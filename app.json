@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "JoyJet",
+    "slug": "joyjet",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.guru9.joyjet",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      }
+    }
+  }
+}
