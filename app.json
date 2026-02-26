@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "JoyJet",
-    "slug": "joyjet",
+    "name": "joyjet-hub",
+    "slug": "joyjet-hub",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
