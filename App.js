@@ -4,10 +4,10 @@ import io from 'socket.io-client';
 import { ADMIN_SECRET_KEY } from '@env';
 
 // Corrected Imports based on your folder structure
-import LoginScreen from './src/screens/LoginScreen';
-import AdminScreen from './src/screens/AdminScreen';
-import ViewerScreen from './src/screens/ViewerScreen';
-import GhostScreen from './src/screens/GhostScreen';
+import LoginScreen from './screens/LoginScreen';
+import AdminScreen from './screens/AdminScreen';
+import ViewerScreen from './screens/ViewerScreen';
+import GhostScreen from './screens/GhostScreen';
 
 // Replace with your actual Render URL
 const socket = io("https://joyjet-server.onrender.com");
