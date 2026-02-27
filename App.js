@@ -21,15 +21,10 @@ export default function App() {
     socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : data.role));
     socket.on('update_list', (list) => setActiveUsers(list));
     socket.on('forced_disconnect', (data) => {
-      Alert.alert("STRIKE", data.reason);
+      Alert.alert("SYSTEM NOTICE", data.reason);
       setRole(null);
     });
-
-    return () => {
-      socket.off('status_update');
-      socket.off('role_assigned');
-      socket.off('update_list');
-    };
+    return () => { socket.off('status_update'); socket.off('role_assigned'); socket.off('update_list'); };
   }, []);
 
   const handleLogoutLogic = () => {
@@ -41,8 +36,8 @@ export default function App() {
   const handleAuth = (targetRole, name, key) => {
     const cleanName = name.toLowerCase().trim();
     if (targetRole === "ADMIN") {
-      if (!adminPresent) {
-        Alert.alert("System Locked", "Admin has exited. Access disabled.");
+      if (adminPresent) {
+        Alert.alert("Access Blocked", "An Admin already exists. Only one session allowed.");
         return;
       }
       if (key === ADMIN_SECRET_KEY) {
