@@ -1,43 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function LoginScreen({ adminPresent, onEngage, secretKey }) {
-  const [input, setInput] = useState('');
+export default function LoginScreen({ adminPresent, onEngage }) {
   const [key, setKey] = useState('');
-
-  const cleanInput = input.toLowerCase().trim().substring(0, 10);
-  const isGhostFormat = cleanInput.includes('_');
-  const isAlphabetOnly = /^[a-z]+$/.test(cleanInput);
-  const isGhostValid = /^[a-z]+_[a-z]+$/.test(cleanInput);
-
-  let btnText = "IDENTIFYING...";
-  let type = "";
-
-  if (!adminPresent && key === secretKey) { 
-    btnText = "CLAIM MASTER"; type = "ADMIN"; 
-  } else if (isGhostFormat) {
-    btnText = isGhostValid ? "ENGAGE AS GHOST" : "INVALID ID";
-    type = isGhostValid ? "GHOST" : "";
-  } else if (isAlphabetOnly) {
-    btnText = "ENGAGE AS VIEWER"; type = "VIEWER";
-  }
+  const [name, setName] = useState('');
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>🛩️ JOYJET</Text>
-      <TextInput placeholder="Callsign" placeholderTextColor="#444" maxLength={10} onChangeText={setInput} style={styles.input} />
-      {!adminPresent && <TextInput placeholder="Secret Key" secureTextEntry placeholderTextColor="#444" onChangeText={setKey} style={styles.input} />}
-      <TouchableOpacity onPress={() => onEngage(type, cleanInput, key)} style={[styles.button, {opacity: type ? 1 : 0.4}]} disabled={!type}>
-        <Text style={styles.btnText}>{btnText}</Text>
+      <Text style={styles.logo}>JOYJET HUB</Text>
+      <TextInput placeholder="Secret Key" placeholderTextColor="#444" secureTextEntry style={styles.input} onChangeText={setKey} />
+      <TouchableOpacity 
+        style={[styles.adminBtn, adminPresent && styles.occupied]} 
+        onPress={() => onEngage("ADMIN", "", key)}
+      >
+        <Text style={styles.btnText}>{adminPresent ? "ADMIN ALREADY EXISTS" : "ENTER MASTER HUB"}</Text>
       </TouchableOpacity>
+      <View style={styles.divider} />
+      <TextInput placeholder="Username" placeholderTextColor="#444" style={styles.input} onChangeText={setName} />
+      <View style={styles.row}>
+        <TouchableOpacity style={styles.subBtn} onPress={() => onEngage("VIEWER", name, "")}><Text style={styles.btnText}>VIEWER</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.subBtn} onPress={() => onEngage("GHOST", name, "")}><Text style={styles.btnText}>GHOST</Text></TouchableOpacity>
+      </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 30, justifyContent: 'center' },
-  logo: { color: '#FFD700', fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginBottom: 40 },
-  input: { backgroundColor: '#0A0A0A', color: '#FFD700', padding: 18, borderRadius: 5, marginBottom: 15, borderWidth: 1, borderColor: '#222' },
-  button: { backgroundColor: '#FFD700', padding: 20, borderRadius: 5, alignItems: 'center' },
-  btnText: { fontWeight: 'bold', color: '#000' }
+  container: { flex: 1, backgroundColor: '#000', justifyContent: 'center', padding: 30 },
+  logo: { color: '#FFF', fontSize: 30, fontWeight: '900', textAlign: 'center', marginBottom: 40 },
+  input: { backgroundColor: '#111', color: '#FFF', padding: 15, borderRadius: 8, marginBottom: 15 },
+  adminBtn: { backgroundColor: '#F00', padding: 18, borderRadius: 8 },
+  occupied: { backgroundColor: '#300', opacity: 0.7 },
+  subBtn: { flex: 1, padding: 15, borderWidth: 1, borderColor: '#444', borderRadius: 8, marginHorizontal: 5 },
+  btnText: { color: '#FFF', textAlign: 'center', fontWeight: 'bold' },
+  divider: { height: 1, backgroundColor: '#222', marginVertical: 30 },
+  row: { flexDirection: 'row' }
 });
