@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 
 export default function ViewerScreen({ users, name }) {
   // 1. Convert viewer name to lowercase for reliable matching
-  const viewerPrefix = name.toLowerCase();
+  const viewerPrefix = name.toLowerCase().trim();
 
   // 2. Filter list: Find ghosts that start with "viewername_"
   const myGhosts = users.filter(u => 
