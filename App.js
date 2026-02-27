@@ -11,20 +11,40 @@ import GhostScreen from './screens/GhostScreen';
 const socket = io("https://joyjet-server.onrender.com");
 
 export default function App() {
+  const [isConnected, setIsConnected] = useState(false);
   const [adminPresent, setAdminPresent] = useState(false);
   const [role, setRole] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
   const [userContext, setUserContext] = useState({ name: '', key: '' });
 
   useEffect(() => {
-    socket.on('status_update', (data) => setAdminPresent(data.admin_present));
-    socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : data.role));
-    socket.on('update_list', (list) => setActiveUsers(list));
+    socket.on('connect', () => setIsConnected(true));
+    socket.on('disconnect', () => setIsConnected(false));
+
+    socket.on('status_update', (data) => {
+      setAdminPresent(data.admin_present);
+    });
+
+    socket.on('role_assigned', (data) => {
+      setRole(data.role === 'MASTER' ? 'ADMIN' : data.role);
+    });
+
+    socket.on('update_list', (list) => {
+      setActiveUsers(list);
+    });
+
     socket.on('forced_disconnect', (data) => {
       Alert.alert("SYSTEM NOTICE", data.reason);
       setRole(null);
     });
-    return () => { socket.off('status_update'); socket.off('role_assigned'); socket.off('update_list'); };
+
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('status_update');
+      socket.off('role_assigned');
+      socket.off('update_list');
+    };
   }, []);
 
   const handleLogoutLogic = () => {
@@ -35,9 +55,10 @@ export default function App() {
 
   const handleAuth = (targetRole, name, key) => {
     const cleanName = name.toLowerCase().trim();
+
     if (targetRole === "ADMIN") {
       if (adminPresent) {
-        Alert.alert("Access Blocked", "An Admin already exists. Only one session allowed.");
+        Alert.alert("Access Denied", "Another Master Admin is already active.");
         return;
       }
       if (key === ADMIN_SECRET_KEY) {
@@ -59,7 +80,11 @@ export default function App() {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <LoginScreen adminPresent={adminPresent} onEngage={handleAuth} />
+      <LoginScreen 
+        adminPresent={adminPresent} 
+        isConnected={isConnected} 
+        onEngage={handleAuth} 
+      />
     </>
   );
 }
