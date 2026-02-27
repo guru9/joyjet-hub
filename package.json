@@ -12,10 +12,12 @@
     "expo": "~50.0.0",
     "react": "18.2.0",
     "react-native": "0.73.6",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "react-native-dotenv": "^3.4.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "eas-cli": "^14.2.1"
   },
   "private": true
 }
