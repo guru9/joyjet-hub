@@ -1,34 +1,35 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function AdminScreen({ users }) {
+export default function AdminScreen({ users, onKick }) {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>MASTER CONTROL</Text>
-      <Text style={styles.subHeader}>Full Network Visibility</Text>
-      
-      <ScrollView style={styles.radar}>
-        <Text style={styles.label}>CONNECTED NODES:</Text>
+      <ScrollView>
         {users.map((user, i) => (
-          <View key={i} style={styles.userRow}>
-            <Text style={styles.userText}>>> {user.name.toUpperCase()}</Text>
-            <Text style={styles.roleTag}>{user.role}</Text>
+          <View key={i} style={styles.row}>
+            <View>
+              <Text style={styles.name}>{user.name.toUpperCase()}</Text>
+              <Text style={styles.role}>{user.role}</Text>
+            </View>
+            {user.role !== 'MASTER' && (
+              <TouchableOpacity onPress={() => onKick(user.id)} style={styles.kickBtn}>
+                <Text style={styles.kickTxt}>UNINSTALL</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
-        {users.length === 0 && <Text style={styles.empty}>NO ACTIVE NODES</Text>}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 25, paddingTop: 60 },
-  header: { color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 3 },
-  subHeader: { color: '#555', fontSize: 12, marginBottom: 20 },
-  radar: { flex: 1, backgroundColor: '#050505', borderRadius: 8, padding: 15, borderWidth: 1, borderColor: '#111' },
-  label: { color: '#222', fontSize: 10, fontWeight: 'bold', marginBottom: 15 },
-  userRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#111', pb: 5 },
-  userText: { color: '#00FF00', fontSize: 14, fontFamily: 'monospace' },
-  roleTag: { color: '#333', fontSize: 10, fontFamily: 'monospace' },
-  empty: { color: '#222', textAlign: 'center', marginTop: 20 }
+  container: { flex: 1, backgroundColor: '#000', padding: 20, paddingTop: 50 },
+  header: { color: '#00FF00', fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderColor: '#111' },
+  name: { color: '#FFF', fontSize: 14, fontFamily: 'monospace' },
+  role: { color: '#444', fontSize: 10 },
+  kickBtn: { backgroundColor: '#300', padding: 10, borderRadius: 5, borderColor: '#F00', borderWidth: 1 },
+  kickTxt: { color: '#F00', fontSize: 10, fontWeight: 'bold' }
 });
