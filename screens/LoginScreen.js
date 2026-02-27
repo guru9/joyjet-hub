@@ -12,32 +12,36 @@ export default function LoginScreen({ adminPresent, isConnected, onEngage }) {
       <View style={styles.statusContainer}>
         <View style={[styles.statusDot, { backgroundColor: isConnected ? '#0F0' : '#F00' }]} />
         <Text style={[styles.statusText, { color: isConnected ? '#AAA' : '#F00' }]}>
-          {isConnected ? "SYSTEMS ONLINE" : "SERVER OFFLINE / WAKING UP..."}
+          {isConnected ? "SYSTEMS ONLINE" : "SERVER OFFLINE"}
         </Text>
       </View>
       
-      <TextInput 
-        placeholder="Secret Key" 
-        placeholderTextColor="#444" 
-        secureTextEntry 
-        style={styles.input} 
-        onChangeText={setKey} 
-      />
+      {/* REQUIREMENT: Hide Secret Key input if Admin is already logged in */}
+      {!adminPresent && isConnected && (
+        <TextInput 
+          placeholder="Secret Key" 
+          placeholderTextColor="#444" 
+          secureTextEntry 
+          style={styles.input} 
+          onChangeText={setKey} 
+          value={key}
+        />
+      )}
 
       <TouchableOpacity 
         style={[styles.adminBtn, (adminPresent || !isConnected) && styles.disabledBtn]} 
         onPress={() => onEngage("ADMIN", "", key)}
-        disabled={!isConnected}
+        disabled={adminPresent || !isConnected}
       >
         <Text style={styles.btnText}>
-          {!isConnected ? "CONNECTING..." : adminPresent ? "ADMIN ALREADY EXISTS" : "ENTER MASTER HUB"}
+          {!isConnected ? "CONNECTING..." : adminPresent ? "MASTER HUB OCCUPIED" : "ENTER MASTER HUB"}
         </Text>
       </TouchableOpacity>
 
       <View style={styles.divider} />
 
       <TextInput 
-        placeholder="Username" 
+        placeholder="Username (viewer or ghost)" 
         placeholderTextColor="#444" 
         style={styles.input} 
         onChangeText={setName} 
@@ -72,7 +76,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
   input: { backgroundColor: '#111', color: '#FFF', padding: 15, borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: '#222' },
   adminBtn: { backgroundColor: '#F00', padding: 18, borderRadius: 8, marginBottom: 10 },
-  disabledBtn: { backgroundColor: '#222', opacity: 0.6 },
+  disabledBtn: { backgroundColor: '#111', borderColor: '#333', borderWidth: 1, opacity: 0.7 },
   subBtn: { flex: 1, padding: 15, borderWidth: 1, borderColor: '#444', borderRadius: 8, marginHorizontal: 5 },
   btnText: { color: '#FFF', fontWeight: 'bold', textAlign: 'center', fontSize: 12 },
   divider: { height: 1, backgroundColor: '#222', marginVertical: 30 },
