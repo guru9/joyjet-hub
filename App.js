@@ -8,6 +8,7 @@ import AdminScreen from './src/screens/AdminScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
 import GhostScreen from './src/screens/GhostScreen';
 
+// Update this to your ACTUAL Render URL
 const socket = io("https://joyjet-server.onrender.com");
 
 export default function App() {
@@ -20,7 +21,7 @@ export default function App() {
     socket.on('status_update', (data) => setAdminPresent(data.admin_present));
     socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : data.role));
     socket.on('update_list', (list) => setActiveUsers(list));
-
+    
     socket.on('forced_disconnect', (data) => {
       Alert.alert("STRIKE", data.reason);
       setRole(null);
@@ -32,30 +33,36 @@ export default function App() {
 
   const handleAuth = (targetRole, name, key) => {
     const cleanName = name.toLowerCase().trim();
-    
-    if (targetRole === "ADMIN" && key === ADMIN_SECRET_KEY) {
-      socket.emit('claim_admin', { key });
-    } else if (targetRole === "GHOST") {
-      // THE 3-GHOST LIMIT LOGIC
-      const prefix = cleanName.split('_')[0] + "_";
-      const ghostCount = activeUsers.filter(u => u.name.startsWith(prefix)).length;
 
-      if (ghostCount >= 3) {
-        Alert.alert("LOCKOUT", `Viewer "${prefix.replace('_','')}" already has 3 active Ghosts.`);
-      } else {
+    if (targetRole === "ADMIN") {
+      if (key === ADMIN_SECRET_KEY) socket.emit('claim_admin', { key });
+      else Alert.alert("Denied", "Secret Mismatch");
+    } 
+    else if (targetRole === "GHOST") {
+      if (!cleanName.includes('_')) {
+        Alert.alert("Format Error", "Ghost must be: viewername_ghostname");
+        return;
+      }
+      const prefix = cleanName.split('_')[0];
+      const ghostCount = activeUsers.filter(u => u.role === 'GHOST' && u.name.startsWith(prefix + '_')).length;
+
+      if (ghostCount >= 3) Alert.alert("Lockout", `Viewer "${prefix}" already has 3 ghosts.`);
+      else {
         socket.emit('register_user', { name: cleanName, role: 'GHOST' });
-        setUserContext({ name: cleanName, key });
+        setUserContext({ name: cleanName });
         setRole('GHOST');
       }
-    } else if (targetRole === "VIEWER") {
+    } 
+    else if (targetRole === "VIEWER") {
       socket.emit('register_user', { name: cleanName, role: 'VIEWER' });
-      setUserContext({ name: cleanName, key });
+      setUserContext({ name: cleanName });
       setRole('VIEWER');
     }
   };
 
-  return role === 'ADMIN' ? <AdminScreen users={activeUsers} onKick={(id) => socket.emit('admin_kick_user', id)} /> :
-         role === 'VIEWER' ? <ViewerScreen users={activeUsers} name={userContext.name} /> :
-         role === 'GHOST' ? <GhostScreen name={userContext.name} /> :
-         <LoginScreen adminPresent={adminPresent} onEngage={handleAuth} secretKey={ADMIN_SECRET_KEY} />;
+  if (role === 'ADMIN') return <AdminScreen users={activeUsers} onKick={(id) => socket.emit('admin_kick_user', id)} />;
+  if (role === 'VIEWER') return <ViewerScreen users={activeUsers} name={userContext.name} />;
+  if (role === 'GHOST') return <GhostScreen name={userContext.name} />;
+
+  return <LoginScreen adminPresent={adminPresent} onEngage={handleAuth} secretKey={ADMIN_SECRET_KEY} />;
 }
