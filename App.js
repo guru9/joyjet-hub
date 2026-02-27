@@ -20,19 +20,9 @@ export default function App() {
   useEffect(() => {
     socket.on('connect', () => setIsConnected(true));
     socket.on('disconnect', () => setIsConnected(false));
-
-    socket.on('status_update', (data) => {
-      setAdminPresent(data.admin_present);
-    });
-
-    socket.on('role_assigned', (data) => {
-      setRole(data.role === 'MASTER' ? 'ADMIN' : data.role);
-    });
-
-    socket.on('update_list', (list) => {
-      setActiveUsers(list);
-    });
-
+    socket.on('status_update', (data) => setAdminPresent(data.admin_present));
+    socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : data.role));
+    socket.on('update_list', (list) => setActiveUsers(list));
     socket.on('forced_disconnect', (data) => {
       Alert.alert("SYSTEM NOTICE", data.reason);
       setRole(null);
@@ -55,16 +45,15 @@ export default function App() {
 
   const handleAuth = (targetRole, name, key) => {
     const cleanName = name.toLowerCase().trim();
-
     if (targetRole === "ADMIN") {
       if (adminPresent) {
-        Alert.alert("Access Denied", "Another Master Admin is already active.");
+        Alert.alert("Denied", "A Master session is already active.");
         return;
       }
       if (key === ADMIN_SECRET_KEY) {
         socket.emit('claim_admin', { key });
       } else {
-        Alert.alert("Denied", "Secret Key Mismatch.");
+        Alert.alert("Error", "Invalid Secret Key.");
       }
     } else {
       socket.emit('register_user', { name: cleanName, role: targetRole });
@@ -80,11 +69,7 @@ export default function App() {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <LoginScreen 
-        adminPresent={adminPresent} 
-        isConnected={isConnected} 
-        onEngage={handleAuth} 
-      />
+      <LoginScreen adminPresent={adminPresent} isConnected={isConnected} onEngage={handleAuth} />
     </>
   );
 }
