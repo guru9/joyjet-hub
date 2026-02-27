@@ -1,35 +1,36 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import ExitManager from '../components/ExitManager';
 
-export default function AdminScreen({ users, onKick }) {
+export default function AdminScreen({ users, onKick, onLogout }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>MASTER CONTROL</Text>
-      <ScrollView>
-        {users.map((user, i) => (
-          <View key={i} style={styles.row}>
-            <View>
-              <Text style={styles.name}>{user.name.toUpperCase()}</Text>
-              <Text style={styles.role}>{user.role}</Text>
-            </View>
-            {user.role !== 'MASTER' && (
-              <TouchableOpacity onPress={() => onKick(user.id)} style={styles.kickBtn}>
-                <Text style={styles.kickTxt}>UNINSTALL</Text>
-              </TouchableOpacity>
-            )}
+      <View style={styles.headerBox}>
+        <Text style={styles.header}>MASTER HUB</Text>
+        <ExitManager onLogout={onLogout} label="EXIT SYSTEM" styleType="admin" />
+      </View>
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.name}>{item.name.toUpperCase()}</Text>
+            <TouchableOpacity onPress={() => onKick(item.id)} style={styles.kick}>
+              <Text style={styles.kickT}>UNINSTALL</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
+        )}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 20, paddingTop: 50 },
-  header: { color: '#00FF00', fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, borderBottomWidth: 1, borderColor: '#111' },
-  name: { color: '#FFF', fontSize: 14, fontFamily: 'monospace' },
-  role: { color: '#444', fontSize: 10 },
-  kickBtn: { backgroundColor: '#300', padding: 10, borderRadius: 5, borderColor: '#F00', borderWidth: 1 },
-  kickTxt: { color: '#F00', fontSize: 10, fontWeight: 'bold' }
+  container: { flex: 1, backgroundColor: '#000', padding: 20, paddingTop: 60 },
+  headerBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 },
+  header: { color: 'red', fontSize: 20, fontWeight: 'bold' },
+  card: { backgroundColor: '#111', padding: 15, borderRadius: 8, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between' },
+  name: { color: 'white' },
+  kick: { backgroundColor: 'red', padding: 8, borderRadius: 4 },
+  kickT: { color: 'white', fontSize: 10, fontWeight: 'bold' }
 });
