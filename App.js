@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import io from 'socket.io-client';
+import { GHOST_SECRET_KEY } from '@env'; // Import the secret from your .env / EAS Secret
 
 const socket = io("https://joyjet-hub.onrender.com"); 
 
@@ -13,14 +14,19 @@ export default function App() {
   useEffect(() => {
     socket.on('status_update', (data) => setAdminPresent(data.admin_present));
     socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : 'GHOST'));
+    
+    return () => socket.off(); // Cleanup listener
   }, []);
 
   const handleStart = () => {
-    if (!adminPresent && key === "YOUR_SECRET_8888") {
+    // Check against the Secret Key from EAS/Env
+    if (!adminPresent && key === GHOST_SECRET_KEY) {
       socket.emit('claim_admin', { key });
-    } else {
+    } else if (name.trim().length > 0) {
       socket.emit('register_ghost', { name });
       setRole('GHOST');
+    } else {
+      Alert.alert("Identification Required", "Please enter a Callsign.");
     }
   };
 
@@ -32,7 +38,13 @@ export default function App() {
       <Text style={styles.logo}>🛩️ JOYJET</Text>
       <TextInput placeholder="Pilot Callsign" placeholderTextColor="#555" onChangeText={setName} style={styles.input} />
       {!adminPresent && (
-        <TextInput placeholder="Secret Key" secureTextEntry placeholderTextColor="#555" onChangeText={setKey} style={styles.input} />
+        <TextInput 
+          placeholder="Secret Key" 
+          secureTextEntry 
+          placeholderTextColor="#555" 
+          onChangeText={setKey} 
+          style={styles.input} 
+        />
       )}
       <TouchableOpacity onPress={handleStart} style={styles.button}>
         <Text style={styles.btnText}>ENGAGE ENGINE</Text>
@@ -44,9 +56,9 @@ export default function App() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'center', padding: 25 },
   center: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  text: { color: '#FFD700', fontSize: 18 },
+  text: { color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 },
   logo: { color: '#FFD700', fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginBottom: 30 },
   input: { backgroundColor: '#111', color: '#fff', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#333' },
   button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 10, alignItems: 'center' },
-  btnText: { fontWeight: 'bold', fontSize: 16 }
+  btnText: { fontWeight: 'bold', fontSize: 16, color: '#000' }
 });
