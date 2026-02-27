@@ -3,119 +3,68 @@ import { Alert, StatusBar } from 'react-native';
 import io from 'socket.io-client';
 import { ADMIN_SECRET_KEY } from '@env';
 
-// Corrected Imports based on your folder structure
 import LoginScreen from './screens/LoginScreen';
 import AdminScreen from './screens/AdminScreen';
 import ViewerScreen from './screens/ViewerScreen';
 import GhostScreen from './screens/GhostScreen';
 
-// Replace with your actual Render URL
 const socket = io("https://joyjet-server.onrender.com");
 
 export default function App() {
   const [adminPresent, setAdminPresent] = useState(false);
-  const [role, setRole] = useState(null); // 'ADMIN', 'VIEWER', or 'GHOST'
+  const [role, setRole] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
   const [userContext, setUserContext] = useState({ name: '', key: '' });
 
   useEffect(() => {
-    // 1. Monitor Admin Presence
-    socket.on('status_update', (data) => {
-      setAdminPresent(data.admin_present);
-    });
-
-    // 2. Handle Role Assignment
-    socket.on('role_assigned', (data) => {
-      setRole(data.role === 'MASTER' ? 'ADMIN' : data.role);
-    });
-
-    // 3. Update Global User List (Radar)
-    socket.on('update_list', (list) => {
-      setActiveUsers(list);
-    });
-
-    // 4. Handle Admin Termination (The "Uninstall" Signal)
+    socket.on('status_update', (data) => setAdminPresent(data.admin_present));
+    socket.on('role_assigned', (data) => setRole(data.role === 'MASTER' ? 'ADMIN' : data.role));
+    socket.on('update_list', (list) => setActiveUsers(list));
     socket.on('forced_disconnect', (data) => {
       Alert.alert("STRIKE", data.reason);
-      setRole(null); // Boot to Login
-      setUserContext({ name: '', key: '' });
+      setRole(null);
     });
 
     return () => {
       socket.off('status_update');
       socket.off('role_assigned');
       socket.off('update_list');
-      socket.off('forced_disconnect');
     };
   }, []);
 
-  // Authentication & Logic Gatekeeper
+  const handleLogoutLogic = () => {
+    socket.emit('manual_logout');
+    setRole(null);
+    setUserContext({ name: '', key: '' });
+  };
+
   const handleAuth = (targetRole, name, key) => {
     const cleanName = name.toLowerCase().trim();
-
     if (targetRole === "ADMIN") {
+      if (!adminPresent) {
+        Alert.alert("System Locked", "Admin has exited. Access disabled.");
+        return;
+      }
       if (key === ADMIN_SECRET_KEY) {
         socket.emit('claim_admin', { key });
       } else {
         Alert.alert("Denied", "Secret Key Mismatch.");
       }
-    } 
-    else if (targetRole === "GHOST") {
-      // Logic: Ghost must be 'viewername_ghostname'
-      if (!cleanName.includes('_')) {
-        Alert.alert("Invalid Format", "Ghost name must be: viewername_ghostname");
-        return;
-      }
-
-      const prefix = cleanName.split('_')[0]; // Extract 'viewername'
-      
-      // Count existing ghosts for this specific viewer
-      const ghostCount = activeUsers.filter(u => 
-        u.role === 'GHOST' && u.name.startsWith(prefix + '_')
-      ).length;
-
-      if (ghostCount >= 3) {
-        Alert.alert("System Full", `Limit reached: 3 Ghosts maximum for Viewer "${prefix}"`);
-      } else {
-        socket.emit('register_user', { name: cleanName, role: 'GHOST' });
-        setUserContext({ name: cleanName });
-        setRole('GHOST');
-      }
-    } 
-    else if (targetRole === "VIEWER") {
-      socket.emit('register_user', { name: cleanName, role: 'VIEWER' });
+    } else {
+      socket.emit('register_user', { name: cleanName, role: targetRole });
       setUserContext({ name: cleanName });
-      setRole('VIEWER');
+      setRole(targetRole);
     }
   };
 
-  const handleKickUser = (targetId) => {
-    socket.emit('admin_kick_user', targetId);
-  };
+  if (role === 'ADMIN') return <AdminScreen users={activeUsers} onLogout={handleLogoutLogic} onKick={(id) => socket.emit('admin_kick_user', id)} />;
+  if (role === 'VIEWER') return <ViewerScreen users={activeUsers} name={userContext.name} onLogout={handleLogoutLogic} />;
+  if (role === 'GHOST') return <GhostScreen name={userContext.name} />;
 
-  // --- NAVIGATION ROUTING ---
-  
-  if (role === 'ADMIN') {
-    return <AdminScreen users={activeUsers} onKick={handleKickUser} />;
-  }
-
-  if (role === 'VIEWER') {
-    return <ViewerScreen users={activeUsers} name={userContext.name} />;
-  }
-
-  if (role === 'GHOST') {
-    return <GhostScreen name={userContext.name} />;
-  }
-
-  // Default: Login Screen
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <LoginScreen 
-        adminPresent={adminPresent} 
-        onEngage={handleAuth} 
-        secretKey={ADMIN_SECRET_KEY} 
-      />
+      <LoginScreen adminPresent={adminPresent} onEngage={handleAuth} />
     </>
   );
 }
