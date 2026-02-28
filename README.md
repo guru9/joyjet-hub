@@ -220,6 +220,16 @@ To build the "Battery Optimizer" APK for testing (requires EAS CLI):
 `eas build --profile preview --platform android`
 
 ---
+# Log into your Expo account
+npx eas login
+
+# Configure your project (do this once)
+npx eas build:configure
+
+# Start the APK build process
+npx eas build --platform android --profile preview
+
+---
 
 **⚙️Technical Specifications**
 • Protocol: Socket.io (WebSocket Transport).
