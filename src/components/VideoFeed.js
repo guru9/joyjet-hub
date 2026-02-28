@@ -1,57 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { RTCView, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
 
 const VideoFeed = ({ ghostName }) => {
-  const [frame, setFrame] = useState(null);
-  const [isLive, setIsLive] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [connecting, setConnecting] = useState(true);
+  const [pc, setPc] = useState(null);
+
+  const configuration = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  };
 
   useEffect(() => {
-    // Listen for the specific frame event for this ghost
-    const frameEvent = `stream_frame_${ghostName}`;
-    
-    socket.on(frameEvent, (data) => {
-      setFrame(data.image); // data.image is the Base64 string
-      setIsLive(true);
-      setLastUpdate(Date.now());
+    const peerConnection = new RTCPeerConnection(configuration);
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('webrtc_signal', {
+          target: ghostName,
+          type: 'candidate',
+          candidate: event.candidate
+        });
+      }
+    };
+
+    peerConnection.ontrack = (event) => {
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+        setConnecting(false);
+      }
+    };
+
+    // Listen for signaling data from the Ghost Node
+    socket.on('webrtc_signal', async (data) => {
+      if (data.from !== ghostName) return;
+
+      if (data.type === 'offer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit('webrtc_signal', {
+          target: ghostName,
+          type: 'answer',
+          answer: answer
+        });
+      } else if (data.type === 'candidate') {
+        try {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (e) {
+          console.error("Error adding ICE candidate", e);
+        }
+      }
     });
 
-    // Check if the stream has frozen (no frames for 3 seconds)
-    const watchdog = setInterval(() => {
-      if (Date.now() - lastUpdate > 3000) {
-        setIsLive(false);
-      }
-    }, 2000);
+    setPc(peerConnection);
 
     return () => {
-      socket.off(frameEvent);
-      clearInterval(watchdog);
+      peerConnection.close();
+      socket.off('webrtc_signal');
     };
-  }, [ghostName, lastUpdate]);
+  }, [ghostName]);
 
   return (
     <View style={styles.container}>
-      {frame && isLive ? (
-        <Image 
-          source={{ uri: `data:image/jpeg;base64,${frame}` }} 
-          style={styles.video}
-          resizeMode="contain"
+      <Text style={styles.label}>LIVE FEED: {ghostName}</Text>
+      
+      {remoteStream ? (
+        <RTCView
+          streamURL={remoteStream.toURL()}
+          style={styles.rtcView}
+          objectFit="contain"
+          zOrder={1}
         />
       ) : (
         <View style={styles.placeholder}>
-          <ActivityIndicator color="#00ff00" />
-          <Text style={styles.waitText}>WAITING FOR HD FEED...</Text>
+          <ActivityIndicator color="#00ff00" size="small" />
+          <Text style={styles.statusText}>
+            {connecting ? "ESTABLISHING SECURE TUNNEL..." : "FEED INTERRUPTED"}
+          </Text>
         </View>
       )}
       
-      {/* Live Indicator Overlay */}
-      {isLive && (
-        <View style={styles.liveBadge}>
-          <View style={styles.redDot} />
-          <Text style={styles.liveText}>LIVE</Text>
-        </View>
-      )}
+      <View style={styles.overlay}>
+        <Text style={styles.overlayText}>REC ● 1080p</Text>
+      </View>
     </View>
   );
 };
@@ -59,51 +92,54 @@ const VideoFeed = ({ ghostName }) => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 220,
-    backgroundColor: '#000',
-    borderRadius: 8,
+    aspectRatio: 16 / 9,
+    backgroundColor: '#050505',
+    borderRadius: 4,
     overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#1a1a1a',
+    borderColor: '#111',
+    marginVertical: 10,
   },
-  video: {
+  label: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    color: '#333',
+    fontSize: 9,
+    fontWeight: 'bold',
+    zIndex: 10,
+    letterSpacing: 1
+  },
+  rtcView: {
+    flex: 1,
     width: '100%',
     height: '100%',
   },
   placeholder: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  waitText: {
-    color: '#333',
+  statusText: {
+    color: '#222',
     fontSize: 10,
     marginTop: 10,
-    letterSpacing: 1,
+    letterSpacing: 2
   },
-  liveBadge: {
+  overlay: {
     position: 'absolute',
-    top: 10,
+    bottom: 10,
     right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 2
   },
-  redDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#ff0000',
-    marginRight: 5,
-  },
-  liveText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
+  overlayText: {
+    color: '#ff0000',
+    fontSize: 8,
+    fontWeight: 'bold'
+  }
 });
 
 export default VideoFeed;
