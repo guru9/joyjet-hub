@@ -231,15 +231,21 @@ To build the "Battery Optimizer" APK for testing (requires EAS CLI):
 
 **📦 Project Structure**
 
-/
-├── App.js                 # Entry point & Background Task definitions
-├── app.json               # Android Permissions & Masking Identity
-├── package.json           # Dependencies (Socket.io, View-Shot, etc.)
-└── /src
-    └── /screens
-        ├── LoginScreen.js # Secure identifier & Admin key entry
-        ├── GhostScreen.js # The "Battery Optimizer" Game & Capture Engine
-        └── AdminScreen.js # Unified HD Monitoring Dashboard
+joyjet-hub/ (Root Folder)
+• 📄 App.js (Main controller)
+• 📄 app.json (App identity & permissions)
+• 📄 package.json (Dependencies)
+• 📄 eas.json (Build configuration)
+• 📄 README.md (The guide I just sent)
+• 📁 src/
+  • 📁 screens/
+    • 📄 LoginScreen.js
+    • 📄 GhostScreen.js
+    • 📄 AdminScreen.js
+• 📁 assets/
+  • 🖼️ icon.png (The Green Battery icon)
+  • 🖼️ adaptive-icon.png
+  • 🖼️ splash.png
 
 ---
 
