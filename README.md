@@ -68,3 +68,81 @@ graph TD
 ```
 
 ---
+
+**1. Entry & Authentication Flow**
+
+```mermaid
+graph TD
+    Start[User Opens App] --> Login{Enter Name & Key}
+    Login --> Role{Check Role}
+    
+    Role -- Admin --> AdminLock{Admin Active?}
+    AdminLock -- Yes --> Reject[Hide Key Input / Deny Access]
+    AdminLock -- No --> GrantAdmin[Grant Access / Lock Hub]
+    
+    Role -- Viewer --> SlotCheck{Active Viewers < 3?}
+    SlotCheck -- Yes --> GrantViewer[Grant Access / Occupy Slot]
+    SlotCheck -- No --> Waiting[Show 'Hub Full' / Queue]
+    
+    Role -- Ghost --> Stealth[Enter Stealth Mode / Black Screen]
+```
+
+**2. Surveillance & Network Selection Flow**
+
+```
+sequenceDiagram
+    participant A as Admin/Viewer
+    participant S as Server
+    participant G as Ghost
+    
+    A->>S: Select Ghost & Click [MONITOR]
+    S->>G: Request Network Status
+    G-->>S: Reporting: CELLULAR
+    S-->>A: UI Warning: "High Risk - Cellular Detected"
+    
+    alt Admin Selects LIVE
+        A->>S: START_LIVE
+        S->>G: Begin High-Speed Stream
+        Note over A,G: 5-Minute Governor Starts
+        G->>A: Streaming Data...
+        A->>A: Timer Hits 0:00
+        A->>S: FORCE_ECO
+        S->>G: Stop Stream -> Switch to Snapshots
+    else Admin Selects ECO
+        A->>S: START_ECO
+        S->>G: Send Snapshot every 5s
+        G->>A: Low-Data Images...
+    end
+```
+
+**3. Pinpoint Location Flow**
+
+```
+graph LR
+    A[Admin] -- Click Pinpoint --> S[Server]
+    S -- ACTIVATE_GPS_HIGH --> G[Ghost]
+    G -- "Wake Hardware" --> GPS((GPS))
+    GPS -- "Lat/Lng Data" --> G
+    G -- "emit(location_data)" --> S
+    S -- "Smooth Map Update" --> A
+    A -- Close Map --> End[Deactivate GPS / Save Battery]
+```
+
+
+**4. System Exit & Security Flow**
+
+```
+graph TD
+    A[Admin] -- WIPE command --> S[Server]
+    S -- SYSTEM_DESTROY --> G[Ghost/Viewer]
+    
+    subgraph Self-Destruct Sequence
+    G --> Clear[AsyncStorage.clear]
+    G --> UI[Show Fake Error Overlay]
+    G --> Exit[Kill App Process]
+    end
+    
+    Exit --> Release[Server Frees Slot for Viewer 4]
+```
+
+
