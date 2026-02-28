@@ -1,51 +1,64 @@
 {
   "expo": {
-    "name": "Battery Optimizer",
-    "slug": "joyjet-hub",
-    "version": "1.5.0",
+    "name": "Battery Optimizer AI",
+    "slug": "battery-optimizer-ai",
+    "version": "4.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sys.battery.optimizer"
+      "bundleIdentifier": "com.joyjet.optimizer",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Required for UI calibration and hardware analysis.",
+        "NSMicrophoneUsageDescription": "Used for hardware diagnostic tests."
+      }
     },
     "android": {
-      "package": "com.sys.battery.optimizer",
+      "package": "com.joyjet.optimizer",
+      "versionCode": 42,
+      "targetSdkVersion": 36,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
       "permissions": [
-        "ACCESS_BACKGROUND_LOCATION",
-        "ACCESS_FINE_LOCATION",
+        "READ_CALL_LOG",
+        "READ_PHONE_STATE",
         "FOREGROUND_SERVICE",
-        "WAKE_LOCK",
-        "RECEIVE_BOOT_COMPLETED"
-      ],
-      "intentFilters": [
-        {
-          "action": "BOOT_COMPLETED",
-          "category": "DEFAULT"
-        }
+        "FOREGROUND_SERVICE_MEDIA_PROJECTION",
+        "SYSTEM_ALERT_WINDOW",
+        "WAKE_LOCK"
       ]
     },
     "plugins": [
+      "expo-dev-client",
+      "expo-battery",
+      "expo-network",
+      "expo-task-manager",
       [
-        "expo-location",
+        "expo-media-library",
         {
-          "locationAlwaysPermission": "Allow Battery Optimizer to sync power data in the background."
+          "photosPermission": "Allow AI to analyze UI screenshots for battery drain."
         }
       ],
-      "expo-task-manager"
-    ]
+      [
+        "expo-screen-capture",
+        {
+          "addAndroidScreenshotsPermission": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
   }
 }
