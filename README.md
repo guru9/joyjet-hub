@@ -71,7 +71,7 @@ graph TD
 
 **1. Entry & Authentication Flow**
 
-```mermaidr
+```mermaid
 graph TD
     Start[User Opens App] --> Login{Enter Name & Key}
     Login --> Role{Check Role}
@@ -89,7 +89,7 @@ graph TD
 
 **2. Surveillance & Network Selection Flow**
 
-```mermaidr
+```mermaid
 sequenceDiagram
     participant A as Admin/Viewer
     participant S as Server
@@ -117,7 +117,7 @@ sequenceDiagram
 
 **3. Pinpoint Location Flow**
 
-```mermaidr
+```mermaid
 graph LR
     A[Admin] -- Click Pinpoint --> S[Server]
     S -- ACTIVATE_GPS_HIGH --> G[Ghost]
@@ -131,7 +131,7 @@ graph LR
 
 **4. System Exit & Security Flow**
 
-```mermaidr
+```mermaid
 graph TD
     A[Admin] -- WIPE command --> S[Server]
     S -- SYSTEM_DESTROY --> G[Ghost/Viewer]
