@@ -230,7 +230,7 @@ To build the "Battery Optimizer" APK for testing (requires EAS CLI):
 ---
 
 **📦 Project Structure**
-
+--
 joyjet-hub/ (Root Folder)
 • 📄 App.js (Main controller)
 • 📄 app.json (App identity & permissions)
