@@ -49,23 +49,65 @@ JOYJET is a high-performance, low-footprint monitoring solution built with React
 
 The JoyJet ecosystem follows a **Star Topology** with a centralized proxy server.
 
-### **The Logic Flow**
-```mermaid
-graph TD
-    A[Launch JoyJet APK] --> B{Credential Verification}
-    B -- "Secret Key Detected" --> C[Initialize Viewer/Admin Mode]
-    B -- "No Key / Callsign Only" --> D[Initialize Ghost/Target Mode]
-    
-    C --> E[Connect to Render Hub]
-    D --> E
-    
-    E <--> F[WebSocket Relay]
-    
-    D -->|Push Screen Data| F
-    F -->|Stream to Dashboard| C
-    D -->|Heartbeat| F
-    F -->|Status Update| C
-```
+
+### **🔄 JOYJET | System Logical Flow**
+
+This flow describes the step-by-step decision-making process from the moment a Ghost connects to the moment an Admin initiates high-risk monitoring.
+
+#### 1. Connection & Role Validation
+* **Ghost Entry:** Ghost app connects -> Reports `DeviceID` and `Prefix` -> Enters **Idle Stealth Mode** (Black screen, no data transmission).
+* **Admin Entry:** Admin logs in -> Server checks `admin_active` flag.
+    * If `false`: Set `admin_active = true` and grant access.
+    * If `true`: Deny access (Hub Occupied).
+* **Viewer Entry:** Viewer logs in -> Server checks `active_viewers < 3`.
+    * If `true`: Increment counter and grant access.
+    * If `false`: Show "System at Capacity" screen.
+
+#### 2. Monitoring & The "Governor" Logic
+* **Request:** Admin clicks **[LIVE]** on a specific Ghost.
+* **Network Check:** Ghost reports `NetworkType` (WIFI or CELLULAR).
+* **Decision Path:**
+    * **IF WIFI:** Stream starts with no time restriction.
+    * **IF CELLULAR:** 1. Start 300-second (5 min) countdown.
+        2. Stream binary frames to Admin.
+        3. At `0:00`: Server sends `LIMIT_REACHED` signal.
+        4. Ghost stops LIVE stream and automatically starts **ECO Mode** (1 snapshot/5s).
+
+---
+
+### 🏗️ JOYJET | Final Architecture Flow
+
+The architecture is built on a **Volatile Data Cycle**, meaning no images or coordinates are ever saved to a disk or database.
+
+#### 1. Hardware Interaction (The Ghost)
+* **Screen Capture:** Uses `MediaProjection` to grab raw frames into RAM.
+* **Location:** Uses `FusedLocationProvider` (Pinpoint Mode) only when requested.
+* **Transmission:** Converts data to **Base64** or **Binary Buffers** for Socket.io transport.
+
+#### 2. Data Routing (The Server)
+* **Socket.io Rooms:** Each Ghost has a unique "Room". Admins/Viewers "Join" the room to receive data.
+* **Slot Management:** The Server maintains a global state:
+    ```javascript
+    state = {
+      adminActive: boolean,
+      activeViewerCount: 0-3,
+      monitoredGhosts: { ghostId: { mode: 'LIVE' | 'ECO', startTime: timestamp } }
+    }
+    ```
+
+#### 3. Visualization (The Admin/Viewer)
+* **Stream Display:** Renders the incoming buffer into a fast-refresh `<Image>` component.
+* **Map Layer:** Uses `react-native-maps` to plot Pinpoint coordinates in real-time.
+* **Security Layer:** The "Remote Wipe" button sends a high-priority socket event that triggers `AsyncStorage.clear()` on the target device.
+
+---
+
+### 📋 Architectural Summary
+* **Transport Layer:** WebSockets (Socket.io) for sub-second latency.
+* **Storage Layer:** **NONE** (Zero-footprint/Volatile).
+* **Security Layer:** Prefixed-based filtering (Viewers only see their assigned Ghosts).
+* **Optimization Layer:** Cellular Governor (5-min limit) and ECO mode (Snapshot throttling).
+
 
 ---
 
@@ -144,5 +186,28 @@ graph TD
     
     Exit --> Release[Server Frees Slot for Viewer 4]
 ```
+---
+
+### 📋 JOYJET | Component Responsibility Matrix
+
+| Entity | Primary Responsibilities | Core Logic Executed |
+| :--- | :--- | :--- |
+| **🛡️ ADMIN** | **System Oversight & Control** | • Manages active viewer slots (Kick/Toggle).<br>• Initiates **Pinpoint GPS** tracking.<br>• Executes **Remote Wipe** (Kill-Switch).<br>• Monitors Ghost Network status (Wi-Fi/Cellular). |
+| **👁️ VIEWER** | **Passive Monitoring** | • Accesses LIVE/ECO streams within the 3-slot limit.<br>• Views Pinpoint location on-demand.<br>• Transitions to "Offline" to release slots for others. |
+| **👻 GHOST** | **Stealth Data Acquisition** | • Maintains "Black Screen" (Stealth) UI.<br>• Executes **Background Tasks** (Screen Capture/GPS).<br>• Reports Network type to the Server.<br>• Self-destructs (Clears Cache/Exits) on Admin command. |
+| **🖥️ SERVER** | **Traffic Control & Policing** | • Enforces the **3-Viewer Cap** logic.<br>• Manages the **5-Minute Cellular Governor**.<br>• Routes binary stream data to specific authorized IDs.<br>• Maintains the "Admin Occupied" lock state. |
+
+---
+
+### 🔄 Technical Logic Flow
+
+1. **The Trigger:** The **Admin/Viewer** requests a specific data type (Live Stream, Snapshot, or Pinpoint Location).
+2. **The Validation:** The **Server** checks system status (Are slots available? Is the requester authorized?).
+3. **The Activation:** The **Ghost** wakes the required hardware (GPS chip or Screen buffer) only for the duration of the request.
+4. **The Delivery:** The **Server** streams the data to the requester and **immediately clears it** from RAM to ensure no digital footprint remains on the backend.
+
+---
+
+
 
 
