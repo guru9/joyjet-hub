@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 
 const LogConsole = ({ logs }) => {
@@ -6,35 +6,40 @@ const LogConsole = ({ logs }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>SYSTEM LOGS</Text>
+      <Text style={styles.header}>LIVE SYSTEM LOGS</Text>
       <FlatList
         ref={flatListRef}
         data={logs}
         keyExtractor={(item, index) => index.toString()}
-        // Auto-scroll to bottom when content changes
-        onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}
-        renderItem={({ item }) => (
-          <View style={styles.logLine}>
-            <Text style={styles.timestamp}>[{item.timestamp}]</Text>
-            <Text style={[
+        onContentSizeChange={() => flatListRef.current.scrollToEnd()}
+        renderItem={({ item }) => {
+          const isCall = item.message.includes('CALL:');
+          
+          return (
+            <View style={styles.logRow}>
+              <Text style={styles.timestamp}>[{item.timestamp}]</Text>
+              <Text style={[
                 styles.message, 
-                { color: item.type === 'ERROR' ? '#ff4444' : '#00ff00' }
-            ]}>
-              {item.message}
-            </Text>
-          </View>
-        )}
+                isCall ? styles.callText : styles.normalText
+              ]}>
+                {item.message}
+              </Text>
+            </View>
+          );
+        }}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { height: 180, backgroundColor: '#050505', borderTopWidth: 1, borderTopColor: '#333', padding: 10 },
-  title: { color: '#666', fontSize: 10, fontWeight: 'bold', marginBottom: 5, letterSpacing: 1 },
-  logLine: { flexDirection: 'row', marginBottom: 2 },
-  timestamp: { color: '#444', fontSize: 10, marginRight: 8, fontFamily: 'monospace' },
-  message: { fontSize: 11, fontFamily: 'monospace' }
+  container: { height: 200, backgroundColor: '#050505', borderTopWidth: 1, borderTopColor: '#1a1a1a', padding: 10 },
+  header: { color: '#333', fontSize: 9, fontWeight: 'bold', marginBottom: 8, letterSpacing: 2 },
+  logRow: { flexDirection: 'row', marginBottom: 4 },
+  timestamp: { color: '#222', fontSize: 10, fontFamily: 'monospace', marginRight: 10 },
+  message: { fontSize: 11, fontFamily: 'monospace', flex: 1 },
+  normalText: { color: '#00ff00' },
+  callText: { color: '#ffcc00', fontWeight: 'bold' } // Golden highlight for Calls
 });
 
 export default LogConsole;
