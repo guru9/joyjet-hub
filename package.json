@@ -18,8 +18,6 @@
     "react": "19.2.0",
     "react-native": "0.83.1",
     "react-native-call-log": "^3.0.0",
-    "react-native-safe-area-context": "5.7.0",
-    "react-native-screens": "4.20.0",
     "react-native-webrtc": "^124.0.7",
     "socket.io-client": "4.8.3",
     "@react-navigation/native": "^7.0.0",
@@ -32,8 +30,8 @@
     "react-native": "0.83.1",
     "hermes-compiler": "250829098.0.4"
   },
-  "private": true,
   "devDependencies": {
     "react-native-dotenv": "^3.4.11"
-  }
+  },
+  "private": true
 }
