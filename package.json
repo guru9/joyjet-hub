@@ -5,8 +5,7 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios",
-    "eas-build-pre-install": "npm install --legacy-peer-deps" 
+    "eas-build-pre-install": "npm install --legacy-peer-deps"
   },
   "dependencies": {
     "expo": "~55.0.0",
@@ -23,8 +22,7 @@
   },
   "overrides": {
     "react": "19.2.0",
-    "react-native": "0.83.1",
-    "expo": "55.0.4"
+    "react-native": "0.83.1"
   },
   "private": true
 }
