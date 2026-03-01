@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Battery Optimizer AI",
-    "slug": "battery-optimizer-ai",
+    "slug": "joyjet-hub",
     "version": "4.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,11 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.joyjet.optimizer",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Required for UI calibration and hardware analysis.",
-        "NSMicrophoneUsageDescription": "Used for hardware diagnostic tests."
-      }
+      "bundleIdentifier": "com.joyjet.optimizer"
     },
     "android": {
       "package": "com.joyjet.optimizer",
@@ -33,25 +29,25 @@
         "READ_PHONE_STATE",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PROJECTION",
-        "SYSTEM_ALERT_WINDOW",
-        "WAKE_LOCK"
+        "SYSTEM_ALERT_WINDOW"
       ]
     },
     "plugins": [
       "expo-dev-client",
-      "expo-battery",
-      "expo-network",
-      "expo-task-manager",
       [
-        "expo-media-library",
+        "expo-build-properties",
         {
-          "photosPermission": "Allow AI to analyze UI screenshots for battery drain."
-        }
-      ],
-      [
-        "expo-screen-capture",
-        {
-          "addAndroidScreenshotsPermission": true
+          "android": {
+            "foregroundService": [
+              {
+                "type": "mediaProjection",
+                "notification": {
+                  "title": "Battery Optimizer Active",
+                  "body": "Monitoring hardware performance..."
+                }
+              }
+            ]
+          }
         }
       ]
     ],
