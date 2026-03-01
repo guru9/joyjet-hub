@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 // Replace with your actual Render/Backend URL
-const SOCKET_URL = 'https://your-backend-app.onrender.com';
+const SOCKET_URL = 'https://joyjet-server.onrender.com';
 
 const socket = io(SOCKET_URL, {
   transports: ['websocket'],
