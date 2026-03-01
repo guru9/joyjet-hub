@@ -9,18 +9,19 @@
   },
   "dependencies": {
     "expo": "~55.0.0",
+    "expo-asset": "~55.0.0",
+    "expo-battery": "~55.0.0",
+    "expo-build-properties": "~55.0.9",
+    "expo-constants": "~55.0.0",
+    "expo-dev-client": "~55.0.0",
+    "expo-network": "~55.0.0",
     "react": "19.2.0",
     "react-native": "0.83.1",
-    "expo-dev-client": "~55.0.0",
-    "react-native-webrtc": "^124.0.7",
     "react-native-call-log": "^3.0.0",
-    "socket.io-client": "4.8.3",
-    "expo-battery": "~55.0.0",
-    "expo-network": "~55.0.0",
-    "expo-constants": "~55.0.0",
-    "expo-asset": "~55.0.0",
     "react-native-safe-area-context": "5.7.0",
-    "react-native-screens": "4.20.0"
+    "react-native-screens": "4.20.0",
+    "react-native-webrtc": "^124.0.7",
+    "socket.io-client": "4.8.3"
   },
   "overrides": {
     "react": "19.2.0",
