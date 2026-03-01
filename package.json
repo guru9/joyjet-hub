@@ -13,16 +13,19 @@
     "react-native": "0.83.1",
     "expo-dev-client": "~55.0.0",
     "react-native-webrtc": "^124.0.7",
-    "react-native-call-log": "^2.2.0",
+    "react-native-call-log": "^3.0.0",
     "socket.io-client": "4.8.3",
     "expo-battery": "~55.0.0",
     "expo-network": "~55.0.0",
-    "expo-constants": "~15.4.0",
-    "expo-asset": "~9.0.2"
+    "expo-constants": "~55.0.0",
+    "expo-asset": "~55.0.0",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "4.20.0"
   },
   "overrides": {
     "react": "19.2.0",
-    "react-native": "0.83.1"
+    "react-native": "0.83.1",
+    "hermes-compiler": "250829098.0.4"
   },
   "private": true
 }
