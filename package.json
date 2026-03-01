@@ -14,7 +14,7 @@
     "expo": "~55.0.0",
     "expo-asset": "~55.0.0",
     "expo-audio": "~55.0.0",
-    "expo-av": "~55.0.0",
+    "expo-video": "~55.0.0",
     "expo-battery": "~55.0.0",
     "expo-build-properties": "~55.0.0",
     "expo-constants": "~55.0.0",
