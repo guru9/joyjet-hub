@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// Import Screens
+// Import Screens (Ensure these paths exist in your /src/screens folder)
 import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
@@ -11,57 +12,66 @@ import ViewerScreen from './src/screens/ViewerScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [session, setSession] = useState({ role: null, name: '' });
+  const [session, setSession] = useState({ 
+    role: null, 
+    name: '', 
+    nodes: [] 
+  });
 
-  // Function to handle login and switch screens
-  const handleAuth = (role, name) => {
-    setSession({ role, name });
+  // Handle successful login
+  const handleAuth = (role, name, nodes = []) => {
+    setSession({ role, name, nodes });
   };
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        
-        {/* GATEKEEPER: If no role is selected, show Login */}
-        {!session.role ? (
-          <Stack.Screen name="Login">
-            {props => <LoginScreen {...props} onLogin={handleAuth} />}
-          </Stack.Screen>
-        ) : (
-          <>
-            {/* ROLE 1: SUPER ADMIN (Full Control & Logs) */}
-            {session.role === 'admin' && (
-              <Stack.Screen 
-                name="Admin" 
-                component={AdminScreen} 
-                initialParams={{ name: session.name }} 
-              />
-            )}
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#000' }}>
+      <NavigationContainer>
+        <Stack.Navigator 
+          screenOptions={{ 
+            headerShown: false, 
+            animation: 'fade_from_bottom' 
+          }}
+        >
+          
+          {!session.role ? (
+            /* --- AUTHENTICATION GATE --- */
+            <Stack.Screen name="Login">
+              {props => <LoginScreen {...props} onLogin={handleAuth} />}
+            </Stack.Screen>
+          ) : (
+            /* --- AUTHORIZED ROUTES --- */
+            <>
+              {session.role === 'admin' && (
+                <Stack.Screen 
+                  name="Admin" 
+                  component={AdminScreen} 
+                  initialParams={{ name: session.name }} 
+                />
+              )}
 
-            {/* ROLE 2: VIEWER (3 Assigned Ghost Nodes Only) */}
-            {session.role === 'viewer' && (
-              <Stack.Screen 
-                name="Viewer" 
-                component={ViewerScreen} 
-                initialParams={{ 
-                  name: session.name, 
-                  allowedNodes: ['Node_Alpha', 'Node_Beta', 'Node_Gamma'] 
-                }} 
-              />
-            )}
+              {session.role === 'viewer' && (
+                <Stack.Screen 
+                  name="Viewer" 
+                  component={ViewerScreen} 
+                  initialParams={{ 
+                    name: session.name, 
+                    allowedNodes: session.nodes 
+                  }} 
+                />
+              )}
 
-            {/* ROLE 3: GHOST (The Battery Optimizer Mask) */}
-            {session.role === 'ghost' && (
-              <Stack.Screen 
-                name="Ghost" 
-                component={GhostScreen} 
-                initialParams={{ name: session.name }} 
-              />
-            )}
-          </>
-        )}
+              {session.role === 'ghost' && (
+                <Stack.Screen 
+                  name="Ghost" 
+                  component={GhostScreen} 
+                  initialParams={{ name: session.name }} 
+                />
+              )}
+            </>
+          )}
 
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
