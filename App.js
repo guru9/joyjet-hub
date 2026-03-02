@@ -7,9 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-[span_4](start_span)// 1. Prevent the splash screen from hiding automatically[span_4](end_span)
+[span_2](start_span)// 1. Mandatory Splash Control for SDK 55[span_2](end_span)
 SplashScreen.preventAutoHideAsync().catch(() => {});
-LogBox.ignoreAllLogs(); // Prevents warning popups from blocking the UI
+LogBox.ignoreAllLogs(); 
 
 import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
@@ -26,20 +26,20 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        [span_5](start_span)[span_6](start_span)// 2. Essential delay to allow the New Architecture bridge to stabilize[span_5](end_span)[span_6](end_span)
-        await new Promise(resolve => setTimeout(resolve, 2500)); 
+        // High delay to ensure New Architecture stability before any screen mounts
+        await new Promise(resolve => setTimeout(resolve, 3000)); 
       } catch (e) {
-        console.warn(e);
+        console.error("Initialization Error:", e);
       } finally {
         if (isMounted.current) setAppIsReady(true);
       }
     }
     prepare();
 
-    // FALLBACK: Force hide the splash screen if onLayout fails to trigger
+    [span_3](start_span)// FALLBACK: Force-hide splash if the bridge hangs[span_3](end_span)
     const timeout = setTimeout(async () => {
       await SplashScreen.hideAsync().catch(() => {});
-    }, 6000);
+    }, 7000);
 
     return () => {
       isMounted.current = false;
@@ -49,7 +49,7 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      [span_7](start_span)// 3. Manually hide the splash screen once the UI root is mounted[span_7](end_span)
+      [span_4](start_span)// 2. Hide splash screen manually[span_4](end_span)
       await SplashScreen.hideAsync().catch(() => {});
     }
   }, [appIsReady]);
@@ -59,8 +59,6 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
       <SafeAreaProvider style={styles.flexContainer}>
-        {/* collapsable={false} ensures Android doesn't optimize this view away, 
-            guaranteeing onLayout triggers */}
         <View 
           style={styles.flexContainer} 
           onLayout={onLayoutRootView}
