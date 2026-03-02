@@ -1,16 +1,15 @@
-import 'react-native-gesture-handler'; // MUST be the first import
+import 'react-native-gesture-handler'; 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// 1. Prevent the splash screen from hiding automatically
+// 1. Prevent splash from hiding until we are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// Import your screens (Ensure these paths are correct)
 import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
@@ -25,8 +24,7 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-initialization logic (e.g., loading fonts or storage) goes here
-        // 2. We add a safety delay to ensure the native bridge is stable
+        // Essential bridge delay for New Architecture / SDK 55
         await new Promise(resolve => setTimeout(resolve, 2000)); 
       } catch (e) {
         console.warn(e);
@@ -39,56 +37,38 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      // 3. Manually hide the splash screen once the UI is ready to mount
+      // 2. Hide splash once the root View is mounted
       await SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 
-  if (!appIsReady) {
-    return null; // Keep native splash screen visible
-  }
+  if (!appIsReady) return null;
 
   const handleAuth = (role, name, nodes = []) => {
     setSession({ role, name, nodes });
   };
 
   return (
-    // 4. Wrap with GestureHandlerRootView and provide explicit flex: 1
     <GestureHandlerRootView style={styles.flexContainer}>
-      <SafeAreaProvider style={styles.flexContainer} onLayout={onLayoutRootView}>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {!session.role ? (
-              <Stack.Screen name="Login">
-                {(props) => <LoginScreen {...props} onLogin={handleAuth} />}
-              </Stack.Screen>
-            ) : (
-              <>
-                {session.role === 'admin' && (
-                  <Stack.Screen 
-                    name="Admin" 
-                    component={AdminScreen} 
-                    initialParams={{ name: session.name }} 
-                  />
-                )}
-                {session.role === 'viewer' && (
-                  <Stack.Screen 
-                    name="Viewer" 
-                    component={ViewerScreen} 
-                    initialParams={{ name: session.name, allowedNodes: session.nodes }} 
-                  />
-                )}
-                {session.role === 'ghost' && (
-                  <Stack.Screen 
-                    name="Ghost" 
-                    component={GhostScreen} 
-                    initialParams={{ name: session.name }} 
-                  />
-                )}
-              </>
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
+      <SafeAreaProvider style={styles.flexContainer}>
+        {/* Safety View to ensure onLayout triggers and hides Splash */}
+        <View style={styles.flexContainer} onLayout={onLayoutRootView}>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              {!session.role ? (
+                <Stack.Screen name="Login">
+                  {(props) => <LoginScreen {...props} onLogin={handleAuth} />}
+                </Stack.Screen>
+              ) : (
+                <>
+                  {session.role === 'admin' && <Stack.Screen name="Admin" component={AdminScreen} initialParams={{ name: session.name }} />}
+                  {session.role === 'viewer' && <Stack.Screen name="Viewer" component={ViewerScreen} initialParams={{ name: session.name, allowedNodes: session.nodes }} />}
+                  {session.role === 'ghost' && <Stack.Screen name="Ghost" component={GhostScreen} initialParams={{ name: session.name }} />}
+                </>
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </View>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -96,7 +76,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1, // Crucial for New Architecture to prevent 0-height screens
+    flex: 1,
     backgroundColor: '#000000',
   },
 });
