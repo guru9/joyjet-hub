@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform
+  View, Text, TextInput, TouchableOpacity, StyleSheet, 
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform 
 } from 'react-native';
-import socket from '../services/socket';
+
+// IMPORT: Make sure your socket service EXPORTS a function or a lazy-loaded object
+import socket from '../services/socket'; 
 
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -18,23 +13,25 @@ const LoginScreen = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Listen for authentication response from server
-    socket.on('auth_response', (response) => {
-      setLoading(false);
-      
-      if (response.success) {
-        // Pass data back to App.js to handle navigation
-        onLogin(response.role, response.name, response.allowedNodes || []);
-      } else {
-        Alert.alert('Access Denied', response.message || 'Invalid credentials');
-        socket.disconnect(); // Disconnect if auth fails to save battery
-      }
-    });
+    // ONLY attach listeners if the socket is already initialized
+    const setupListeners = () => {
+      socket.on('auth_response', (response) => {
+        setLoading(false);
+        if (response.success) {
+          onLogin(response.role, response.name, response.allowedNodes || []);
+        } else {
+          Alert.alert('Access Denied', response.message || 'Invalid credentials');
+          socket.disconnect(); 
+        }
+      });
 
-    socket.on('connect_error', () => {
-      setLoading(false);
-      Alert.alert('Connection Error', 'Unable to reach the optimization server.');
-    });
+      socket.on('connect_error', () => {
+        setLoading(false);
+        Alert.alert('Connection Error', 'Server is currently unreachable.');
+      });
+    };
+
+    setupListeners();
 
     return () => {
       socket.off('auth_response');
@@ -44,26 +41,33 @@ const LoginScreen = ({ onLogin }) => {
 
   const handleLogin = () => {
     if (!username || !password) {
-      Alert.alert('Error', 'Please enter both fields');
+      Alert.alert('Error', 'Please enter credentials');
       return;
     }
 
     setLoading(true);
 
-    // 1. Establish the connection first
+    // CRITICAL: Ensure connection ONLY starts after user clicks the button
+    // This satisfies Android 16's "User-Initiated" network rules
     if (!socket.connected) {
       socket.connect();
     }
 
-    // 2. Wait for connection then emit
-    socket.once('connect', () => {
+    // Wait for the connection to be established before sending data
+    const attemptAuth = () => {
       socket.emit('authenticate', {
         user: username.trim(),
         pass: password.trim(),
         device: Platform.OS,
         version: '4.2.0'
       });
-    });
+    };
+
+    if (socket.connected) {
+      attemptAuth();
+    } else {
+      socket.once('connect', attemptAuth);
+    }
   };
 
   return (
