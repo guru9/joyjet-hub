@@ -1,13 +1,13 @@
-import 'react-native-gesture-handler'; 
+import 'react-native-gesture-handler'; // MUST be the first import
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, LogBox } from 'react-native';
+import { StyleSheet, View, LogBox, StatusBar } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-[span_2](start_span)// 1. Mandatory Splash Control for SDK 55[span_2](end_span)
+// 1. Prevent Auto-Hide immediately to handle New Architecture bridge timing
 SplashScreen.preventAutoHideAsync().catch(() => {});
 LogBox.ignoreAllLogs(); 
 
@@ -26,17 +26,17 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // High delay to ensure New Architecture stability before any screen mounts
-        await new Promise(resolve => setTimeout(resolve, 3000)); 
+        // Essential delay for New Architecture bridge stability (0.83+)
+        await new Promise(resolve => setTimeout(resolve, 2500)); 
       } catch (e) {
-        console.error("Initialization Error:", e);
+        console.warn("Init Warning:", e);
       } finally {
         if (isMounted.current) setAppIsReady(true);
       }
     }
     prepare();
 
-    [span_3](start_span)// FALLBACK: Force-hide splash if the bridge hangs[span_3](end_span)
+    // FALLBACK: Force-hide splash if the bridge hangs (Safety for Android 16)
     const timeout = setTimeout(async () => {
       await SplashScreen.hideAsync().catch(() => {});
     }, 7000);
@@ -49,7 +49,7 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      [span_4](start_span)// 2. Hide splash screen manually[span_4](end_span)
+      // 2. Hide splash ONLY once the UI root is mounted and measured
       await SplashScreen.hideAsync().catch(() => {});
     }
   }, [appIsReady]);
@@ -58,18 +58,19 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
-      <SafeAreaProvider style={styles.flexContainer}>
+      <SafeAreaProvider>
+        <StatusBar barStyle="light-content" backgroundColor="#000000" />
         <View 
           style={styles.flexContainer} 
           onLayout={onLayoutRootView}
-          collapsable={false} 
+          collapsable={false} // Prevents native view flattening on Android
         >
-          <NavigationContainer>
+          <NavigationContainer theme={DarkTheme}>
             <Stack.Navigator 
               screenOptions={{ 
                 headerShown: false, 
                 animation: 'fade',
-                contentStyle: { backgroundColor: '#000000' } 
+                contentStyle: { backgroundColor: '#000000' } // Fixes white flash during transitions
               }}
             >
               {!session.role ? (
