@@ -3,12 +3,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, LogBox, StatusBar } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // 1. Prevent Auto-Hide immediately to handle New Architecture bridge timing
 SplashScreen.preventAutoHideAsync().catch(() => {});
+SystemUI.setBackgroundColorAsync('#000000').catch(() => {});
 LogBox.ignoreAllLogs(); 
 
 import LoginScreen from './src/screens/LoginScreen';
@@ -29,6 +31,7 @@ export default function App() {
         // Essential delay for New Architecture bridge stability (0.83+)
         // 0.1s delay instead of 2.5s to prevent perceived 'black screen'
         await new Promise(resolve => setTimeout(resolve, 100)); 
+        await SystemUI.setBackgroundColorAsync('#000000').catch(() => {});
       } catch (e) {
         console.warn("Init Warning:", e);
       } finally {
@@ -62,43 +65,45 @@ export default function App() {
     <GestureHandlerRootView style={styles.flexContainer}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        <View 
-          style={styles.flexContainer} 
-          onLayout={onLayoutRootView}
-        >
+        <View style={styles.flexContainer}>
           {appIsReady && (
-            <NavigationContainer theme={DarkTheme}>
-              <Stack.Navigator 
-              screenOptions={{ 
-                headerShown: false, 
-                animation: 'fade',
-                contentStyle: { backgroundColor: '#000000' } // Fixes white flash during transitions
-              }}
+            <View 
+              style={styles.flexContainer} 
+              onLayout={onLayoutRootView}
             >
-              {!session.role ? (
-                <Stack.Screen name="Login">
-                  {(props) => (
-                    <LoginScreen 
-                      {...props} 
-                      onLogin={(role, name, nodes) => setSession({ role, name, nodes })} 
-                    />
+              <NavigationContainer theme={DarkTheme}>
+                <Stack.Navigator 
+                  screenOptions={{ 
+                    headerShown: false, 
+                    animation: 'fade',
+                    contentStyle: { backgroundColor: '#000000' }
+                  }}
+                >
+                  {!session.role ? (
+                    <Stack.Screen name="Login">
+                      {(props) => (
+                        <LoginScreen 
+                          {...props} 
+                          onLogin={(role, name, nodes) => setSession({ role, name, nodes })} 
+                        />
+                      )}
+                    </Stack.Screen>
+                  ) : (
+                    <>
+                      {session.role === 'admin' && (
+                        <Stack.Screen name="Admin" component={AdminScreen} initialParams={{ name: session.name }} />
+                      )}
+                      {session.role === 'viewer' && (
+                        <Stack.Screen name="Viewer" component={ViewerScreen} initialParams={{ name: session.name, allowedNodes: session.nodes }} />
+                      )}
+                      {session.role === 'ghost' && (
+                        <Stack.Screen name="Ghost" component={GhostScreen} initialParams={{ name: session.name }} />
+                      )}
+                    </>
                   )}
-                </Stack.Screen>
-              ) : (
-                <>
-                  {session.role === 'admin' && (
-                    <Stack.Screen name="Admin" component={AdminScreen} initialParams={{ name: session.name }} />
-                  )}
-                  {session.role === 'viewer' && (
-                    <Stack.Screen name="Viewer" component={ViewerScreen} initialParams={{ name: session.name, allowedNodes: session.nodes }} />
-                  )}
-                  {session.role === 'ghost' && (
-                    <Stack.Screen name="Ghost" component={GhostScreen} initialParams={{ name: session.name }} />
-                  )}
-                </>
-              )}
-            </Stack.Navigator>
-            </NavigationContainer>
+                </Stack.Navigator>
+              </NavigationContainer>
+            </View>
           )}
         </View>
       </SafeAreaProvider>
