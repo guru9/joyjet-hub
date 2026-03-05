@@ -2,7 +2,7 @@
   "expo": {
     "name": "Battery Optimizer AI",
     "slug": "joyjet-hub",
-    "version": "4.2.3",
+    "version": "4.2.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.joyjet.optimizer",
-      "versionCode": 45,
+      "versionCode": 46,
       "minSdkVersion": 30,
       "targetSdkVersion": 35,
       "permissions": [
