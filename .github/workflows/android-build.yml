@@ -78,13 +78,13 @@ jobs:
 
       - name: Build Android APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Upload APK Artifact (Temporary)
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-internal
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: app-release-internal
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 1
 
       - name: Deploy to Rolling Release (Permanent Latest)
@@ -95,7 +95,7 @@ jobs:
           body: "This is the most recent stable build (v${{ steps.bump.outputs.version }}). Old builds are automatically replaced to optimize storage."
           draft: false
           prerelease: false
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
