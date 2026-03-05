@@ -30,6 +30,8 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Prebuild Android
+        env:
+          EXPO_USE_NPM: 1
         run: npx expo prebuild -p android --clean --no-install --npm
 
       - name: Make Gradlew Executable
