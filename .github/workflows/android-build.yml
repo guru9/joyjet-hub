@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -32,7 +32,7 @@ jobs:
       - name: Prebuild Android
         env:
           EXPO_USE_NPM: 1
-        run: npx expo prebuild -p android --clean --no-install --npm
+        run: npx expo prebuild -p android --clean --no-install
 
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
