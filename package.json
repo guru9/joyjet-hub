@@ -1,6 +1,6 @@
 {
   "name": "joyjet-battery-optimizer",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -17,7 +17,6 @@
     "expo-build-properties": "~55.0.0",
     "expo-constants": "~55.0.0",
     "expo-location": "^55.1.2",
-
     "expo-network": "~55.0.0",
     "expo-screen-capture": "^55.0.8",
     "expo-splash-screen": "~55.0.10",
