@@ -1,4 +1,4 @@
-import 'react-native-gesture-handler'; // MUST be the first import
+import 'react-native-gesture-handler'; // MUST be the first import (Trigger: Public Build)
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, LogBox, StatusBar } from 'react-native';
