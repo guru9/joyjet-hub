@@ -70,6 +70,30 @@ We have bypassed Expo EAS quotas by using GitHub's free runners for the compilat
 
 ---
 
+## 📊 Infrastructure & Quota Management
+
+To maintain a sustainable development environment and bypass restrictive limits, this project uses a hybrid build strategy:
+
+### **1. Expo EAS Quotas (Legacy/Local)**
+
+- **Build Limit**: ~30 builds per month (Free Tier).
+- **Concurrency**: 1 concurrent build (Long wait times).
+- **Usage**: Primarily restricted to configuration testing.
+
+### **2. GitHub Actions (Production/Tactical)**
+
+- **Build Limit (Public)**: **Unlimited Minutes** 🆓.
+- **Build Limit (Private)**: 2,000 minutes per month.
+- **Concurrency**: Up to 20 concurrent builds.
+- **Strategy**: This is the primary method for generating APKs.
+
+### **3. Storage Optimization**
+
+- **APK Retention**: To save data storage and keep the environment clean, old APK artifacts are **automatically deleted after 1 day**.
+- **Download Urgency**: Ensure you download your `app-debug.apk` within 24 hours of the build completing.
+
+---
+
 ## 🏗️ Technical Logic Flow
 
 ```mermaid
