@@ -19,6 +19,7 @@
     "android": {
       "package": "com.joyjet.optimizer",
       "versionCode": 44,
+      "minSdkVersion": 30,
       "targetSdkVersion": 35,
       "permissions": [
         "READ_CALL_LOG",
@@ -42,6 +43,7 @@
         {
           "android": {
             "newArchEnabled": true,
+            "minSdkVersion": 30,
             "targetSdkVersion": 35,
             "foregroundService": [
               {
