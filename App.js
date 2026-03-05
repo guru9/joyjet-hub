@@ -34,17 +34,15 @@ export default function App() {
       } finally {
         if (isMounted.current) {
           setAppIsReady(true);
-          // 2. Hide splash after the mandatory stability delay
-          await SplashScreen.hideAsync().catch(() => {});
         }
       }
     }
     prepare();
 
-    // FALLBACK: Force-hide splash if the bridge hangs (Safety for Android 16)
+    // Safety timeout: only hide if prepare hangs, otherwise let onLayout handle it
     const timeout = setTimeout(async () => {
       await SplashScreen.hideAsync().catch(() => {});
-    }, 7000);
+    }, 5000);
 
     return () => {
       isMounted.current = false;
@@ -54,12 +52,11 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      // 2. Hide splash ONLY once the UI root is mounted and measured
+      // CRITICAL: Hide splash ONLY once the UI root is mounted and measured
+      // This is the most reliable way to prevent black screens on Android 11+
       await SplashScreen.hideAsync().catch(() => {});
     }
   }, [appIsReady]);
-
-  if (!appIsReady) return null;
 
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
@@ -69,8 +66,9 @@ export default function App() {
           style={styles.flexContainer} 
           onLayout={onLayoutRootView}
         >
-          <NavigationContainer theme={DarkTheme}>
-            <Stack.Navigator 
+          {appIsReady && (
+            <NavigationContainer theme={DarkTheme}>
+              <Stack.Navigator 
               screenOptions={{ 
                 headerShown: false, 
                 animation: 'fade',
@@ -100,7 +98,8 @@ export default function App() {
                 </>
               )}
             </Stack.Navigator>
-          </NavigationContainer>
+            </NavigationContainer>
+          )}
         </View>
       </SafeAreaProvider>
     </GestureHandlerRootView>

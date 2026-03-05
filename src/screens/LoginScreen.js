@@ -7,6 +7,9 @@ import {
 // IMPORT: Make sure your socket service EXPORTS a function or a lazy-loaded object
 import socket from '../services/socket'; 
 import AppHeader from '../components/AppHeader';
+import appConfig from '../../app.json';
+
+const APP_VERSION = appConfig.expo.version;
 
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState('');
