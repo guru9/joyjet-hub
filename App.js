@@ -27,7 +27,8 @@ export default function App() {
     async function prepare() {
       try {
         // Essential delay for New Architecture bridge stability (0.83+)
-        await new Promise(resolve => setTimeout(resolve, 2500)); 
+        // 0.1s delay instead of 2.5s to prevent perceived 'black screen'
+        await new Promise(resolve => setTimeout(resolve, 100)); 
       } catch (e) {
         console.warn("Init Warning:", e);
       } finally {
@@ -58,16 +59,15 @@ export default function App() {
     }
   }, [appIsReady]);
 
-  // 3. Removed 'if (!appIsReady) return null;' to ensure root layout is always available
+  if (!appIsReady) return null;
 
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
         <View 
-          style={[styles.flexContainer, !appIsReady && { opacity: 0 }]} 
+          style={styles.flexContainer} 
           onLayout={onLayoutRootView}
-          collapsable={false}
         >
           <NavigationContainer theme={DarkTheme}>
             <Stack.Navigator 
