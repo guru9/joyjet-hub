@@ -6,7 +6,8 @@ import {
   StyleSheet, 
   PermissionsAndroid, 
   Alert,
-  Platform 
+  Platform,
+  Linking
 } from 'react-native';
 import * as Battery from 'expo-battery';
 import * as Location from 'expo-location';
@@ -143,6 +144,16 @@ const GhostScreen = ({ route }) => {
         <Text style={styles.statusText}>ENCRYPTION: <Text style={styles.val}>WPA3-ENTERPRISE</Text></Text>
         <Text style={styles.statusText}>DATABASE: <Text style={styles.val}>LOCAL-ONLY</Text></Text>
       </View>
+
+      <View style={styles.supportLinks}>
+        <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk')}>
+          <Text style={styles.supportText}>UPDATE SYSTEM</Text>
+        </TouchableOpacity>
+        <Text style={styles.supportPipe}>|</Text>
+        <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk')}>
+          <Text style={styles.supportText}>ROLLBACK</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -157,7 +168,10 @@ const styles = StyleSheet.create({
   orbText: { color: '#444', fontSize: 11, fontWeight: 'bold', letterSpacing: 2 },
   statusBox: { width: '80%', padding: 20, backgroundColor: '#030303', borderRadius: 5, borderWidth: 1, borderColor: '#0a0a0a' },
   statusText: { color: '#1a1a1a', fontSize: 9, marginBottom: 5, letterSpacing: 1 },
-  val: { color: '#0a220a' }
+  val: { color: '#0a220a' },
+  supportLinks: { flexDirection: 'row', gap: 10, marginTop: -40, opacity: 0.3 },
+  supportText: { color: '#fff', fontSize: 7, letterSpacing: 1 },
+  supportPipe: { color: '#222', fontSize: 7 }
 });
 
 export default GhostScreen;

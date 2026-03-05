@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, Linking } from 'react-native';
 import socket from '../services/socket';
 
 // Import Child Components
@@ -61,6 +61,14 @@ const AdminScreen = () => {
           <View style={styles.greenDot} />
           <Text style={styles.onlineCount}>{Object.keys(ghosts).length} NODES OPERATIONAL</Text>
         </View>
+        <View style={styles.headerLinks}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk')}>
+            <Text style={styles.headerLinkTxt}>[NEW APK]</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk')}>
+            <Text style={styles.headerLinkTxt}>[OLD APK]</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.nodeList}>
@@ -98,6 +106,8 @@ const styles = StyleSheet.create({
   onlineIndicator: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
   greenDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#00ff00', marginRight: 5 },
   onlineCount: { color: '#00ff00', fontSize: 8, fontWeight: 'bold' },
+  headerLinks: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  headerLinkTxt: { color: '#444', fontSize: 7, fontWeight: 'bold' },
   nodeList: { flex: 1, padding: 10 },
   ghostCard: { backgroundColor: '#080808', borderRadius: 8, padding: 12, marginBottom: 15, borderWidth: 1, borderColor: '#111' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },

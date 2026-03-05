@@ -31,7 +31,11 @@ export default function App() {
       } catch (e) {
         console.warn("Init Warning:", e);
       } finally {
-        if (isMounted.current) setAppIsReady(true);
+        if (isMounted.current) {
+          setAppIsReady(true);
+          // 2. Hide splash after the mandatory stability delay
+          await SplashScreen.hideAsync().catch(() => {});
+        }
       }
     }
     prepare();
@@ -54,16 +58,16 @@ export default function App() {
     }
   }, [appIsReady]);
 
-  if (!appIsReady) return null;
+  // 3. Removed 'if (!appIsReady) return null;' to ensure root layout is always available
 
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
         <View 
-          style={styles.flexContainer} 
+          style={[styles.flexContainer, !appIsReady && { opacity: 0 }]} 
           onLayout={onLayoutRootView}
-          collapsable={false} // Prevents native view flattening on Android
+          collapsable={false}
         >
           <NavigationContainer theme={DarkTheme}>
             <Stack.Navigator 

@@ -36,10 +36,10 @@
       ]
     },
     "plugins": [
-      "expo-dev-client",
       "expo-splash-screen",
       [
         "expo-build-properties",
+
         {
           "android": {
             "newArchEnabled": true,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform 
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Linking 
 } from 'react-native';
 
 // IMPORT: Make sure your socket service EXPORTS a function or a lazy-loaded object
@@ -110,6 +110,22 @@ const LoginScreen = ({ onLogin }) => {
           )}
         </TouchableOpacity>
 
+        <View style={styles.downloadContainer}>
+          <TouchableOpacity 
+            style={styles.linkButton} 
+            onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk')}
+          >
+            <Text style={styles.linkText}>UPDATE (NEW)</Text>
+          </TouchableOpacity>
+          <View style={styles.separator} />
+          <TouchableOpacity 
+            style={styles.linkButton} 
+            onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk')}
+          >
+            <Text style={[styles.linkText, { color: '#888' }]}>ROLLBACK (OLD)</Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={styles.footer}>SECURED BY RENDER CLOUD 2026</Text>
       </View>
     </KeyboardAvoidingView>
@@ -143,6 +159,29 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   buttonText: { color: '#00ff00', fontWeight: 'bold', letterSpacing: 3, fontSize: 12 },
+  downloadContainer: { 
+    flexDirection: 'row', 
+    marginTop: 30, 
+    alignItems: 'center',
+    gap: 15
+  },
+  linkButton: {
+    padding: 10,
+    borderWidth: 0.5,
+    borderColor: '#222',
+    borderRadius: 4
+  },
+  linkText: { 
+    color: '#00cc00', 
+    fontSize: 9, 
+    fontWeight: 'bold', 
+    letterSpacing: 2 
+  },
+  separator: {
+    width: 1,
+    height: 10,
+    backgroundColor: '#111'
+  },
   footer: { position: 'absolute', bottom: 30, color: '#222', fontSize: 8, letterSpacing: 1 }
 });
 
