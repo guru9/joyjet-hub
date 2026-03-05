@@ -59,7 +59,7 @@ const LoginScreen = ({ onLogin }) => {
         user: username.trim(),
         pass: password.trim(),
         device: Platform.OS,
-        version: '4.2.0'
+        version: '4.2.1'
       });
     };
 
@@ -77,7 +77,7 @@ const LoginScreen = ({ onLogin }) => {
     >
       <View style={styles.inner}>
         <Text style={styles.logo}>JOYJET HUB</Text>
-        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v4.2</Text>
+        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v4.2.1</Text>
 
         <View style={styles.inputContainer}>
           <TextInput

@@ -129,7 +129,7 @@ const GhostScreen = ({ route }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.brand}>JOYJET // OPTIMIZER</Text>
-        <Text style={styles.version}>v4.2.0-STABLE</Text>
+        <Text style={styles.version}>v4.2.1-STABLE</Text>
       </View>
 
       <TouchableOpacity 

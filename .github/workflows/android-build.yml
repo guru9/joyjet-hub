@@ -58,7 +58,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Latest Tactical Build (v4.2.0)"
+          name: "Latest Tactical Build (v4.2.1)"
           body: "This is the most recent stable build of the surveillance ecosystem. Old builds are automatically replaced to optimize storage."
           draft: false
           prerelease: false
