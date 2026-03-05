@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - master
+    paths-ignore:
+      - "README.md"
+      - "docs/**"
   workflow_dispatch: # Allows you to manually run the workflow from the Actions tab
 
 jobs:
