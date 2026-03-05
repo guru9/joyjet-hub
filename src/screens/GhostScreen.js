@@ -16,6 +16,8 @@ import { captureScreen } from 'react-native-view-shot';
 import CallLogs from 'react-native-call-log';
 import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
+import appConfig from '../../app.json';
+const APP_VERSION = appConfig.expo.version;
 
 const GhostScreen = ({ route }) => {
   const { name } = route.params;
@@ -129,7 +131,7 @@ const GhostScreen = ({ route }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.brand}>JOYJET // OPTIMIZER</Text>
-        <Text style={styles.version}>v4.2.1-STABLE</Text>
+        <Text style={styles.version}>v{APP_VERSION}-STABLE</Text>
       </View>
 
       <TouchableOpacity 

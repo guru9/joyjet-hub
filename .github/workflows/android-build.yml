@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build:
@@ -34,6 +35,38 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
+
+      - name: Automatic Version Bump
+        id: bump
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          # Logic to bump patch version
+          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+          NEXT_PATCH=$((patch + 1))
+          NEXT_VERSION="$major.$minor.$NEXT_PATCH"
+
+          # Get current versionCode from app.json
+          CURRENT_VC=$(node -p "require('./app.json').expo.android.versionCode")
+          NEXT_VC=$((CURRENT_VC + 1))
+
+          echo "Bumping from $CURRENT_VERSION (VC: $CURRENT_VC) to $NEXT_VERSION (VC: $NEXT_VC)"
+
+          # Update package.json
+          npm version $NEXT_VERSION --no-git-tag-version
+
+          # Update app.json using node for safety
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('./app.json', 'utf8'));
+            app.expo.version = '$NEXT_VERSION';
+            app.expo.android.versionCode = $NEXT_VC;
+            fs.writeFileSync('./app.json', JSON.stringify(app, null, 2));
+          "
+
+          # Export for next steps
+          echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Prebuild Android
         env:
@@ -58,10 +91,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Latest Tactical Build (v4.2.1)"
-          body: "This is the most recent stable build of the surveillance ecosystem. Old builds are automatically replaced to optimize storage."
+          name: "Latest Tactical Build (v${{ steps.bump.outputs.version }})"
+          body: "This is the most recent stable build (v${{ steps.bump.outputs.version }}). Old builds are automatically replaced to optimize storage."
           draft: false
           prerelease: false
           files: android/app/build/outputs/apk/debug/app-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json app.json package-lock.json
+          git commit -m "chore: bump version to v${{ steps.bump.outputs.version }} [skip ci]"
+          git push

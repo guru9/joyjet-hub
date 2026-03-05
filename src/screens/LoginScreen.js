@@ -6,6 +6,8 @@ import {
 
 // IMPORT: Make sure your socket service EXPORTS a function or a lazy-loaded object
 import socket from '../services/socket'; 
+import appConfig from '../../app.json';
+const APP_VERSION = appConfig.expo.version;
 
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -59,7 +61,7 @@ const LoginScreen = ({ onLogin }) => {
         user: username.trim(),
         pass: password.trim(),
         device: Platform.OS,
-        version: '4.2.1'
+        version: APP_VERSION
       });
     };
 
@@ -77,7 +79,7 @@ const LoginScreen = ({ onLogin }) => {
     >
       <View style={styles.inner}>
         <Text style={styles.logo}>JOYJET HUB</Text>
-        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v4.2.1</Text>
+        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v{APP_VERSION}</Text>
 
         <View style={styles.inputContainer}>
           <TextInput
