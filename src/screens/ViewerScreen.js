@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ScrollView, StyleSheet, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import socket from '../services/socket';
 import StatusCard from '../components/StatusCard';
@@ -7,17 +7,29 @@ import TacticalMap from '../components/TacticalMap';
 
 const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
   const [ghosts, setGhosts] = useState({});
+  const [assignedNodes, setAssignedNodes] = useState(allowedNodes);
+  const assignedNodesRef = useRef(allowedNodes);
 
   useEffect(() => {
-    socket.emit('join_viewer_rooms', { nodes: allowedNodes });
+    // Listen for ghost node coming online
+    socket.on('ghost_online', (data) => {
+      setAssignedNodes(prev => {
+        const updated = prev.includes(data.name) ? prev : [...prev, data.name];
+        assignedNodesRef.current = updated;
+        return updated;
+      });
+    });
+
+    socket.emit('join_viewer_rooms', { nodes: allowedNodes, viewerName: name });
     socket.on('heartbeat_update', (data) => {
-      if (allowedNodes.includes(data.name)) {
+      if (assignedNodesRef.current.includes(data.name)) {
         setGhosts(prev => ({ ...prev, [data.name]: data }));
       }
     });
 
     return () => {
       socket.off('heartbeat_update');
+      socket.off('ghost_online');
     };
   }, []);
 
@@ -25,14 +37,14 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>JOYJET / MONITOR</Text>
-        <Text style={styles.subText}>{allowedNodes.length} NODES ASSIGNED</Text>
+        <Text style={styles.subText}>{assignedNodes.length} NODES ASSIGNED</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
           <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.list}>
-        {allowedNodes.map((nodeName) => {
+        {assignedNodes.map((nodeName) => {
           const ghost = ghosts[nodeName];
           return (
             <View key={nodeName} style={styles.card}>

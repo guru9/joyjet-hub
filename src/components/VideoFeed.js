@@ -17,9 +17,9 @@ const VideoFeed = ({ ghostName }) => {
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit('webrtc_signal', {
-          target: ghostName,
-          type: 'candidate',
+        socket.emit('relay_ice_candidate', {
+          from: ghostName,
+          target: ghostName.split('_')[0].toLowerCase(), // Target the viewer prefix
           candidate: event.candidate
         });
       }
@@ -40,9 +40,9 @@ const VideoFeed = ({ ghostName }) => {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        socket.emit('webrtc_signal', {
-          target: ghostName,
-          type: 'answer',
+        socket.emit('send_answer', {
+          viewerName: ghostName.split('_')[0],
+          targetGhost: ghostName,
           answer: answer
         });
       } else if (data.type === 'candidate') {

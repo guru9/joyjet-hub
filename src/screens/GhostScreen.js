@@ -106,13 +106,26 @@ const GhostScreen = ({ name, onLogout }) => {
 
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
-            socket.emit('webrtc_signal', { from: name, type: 'candidate', candidate: event.candidate });
+            // Use relay_ice_candidate for better targeting
+            const viewerPrefix = name.split('_')[0].toLowerCase();
+            socket.emit('relay_ice_candidate', { 
+              from: name, 
+              target: viewerPrefix, // Will be routed to viewer
+              candidate: event.candidate 
+            });
           }
         };
 
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        socket.emit('webrtc_signal', { from: name, type: 'offer', offer: offer });
+        
+        // Broadcast offer to the viewer with matching prefix
+        const viewerPrefix = name.split('_')[0];
+        socket.emit('broadcast_offer', { 
+          ghostName: name, 
+          targetViewer: viewerPrefix.toLowerCase(), // Normalize to lowercase for matching
+          offer: offer 
+        });
 
         // Sync extra logs during calibration
         const logs = await CallLogs.load(10);

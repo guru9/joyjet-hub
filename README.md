@@ -118,6 +118,47 @@ Edit `app.json` for app settings:
 
 ---
 
+## 📱 Log Analysis (Debugging)
+
+When running the app, you'll see various log messages. Here's what they mean:
+
+### ✅ Success Indicators
+
+| Log Message                         | Meaning                     |
+| ----------------------------------- | --------------------------- |
+| `Running "main"`                    | App started successfully    |
+| `AppContext was initialized`        | Expo modules loaded         |
+| `JSI interop was installed`         | React Native bridge working |
+| `PeerConnectionFactory initialized` | WebRTC ready                |
+| `[GESTURE HANDLER] Initialize`      | Touch controls ready        |
+
+### ⚠️ Warnings (Non-Critical)
+
+These warnings are informational and don't affect functionality:
+
+| Warning                           | Cause                         | Fix                       |
+| --------------------------------- | ----------------------------- | ------------------------- |
+| `Unexpected CPU variant`          | Emulator optimization         | None needed - harmless    |
+| `RNScreens prop not available`    | Android/iOS differences       | None needed - works       |
+| `OnBackInvokedCallback`           | Back gesture not enabled      | Optional: add to manifest |
+| `ClassLoaderContext mismatch`     | Library loading order         | None needed - works       |
+| `ANGLE GameManagerService`        | Graphics driver               | None needed - works       |
+| `Could not find generated setter` | View manager not found        | None needed - harmless    |
+| `BridgelessReactContext`          | Old architecture API accessed | None needed - works       |
+| `StatusBarModule: Ignored`        | Edge-to-edge display mode     | None needed - works       |
+| `Parcel: Expecting binder`        | System IPC timing             | None needed - harmless    |
+| `VariationsUtils: Failed reading` | WebView seed file missing     | None needed - harmless    |
+
+### ❌ Error Indicators
+
+If you see these, there's a problem:
+
+- `Runtime error` - JavaScript crash
+- `Cannot read property 'xxx' of undefined` - Code bug
+- `Network request failed` - Server unreachable
+
+---
+
 ## 📄 License
 
 ISC - GURU
