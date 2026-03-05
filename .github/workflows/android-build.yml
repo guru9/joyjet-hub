@@ -92,6 +92,11 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 1
 
+      - name: Delete existing latest release
+        run: gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Deploy to Rolling Release (Permanent Latest)
         uses: softprops/action-gh-release@v2
         with:
