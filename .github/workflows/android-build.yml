@@ -105,4 +105,5 @@ jobs:
           git config --local user.name "GitHub Action"
           git add package.json app.json package-lock.json
           git commit -m "chore: bump version to v${{ steps.bump.outputs.version }} [skip ci]"
-          git push
+          git pull --rebase origin main
+          git push origin main
