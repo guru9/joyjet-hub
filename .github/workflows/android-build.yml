@@ -10,6 +10,9 @@ on:
       - "docs/**"
   workflow_dispatch: # Allows you to manually run the workflow from the Actions tab
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,9 +47,21 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK Artifact (Temporary)
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug.apk
+          name: app-debug-internal
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 1
+
+      - name: Deploy to Rolling Release (Permanent Latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Tactical Build (v4.2.0)"
+          body: "This is the most recent stable build of the surveillance ecosystem. Old builds are automatically replaced to optimize storage."
+          draft: false
+          prerelease: false
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
