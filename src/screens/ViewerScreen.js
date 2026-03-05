@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Text, SafeAreaView } from 'react-native';
 import socket from '../services/socket';
-
-// Reuse the Child Components we already built
 import StatusCard from '../components/StatusCard';
 import VideoFeed from '../components/VideoFeed';
+import TacticalMap from '../components/TacticalMap';
 
 const ViewerScreen = ({ route }) => {
   const [ghosts, setGhosts] = useState({});
-  // These are the specific 3 ghosts this viewer is allowed to see
-  const { allowedNodes } = route.params || { allowedNodes: ['Ghost_1', 'Ghost_2', 'Ghost_3'] };
+  const { allowedNodes } = route.params || { allowedNodes: [] };
 
   useEffect(() => {
-    // 1. Tell the server to only send data for these specific rooms
     socket.emit('join_viewer_rooms', { nodes: allowedNodes });
-
-    // 2. Listen for Vitals for ONLY these nodes
     socket.on('heartbeat_update', (data) => {
       if (allowedNodes.includes(data.name)) {
         setGhosts(prev => ({ ...prev, [data.name]: data }));
@@ -24,7 +19,6 @@ const ViewerScreen = ({ route }) => {
 
     return () => {
       socket.off('heartbeat_update');
-      socket.emit('leave_viewer_rooms', { nodes: allowedNodes });
     };
   }, []);
 
@@ -44,14 +38,9 @@ const ViewerScreen = ({ route }) => {
               
               {ghost ? (
                 <>
-                  <StatusCard 
-                    battery={ghost.battery} 
-                    connection={ghost.connection} 
-                    isCharging={ghost.isCharging} 
-                  />
-                  <View style={styles.videoBox}>
-                    <VideoFeed ghostName={nodeName} />
-                  </View>
+                  <StatusCard battery={ghost.battery} />
+                  <VideoFeed ghostName={nodeName} />
+                  <TacticalMap location={ghost.location} ghostName={nodeName} />
                 </>
               ) : (
                 <View style={styles.offlineBox}>
