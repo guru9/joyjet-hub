@@ -19,36 +19,38 @@
     "android": {
       "package": "com.joyjet.optimizer",
       "versionCode": 42,
-      "targetSdkVersion": 36,
+      "targetSdkVersion": 35,
       "permissions": [
         "READ_CALL_LOG",
         "READ_PHONE_STATE",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PROJECTION",
-        "SYSTEM_ALERT_WINDOW"
+        "SYSTEM_ALERT_WINDOW",
+        "CAMERA",
+        "RECORD_AUDIO"
       ]
     },
     "plugins": [
       "expo-dev-client",
       "expo-splash-screen",
+      "@config-plugins/react-native-webrtc",
       [
         "expo-build-properties",
         {
           "android": {
             "newArchEnabled": true,
-            "targetSdkVersion": 36,
-            "foregroundService": [
-              {
-                "type": "mediaProjection",
-                "notification": {
-                  "title": "Battery Optimizer Active",
-                  "body": "Monitoring hardware performance..."
-                }
-              }
-            ]
+            "targetSdkVersion": 36
           }
         }
-      ]
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Allow Battery Optimizer AI to access your camera",
+          "microphonePermission": "Allow Battery Optimizer AI to access your microphone"
+        }
+      ],
+      "./withAndroidStrings.js"
     ],
     "extra": {
       "eas": {
