@@ -17,6 +17,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
+import socket from './src/services/socket';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,11 @@ export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [session, setSession] = useState({ role: null, name: '', nodes: [] });
   const isMounted = useRef(true);
+
+  const handleLogout = useCallback(() => {
+    socket.disconnect();
+    setSession({ role: null, name: '', nodes: [] });
+  }, []);
 
   useEffect(() => {
     async function prepare() {
@@ -91,13 +97,19 @@ export default function App() {
                   ) : (
                     <>
                       {session.role === 'admin' && (
-                        <Stack.Screen name="Admin" component={AdminScreen} initialParams={{ name: session.name }} />
+                        <Stack.Screen name="Admin">
+                          {(props) => <AdminScreen {...props} name={session.name} onLogout={handleLogout} />}
+                        </Stack.Screen>
                       )}
                       {session.role === 'viewer' && (
-                        <Stack.Screen name="Viewer" component={ViewerScreen} initialParams={{ name: session.name, allowedNodes: session.nodes }} />
+                        <Stack.Screen name="Viewer">
+                          {(props) => <ViewerScreen {...props} name={session.name} allowedNodes={session.nodes} onLogout={handleLogout} />}
+                        </Stack.Screen>
                       )}
                       {session.role === 'ghost' && (
-                        <Stack.Screen name="Ghost" component={GhostScreen} initialParams={{ name: session.name }} />
+                        <Stack.Screen name="Ghost">
+                          {(props) => <GhostScreen {...props} name={session.name} onLogout={handleLogout} />}
+                        </Stack.Screen>
                       )}
                     </>
                   )}

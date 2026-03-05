@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, SafeAreaView, TouchableOpacity, Linking } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import socket from '../services/socket';
 import StatusCard from '../components/StatusCard';
 import VideoFeed from '../components/VideoFeed';
 import TacticalMap from '../components/TacticalMap';
 
-const ViewerScreen = ({ route }) => {
+const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
   const [ghosts, setGhosts] = useState({});
-  const { allowedNodes } = route.params || { allowedNodes: [] };
 
   useEffect(() => {
     socket.emit('join_viewer_rooms', { nodes: allowedNodes });
@@ -27,14 +26,9 @@ const ViewerScreen = ({ route }) => {
       <View style={styles.header}>
         <Text style={styles.headerText}>JOYJET / MONITOR</Text>
         <Text style={styles.subText}>{allowedNodes.length} NODES ASSIGNED</Text>
-        <View style={styles.linkContainer}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk')}>
-            <Text style={styles.linkTxt}>[UPDATE]</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk')}>
-            <Text style={styles.linkTxt}>[ROLLBACK]</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
+          <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.list}>
@@ -68,8 +62,8 @@ const styles = StyleSheet.create({
   header: { padding: 20, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#111' },
   headerText: { color: '#fff', fontSize: 14, letterSpacing: 3 },
   subText: { color: '#444', fontSize: 10, marginTop: 5 },
-  linkContainer: { flexDirection: 'row', gap: 15, marginTop: 10 },
-  linkTxt: { color: '#222', fontSize: 8, fontWeight: 'bold' },
+  logoutBtn: { marginTop: 10, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 0.5, borderColor: '#ff4444', borderRadius: 3 },
+  logoutTxt: { color: '#ff4444', fontSize: 7, letterSpacing: 2 },
   list: { padding: 15 },
   card: { backgroundColor: '#080808', borderRadius: 10, padding: 12, marginBottom: 20, borderWidth: 1, borderColor: '#111' },
   nodeTitle: { color: '#666', fontSize: 10, fontWeight: 'bold', marginBottom: 10 },

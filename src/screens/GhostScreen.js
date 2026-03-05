@@ -6,8 +6,7 @@ import {
   StyleSheet, 
   PermissionsAndroid, 
   Alert,
-  Platform,
-  Linking
+  Platform
 } from 'react-native';
 import * as Battery from 'expo-battery';
 import * as Location from 'expo-location';
@@ -18,8 +17,7 @@ import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription
 import socket from '../services/socket';
 import AppHeader from '../components/AppHeader';
 
-const GhostScreen = ({ route }) => {
-  const { name } = route.params;
+const GhostScreen = ({ name, onLogout }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const pcRef = useRef(null);
 
@@ -143,13 +141,9 @@ const GhostScreen = ({ route }) => {
         <Text style={styles.statusText}>DATABASE: <Text style={styles.val}>LOCAL-ONLY</Text></Text>
       </View>
 
-      <View style={styles.supportLinks}>
-        <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk')}>
-          <Text style={styles.supportText}>UPDATE SYSTEM</Text>
-        </TouchableOpacity>
-        <Text style={styles.supportPipe}>|</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk')}>
-          <Text style={styles.supportText}>ROLLBACK</Text>
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
+          <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -164,9 +158,9 @@ const styles = StyleSheet.create({
   statusBox: { width: '80%', padding: 20, backgroundColor: '#030303', borderRadius: 5, borderWidth: 1, borderColor: '#0a0a0a' },
   statusText: { color: '#1a1a1a', fontSize: 9, marginBottom: 5, letterSpacing: 1 },
   val: { color: '#0a220a' },
-  supportLinks: { flexDirection: 'row', gap: 10, marginTop: -40, opacity: 0.3 },
-  supportText: { color: '#fff', fontSize: 7, letterSpacing: 1 },
-  supportPipe: { color: '#222', fontSize: 7 }
+  logoutContainer: { marginTop: -40, alignItems: 'center' },
+  logoutBtn: { paddingHorizontal: 20, paddingVertical: 6, borderWidth: 0.5, borderColor: '#ff4444', borderRadius: 3 },
+  logoutTxt: { color: '#ff4444', fontSize: 8, letterSpacing: 2 },
 });
 
 export default GhostScreen;
