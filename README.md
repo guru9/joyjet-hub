@@ -1,4 +1,4 @@
-# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem
+# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.0)
 
 JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
 
@@ -13,40 +13,74 @@ JOYJET is a high-performance, low-footprint monitoring solution built with React
 
 ---
 
-## 🏗️ Technical Architecture
+## 🛠️ System Architecture & Access
 
-The JoyJet ecosystem follows a **Star Topology** with a centralized proxy server.
+- **Master Hub Lock:** Exclusive "Occupied" state—if an Admin is active, the Secret Key input is hidden for others to prevent session hijacking.
+- **System Watchdog:** Real-time Socket.io heartbeat on the login gateway showing "Server Online/Offline" status.
+- **Viewer Slot Optimization:** Hard-capped at **3 active viewing slots**. A 4th viewer is queued until a slot is released or an Admin "Kicks" an inactive session.
+- **Dynamic Filtering:** Viewers only see "Ghosts" that match their specific username prefix.
 
-### **🔄 System Logical Flow**
+## 👁️ Surveillance Protocols
 
-1. **Ghost Entry**: App connects -> Reports `DeviceID` -> Enters **Idle Stealth Mode**.
-2. **Admin Entry**: Logs in via `ADMIN_SECRET_KEY` -> Locks Hub if no other Admin is active.
-3. **Viewer Entry**: Logs in with username prefix -> Restricted to associated Ghost nodes.
+### 1. Dual-Stream Pipeline
+
+- **LIVE Mode:** High-frequency real-time screen mirroring for active target monitoring.
+- **ECO (Snappy) Mode:** Ultra-low bandwidth snapshotting (1 frame every 5 seconds) to minimize the data footprint and battery heat.
+
+### 2. Network Intelligence & Fail-Safes
+
+- **Auto-Detection:** Detects if the Ghost is on **Wi-Fi** or **Mobile Data**.
+- **The Cellular Governor:**
+  - **5-Minute Hard Cap:** Live streaming on mobile data automatically terminates after 300 seconds to prevent carrier data alerts.
+  - **Tactical Countdown:** Admin-side timer (flashing red at <60s) showing the remaining "Signal Window."
+  - **Auto-Fallback:** System automatically reverts to ECO Mode when the cellular timer expires.
+
+### 3. Pinpoint Location Telemetry
+
+- **On-Demand GPS:** High-precision tracking (BestForNavigation) activates only upon request.
+- **Motion Data:** Provides live coordinates, speed (m/s), and heading for targets in transit.
+- **Stealth Backgrounding:** Uses `FOREGROUND_SERVICE` with a masked system notification to stay active while the device is locked.
 
 ---
 
-## 🛠️ Build & Deployment (FREE SOLUTION)
+## 📦 FREE APK BUILD SOLUTION (GitHub Actions)
 
-Since EAS quotas are limited, use the integrated **GitHub Actions** workflow to build your APK for free.
+Since EAS monthly quotas are limited, use our integrated **GitHub Cloud Build** to generate your APK for free.
 
-### **1. Cloud Build (GitHub Actions) - RECOMMENDED**
+### **How to build your APK:**
 
-1. Push your code to your GitHub repository.
-2. Go to the **Actions** tab on GitHub.
-3. Select the **"Build Android APK"** workflow.
-4. Once finished, download the `app-debug.apk` from the **Artifacts** section at the bottom.
+1. **Push your code** to your GitHub repository: `git push origin main`.
+2. **Open your Repository** on GitHub in your browser.
+3. Click the **"Actions"** tab at the top.
+4. Select the workflow named **"Build Android APK"** (or look for the latest commit).
+5. Wait for the green checkmark (approx. 4-6 minutes).
+6. **Download**: Scroll down to the **"Artifacts"** section at the bottom of the job summary and click **`app-debug-apk`** to download your ready-to-install file.
 
-### **2. Local Prebuild (Android Folder Generation)**
+---
 
-If you want to generate the native Android project locally:
+## 🏗️ JOYJET | System Logical Flow
 
-```powershell
-# Install all dependencies
-npm install
+```mermaid
+graph TD
+    Start[User Opens App] --> Login{Enter Name & Key}
+    Login --> Role{Check Role}
 
-# Generate the /android directory with latest configurations
-npx expo prebuild -p android --clean
+    Role -- Admin --> AdminLock{Admin Active?}
+    AdminLock -- Yes --> Reject[Hide Key Input / Deny Access]
+    AdminLock -- No --> GrantAdmin[Grant Access / Lock Hub]
+
+    Role -- Viewer --> SlotCheck{Active Viewers < 3?}
+    SlotCheck -- Yes --> GrantViewer[Grant Access / Occupy Slot]
+    SlotCheck -- No --> Waiting[Show 'Hub Full' / Queue]
+
+    Role -- Ghost --> Stealth[Enter Stealth Mode / Black Screen]
 ```
+
+### **🔄 Logic Summary**
+
+1. **The Validation:** The **Server** enforces the **3-Viewer Cap** and routes binary stream data to specific authorized IDs.
+2. **The Activation:** The **Ghost** wakes the required hardware (GPS chip or Screen buffer) only for the duration of the request.
+3. **The Delivery:** The **Server** streams data and **immediately clears it from RAM**, ensuring a zero digital footprint on the backend.
 
 ---
 
@@ -62,27 +96,11 @@ npx expo prebuild -p android --clean
 
 ## ⚙️ Technical Specifications
 
-- **Transport**: Socket.io (WebSocket)
+- **Transport Protocol**: Socket.io (WebSocket)
 - **Buffer Size**: 100MB (`maxHttpBufferSize: 1e8`)
-- **Format**: Base64 JPEG / WebRTC
+- **Format**: Base64 / WebRTC
 - **Target SDK**: 35 (Android 15/16 compatible)
-- **Backend**: Hosted on Render.com ([joyjet-server.onrender.com](https://joyjet-server.onrender.com))
-
----
-
-## 📦 Project Structure
-
-```text
-joyjet-hub/ (Root)
-├── .github/workflows/   # Free Cloud Build Config
-├── android/             # Native Android Project (Generated via Prebuild)
-├── src/
-│   ├── screens/         # UI Screens (Login, Admin, Viewer, Ghost)
-│   └── services/        # Socket & WebRTC Logic
-├── App.js               # Main Controller & Bridge Init
-├── app.json             # App Identity, Permissions & Plugins
-└── withAndroidStrings.js # Native String Customization Plugin
-```
+- **Backend**: Deployed on Render.com ([joyjet-server.onrender.com](https://joyjet-server.onrender.com))
 
 ---
 
