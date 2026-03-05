@@ -1,14 +1,13 @@
-# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.1)
+# 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.3)
 
 ![Build Status](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)
-[![Download Latest APK (v4.2.1)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-debug.apk)
-[![Download Old APK (v4.1.0)](https://img.shields.io/badge/Rollback-Old_APK-orange?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/v4.1.0/app-debug.apk)
+[![Download Latest APK (v4.2.3)](https://img.shields.io/badge/Download-Latest_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/guru9/joyjet-hub/releases/download/latest/app-release.apk)
 
 JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
 
 ---
 
-## ⚡ LATEST TACTICAL UPDATES (v4.2.1)
+## ⚡ LATEST TACTICAL UPDATES (v4.2.3)
 
 - **WebRTC HD Streaming**: Sub-second latency live screen sharing using secure Peer-to-Peer tunnels.
 - **Pinpoint GPS Tracking**: Integrated high-precision location updates visualized on a dark-mode Tactical Map.
@@ -68,7 +67,7 @@ We have bypassed Expo EAS quotas by using GitHub's free runners for the compilat
 2.  **Open GitHub**: Visit your repository in a web browser.
 3.  **Actions Tab**: Click on the **"Actions"** tab at the top.
 4.  **Wait for Job**: Look for the **"Build Android APK"** job. It takes 5-7 minutes.
-5.  **Download**: Once complete, scroll to the **"Artifacts"** section and download the `app-debug.apk` zip.
+5.  **Download**: Once complete, scroll to the **"Artifacts"** section or **"Releases"** and download the `app-release.apk`.
 
 ---
 
@@ -92,7 +91,7 @@ To maintain a sustainable development environment and bypass restrictive limits,
 ### **3. Storage Optimization**
 
 - **APK Retention**: To save data storage and keep the environment clean, old APK artifacts are **automatically deleted after 1 day**.
-- **Download Urgency**: Ensure you download your `app-debug.apk` within 24 hours of the build completing.
+- **Download Urgency**: Ensure you download your `app-release.apk` within 24 hours of the build completing.
 
 ---
 
