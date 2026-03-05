@@ -1,5 +1,7 @@
 # 🛸 JOYJET HUB | Tactical Surveillance & Stealth Ecosystem (v4.2.0)
 
+![Build Status](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)
+
 JOYJET is a high-performance, low-footprint monitoring solution built with React Native (Expo) and Node.js. It features intelligent data management, automated fail-safes for stealth, and real-time telemetry.
 
 ---
