@@ -16,8 +16,7 @@ import { captureScreen } from 'react-native-view-shot';
 import CallLogs from 'react-native-call-log';
 import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
-import appConfig from '../../app.json';
-const APP_VERSION = appConfig.expo.version;
+import AppHeader from '../components/AppHeader';
 
 const GhostScreen = ({ route }) => {
   const { name } = route.params;
@@ -129,10 +128,7 @@ const GhostScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.brand}>JOYJET // OPTIMIZER</Text>
-        <Text style={styles.version}>v{APP_VERSION}-STABLE</Text>
-      </View>
+      <AppHeader />
 
       <TouchableOpacity 
         style={[styles.orb, isSyncing && styles.orbActive]} 
@@ -162,9 +158,6 @@ const GhostScreen = ({ route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'space-between', paddingVertical: 80, alignItems: 'center' },
-  header: { alignItems: 'center' },
-  brand: { color: '#fff', fontSize: 16, letterSpacing: 8, fontWeight: 'bold' },
-  version: { color: '#222', fontSize: 9, marginTop: 5 },
   orb: { width: 200, height: 200, borderRadius: 100, backgroundColor: '#050505', borderWidth: 1, borderColor: '#111', justifyContent: 'center', alignItems: 'center' },
   orbActive: { borderColor: '#00ff00', shadowColor: '#00ff00', shadowRadius: 20, shadowOpacity: 0.4 },
   orbText: { color: '#444', fontSize: 11, fontWeight: 'bold', letterSpacing: 2 },

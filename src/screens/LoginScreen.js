@@ -6,8 +6,7 @@ import {
 
 // IMPORT: Make sure your socket service EXPORTS a function or a lazy-loaded object
 import socket from '../services/socket'; 
-import appConfig from '../../app.json';
-const APP_VERSION = appConfig.expo.version;
+import AppHeader from '../components/AppHeader';
 
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -78,8 +77,7 @@ const LoginScreen = ({ onLogin }) => {
       style={styles.container}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>JOYJET HUB</Text>
-        <Text style={styles.subtitle}>BATTERY OPTIMIZER AI v{APP_VERSION}</Text>
+        <AppHeader isHub={true} />
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -137,8 +135,6 @@ const LoginScreen = ({ onLogin }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  logo: { color: '#fff', fontSize: 28, fontWeight: 'bold', letterSpacing: 8 },
-  subtitle: { color: '#444', fontSize: 10, marginTop: 5, marginBottom: 50, letterSpacing: 2 },
   inputContainer: { width: '100%', marginBottom: 20 },
   input: { 
     backgroundColor: '#050505', 
