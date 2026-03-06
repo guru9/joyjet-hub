@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import socket from '../services/socket';
 
 // Import Child Components
@@ -174,10 +175,12 @@ const AdminScreen = ({ onLogout, name }) => {
                 <VideoFeed ghostName={selectedGhost.name} adminName={name} />
                 <View style={styles.controls}>
                   <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                    <Text style={styles.btnTxt}>CAPTURE SCREEN</Text>
+                    <MaterialCommunityIcons name="camera-iris" size={18} color="#00ff00" style={{ marginRight: 10 }} />
+                    <Text style={styles.btnTxt}>TRIGGER CAPTURE</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.btn, styles.wipeBtn]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
-                    <Text style={styles.wipeBtnTxt}>[ EMERGENCY WIPE ]</Text>
+                    <MaterialCommunityIcons name="skull-outline" size={18} color="#ff4444" style={{ marginRight: 10 }} />
+                    <Text style={styles.wipeBtnTxt}>EMERGENCY WIPE</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -198,7 +201,8 @@ const AdminScreen = ({ onLogout, name }) => {
               <View style={styles.tabSection}>
                 <SnapshotGallery ghostName={selectedGhost.name} snapshots={selectedGhost.snapshots || []} />
                 <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                  <Text style={styles.btnTxt}>TRIGGER REMOTE CAPTURE</Text>
+                  <MaterialCommunityIcons name="camera-plus" size={18} color="#00ff00" style={{ marginRight: 10 }} />
+                  <Text style={styles.btnTxt}>NEW REMOTE CAPTURE</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -270,7 +274,7 @@ const styles = StyleSheet.create({
   
   // Controls
   controls: { marginTop: 15, gap: 10 },
-  btn: { width: '100%', height: 45, borderWidth: 1, borderColor: '#00ff00', justifyContent: 'center', alignItems: 'center', borderRadius: 4, backgroundColor: '#00ff0005' },
+  btn: { width: '100%', height: 48, borderWidth: 1, borderColor: '#00ff00', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 4, backgroundColor: '#00ff0005' },
   btnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
   wipeBtn: { borderColor: '#ff4444', backgroundColor: '#ff444405' },
   wipeBtnTxt: { color: '#ff4444', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },

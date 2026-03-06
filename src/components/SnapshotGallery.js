@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 
@@ -16,12 +17,9 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
         return;
       }
 
-      // 1. Create a temp file path (Base64 can be long, so we save to file first)
       const filename = `GHOST_SNAP_${Date.now()}.jpg`;
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
       
-      // 2. Write the base64 data to a file (ViewShot URI is usually base64 or file: on Android)
-      // If it's already a file URI from view-shot, we can skip writing
       let sourceUri = uri;
       if (uri.startsWith('data:')) {
         const base64Content = uri.split(',')[1];
@@ -29,14 +27,13 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
         sourceUri = fileUri;
       }
 
-      // 3. Save to media library
       const asset = await MediaLibrary.createAssetAsync(sourceUri);
       await MediaLibrary.createAlbumAsync('JOYJET_SNAPS', asset, false);
       
-      Alert.alert("Success", "Evidence saved to gallery (Album: JOYJET_SNAPS)");
+      Alert.alert("Success", "Evidence preserved in gallery.");
     } catch (err) {
       console.error("[Download] Save failed", err);
-      Alert.alert("System", "Failed to preserve evidence to local storage.");
+      Alert.alert("System", "Failed to preserve evidence.");
     } finally {
       setIsDownloading(false);
     }
@@ -45,7 +42,10 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.snapCard} onPress={() => setSelectedSnap(item.uri)}>
       <Image source={{ uri: item.uri }} style={styles.thumb} />
-      <Text style={styles.time}>{item.timestamp}</Text>
+      <View style={styles.cardFooter}>
+        <Text style={styles.time}>{item.timestamp}</Text>
+        <MaterialCommunityIcons name="eye-outline" size={12} color="#00ff00" />
+      </View>
     </TouchableOpacity>
   );
 
@@ -53,7 +53,8 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
     <View style={styles.container}>
       {snapshots.length === 0 ? (
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>NO SNAPSHOTS CAPTURED FOR {ghostName}</Text>
+          <MaterialCommunityIcons name="image-off-outline" size={40} color="#111" />
+          <Text style={styles.placeholderText}>NO SNAPSHOTS DETECTED</Text>
         </View>
       ) : (
         <FlatList
@@ -81,11 +82,18 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
                 onPress={() => downloadSnap(selectedSnap)}
                 disabled={isDownloading}
               >
-                <Text style={styles.actionBtnTxt}>{isDownloading ? "SAVING..." : "[ DOWNLOAD EVIDENCE ]"}</Text>
+                {isDownloading ? (
+                  <ActivityIndicator color="#00ff00" size="small" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="cloud-download-outline" size={20} color="#00ff00" style={{ marginRight: 10 }} />
+                    <Text style={styles.actionBtnTxt}>DOWNLOAD EVIDENCE</Text>
+                  </>
+                )}
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedSnap(null)}>
-                <Text style={styles.closeBtnTxt}>CLOSE</Text>
+                <Text style={styles.closeBtnTxt}>CLOSE PREVIEW</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -98,23 +106,24 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, marginTop: 10 },
   placeholder: { height: 300, justifyContent: 'center', alignItems: 'center', backgroundColor: '#050505', borderRadius: 4, borderWidth: 1, borderColor: '#111' },
-  placeholderText: { color: '#222', fontSize: 9, letterSpacing: 1 },
+  placeholderText: { color: '#222', fontSize: 9, letterSpacing: 2, marginTop: 10 },
   list: { gap: 10 },
   snapCard: { flex: 1, backgroundColor: '#080808', borderRadius: 4, padding: 5, marginBottom: 10, borderWidth: 1, borderColor: '#111' },
   thumb: { width: '100%', aspectRatio: 9 / 16, borderRadius: 2, backgroundColor: '#000' },
-  time: { color: '#00ff00', fontSize: 8, marginTop: 5, textAlign: 'center' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5, paddingHorizontal: 2 },
+  time: { color: '#00ff00', fontSize: 8 },
   
   // Modal
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', justifyContent: 'center', alignItems: 'center' },
   closeArea: { position: 'absolute', width: '100%', height: '100%' },
   modalContent: { width: '90%', height: '90%', justifyContent: 'center', alignItems: 'center' },
-  fullImage: { width: '100%', height: '80%' },
-  modalActions: { width: '100%', flexDirection: 'column', gap: 15, marginTop: 20 },
-  actionBtn: { width: '100%', height: 50, borderWidth: 1, borderColor: '#00ff00', borderRadius: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00ff0005' },
+  fullImage: { width: '100%', height: '70%' },
+  modalActions: { width: '100%', gap: 10, marginTop: 30 },
+  actionBtn: { width: '100%', height: 50, borderWidth: 1, borderColor: '#00ff00', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 5, backgroundColor: '#00ff0005' },
   actionBtnDisabled: { opacity: 0.5 },
   actionBtnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
   closeBtn: { width: '100%', height: 40, justifyContent: 'center', alignItems: 'center' },
-  closeBtnTxt: { color: '#444', fontSize: 10, fontWeight: 'bold' }
+  closeBtnTxt: { color: '#444', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }
 });
 
 export default SnapshotGallery;
