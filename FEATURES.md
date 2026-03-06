@@ -126,4 +126,16 @@ For professional evidence management, Joyjet organizes assets into two distinct 
 *   **Traceability**: Every filename includes the target's unique Ghost ID and a precise timestamp for legal/operational verification.
 
 ---
-*Document Version: 1.1.4*
+
+## 6. Tactical Role Mapping
+
+Joyjet enforces a strict "Binding" protocol to ensure operational security:
+
+| Role | Access Key | Behavior |
+| --- | --- | --- |
+| **Admin** | `ADMIN_SECRET_KEY` | Master access. Acts as a **Global Viewer**. |
+| **Viewer** | Username | Dynamic registration. Can only see Ghosts with matching prefix. |
+| **Ghost** | `VIEWERNAME_Suffix` | Binds to specific Viewer. If prefix is `admin_`, it binds to the Master Hub. |
+
+---
+*Document Version: 1.1.5*
