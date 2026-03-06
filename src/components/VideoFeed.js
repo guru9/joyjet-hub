@@ -18,10 +18,9 @@ const VideoFeed = ({ ghostName, adminName }) => {
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        const target = adminName ? 'admin' : ghostName.split('_')[0].toLowerCase();
         socket.emit('relay_ice_candidate', {
-          from: ghostName,
-          target: target,
+          from: adminName || ghostName.split('_')[0],
+          target: ghostName,
           candidate: event.candidate
         });
       }

@@ -58,7 +58,8 @@ const GhostScreen = ({ name, onLogout }) => {
     const intervalId = startup();
 
     socket.on('webrtc_signal', async (data) => {
-      if (data.target !== name) return;
+      // Direct signal targeting check: only process if no target specified (legacy) or if it's for us
+      if (data.target && data.target.toLowerCase() !== name.toLowerCase()) return;
       if (!pcRef.current) return;
 
       if (data.type === 'answer') {
@@ -135,9 +136,16 @@ const GhostScreen = ({ name, onLogout }) => {
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
             const viewerPrefix = name.split('_')[0].toLowerCase();
+            // Relay to matching viewer prefix
             socket.emit('relay_ice_candidate', { 
               from: name, 
               target: viewerPrefix, 
+              candidate: event.candidate 
+            });
+            // ALSO explicitly relay to Admin Dashboard
+            socket.emit('relay_ice_candidate', { 
+              from: name, 
+              target: 'admin', 
               candidate: event.candidate 
             });
           }
