@@ -111,15 +111,29 @@ const AdminScreen = ({ onLogout, name }) => {
       }
     });
 
+    socket.on('ghost_online', (data) => {
+      setGhosts(prev => ({
+        ...prev,
+        [data.name]: { name: data.name, status: 'CONNECTED', lastSeen: Date.now() }
+      }));
+    });
+
     return () => {
       clearInterval(syncInterval);
       socket.off('heartbeat_update');
+      socket.off('ghost_online');
       socket.off('log_update');
       socket.off('ghost_activity');
       socket.off('status_report');
       socket.off('system_alert');
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedGhostId && ghosts[selectedGhostId]?.status !== 'OFFLINE') {
+      sendCommand(selectedGhostId, 'PING');
+    }
+  }, [selectedGhostId]);
 
   const sendCommand = (target, cmd) => {
     socket.emit('admin_command', { targetId: target, cmd });

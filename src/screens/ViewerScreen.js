@@ -20,6 +20,7 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
     setGhosts(initialGhosts);
 
     socket.on('ghost_online', (data) => {
+      setGhosts(prev => ({ ...prev, [data.name]: { name: data.name, status: 'CONNECTED' } }));
       setAssignedNodes(prev => {
         const updated = prev.includes(data.name) ? prev : [...prev, data.name];
         assignedNodesRef.current = updated;
@@ -40,6 +41,10 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
       socket.off('ghost_online');
     };
   }, []);
+
+  const sendCommand = (target, cmd) => {
+    socket.emit('admin_command', { targetId: target, cmd });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,53 +82,59 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
           assignedNodes.map((nodeName) => {
             const ghost = ghosts[nodeName];
             return (
-              <View key={nodeName} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.nodeIdBadge}>
-                    <MaterialCommunityIcons name="cellphone-link" size={16} color="#38BDF8" style={{marginRight: 6}} />
-                    <Text style={styles.nodeTitle}>{nodeName.toUpperCase()}</Text>
-                  </View>
-                  <View style={(!ghost || ghost.status === 'OFFLINE') ? styles.statusBadgeOffline : styles.statusBadgeOnline}>
-                    <MaterialCommunityIcons 
-                      name={(!ghost || ghost.status === 'OFFLINE') ? "shield-off-outline" : "shield-check-outline"} 
-                      size={14} 
-                      color={(!ghost || ghost.status === 'OFFLINE') ? "#EF4444" : "#10B981"} 
-                      style={{ marginRight: 6 }} 
-                    />
-                    <Text style={[styles.statusText, (!ghost || ghost.status === 'OFFLINE') ? styles.textRed : styles.textGreen]}>
-                      {(!ghost || ghost.status === 'OFFLINE') ? 'OFFLINE' : (ghost.status === 'OPTIMIZED' ? 'SECURE' : 'CONNECTED')}
-                    </Text>
-                  </View>
-                </View>
-                
-                {ghost ? (
-                  <View style={styles.dataArea}>
-                    <View style={styles.statsRow}>
-                      <StatusCard 
-                        battery={ghost.battery} 
-                        connection={ghost.status} 
-                        isCharging={ghost.isCharging} 
+              <TouchableOpacity 
+                key={nodeName} 
+                activeOpacity={0.9} 
+                onPress={() => ghost && ghost.status !== 'OFFLINE' && sendCommand(nodeName, 'PING')}
+              >
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.nodeIdBadge}>
+                      <MaterialCommunityIcons name="cellphone-link" size={16} color="#38BDF8" style={{marginRight: 6}} />
+                      <Text style={styles.nodeTitle}>{nodeName.toUpperCase()}</Text>
+                    </View>
+                    <View style={(!ghost || ghost.status === 'OFFLINE') ? styles.statusBadgeOffline : styles.statusBadgeOnline}>
+                      <MaterialCommunityIcons 
+                        name={(!ghost || ghost.status === 'OFFLINE') ? "shield-off-outline" : "shield-check-outline"} 
+                        size={14} 
+                        color={(!ghost || ghost.status === 'OFFLINE') ? "#EF4444" : "#10B981"} 
+                        style={{ marginRight: 6 }} 
                       />
+                      <Text style={[styles.statusText, (!ghost || ghost.status === 'OFFLINE') ? styles.textRed : styles.textGreen]}>
+                        {(!ghost || ghost.status === 'OFFLINE') ? 'OFFLINE' : (ghost.status === 'OPTIMIZED' ? 'SECURE' : 'CONNECTED')}
+                      </Text>
                     </View>
-                    
-                    <View style={styles.feedColumn}>
-                      <Text style={styles.sectionLabel}>SECURE VIDEO STREAM</Text>
-                      <VideoFeed ghostName={nodeName} />
-                    </View>
+                  </View>
+                  
+                  {ghost ? (
+                    <View style={styles.dataArea}>
+                      <View style={styles.statsRow}>
+                        <StatusCard 
+                          battery={ghost.battery} 
+                          connection={ghost.status} 
+                          isCharging={ghost.isCharging} 
+                        />
+                      </View>
+                      
+                      <View style={styles.feedColumn}>
+                        <Text style={styles.sectionLabel}>SECURE VIDEO STREAM</Text>
+                        <VideoFeed ghostName={nodeName} />
+                      </View>
 
-                    <View style={styles.mapColumn}>
-                      <Text style={styles.sectionLabel}>GEOGRAPHICAL POSITION</Text>
-                      <TacticalMap location={ghost.location} ghostName={nodeName} />
+                      <View style={styles.mapColumn}>
+                        <Text style={styles.sectionLabel}>GEOGRAPHICAL POSITION</Text>
+                        <TacticalMap location={ghost.location} ghostName={nodeName} />
+                      </View>
                     </View>
-                  </View>
-                ) : (
-                  <View style={styles.offlineBox}>
-                    <ActivityIndicator color="#64748B" size="small" style={{marginBottom: 12}} />
-                    <Text style={styles.offlineText}>ESTABLISHING HANDSHAKE...</Text>
-                    <Text style={styles.offlineSub}>Awaiting signal from remote node</Text>
-                  </View>
-                )}
-              </View>
+                  ) : (
+                    <View style={styles.offlineBox}>
+                      <ActivityIndicator color="#64748B" size="small" style={{marginBottom: 12}} />
+                      <Text style={styles.offlineText}>ESTABLISHING HANDSHAKE...</Text>
+                      <Text style={styles.offlineSub}>Awaiting signal from remote node</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
             );
           })
         )}
