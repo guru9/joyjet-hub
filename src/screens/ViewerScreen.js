@@ -12,6 +12,13 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
   const assignedNodesRef = useRef(allowedNodes);
 
   useEffect(() => {
+    // Initialize ghosts state with allowed nodes as offline
+    const initialGhosts = {};
+    allowedNodes.forEach(node => {
+      initialGhosts[node] = { name: node, status: 'OFFLINE' };
+    });
+    setGhosts(initialGhosts);
+
     socket.on('ghost_online', (data) => {
       setAssignedNodes(prev => {
         const updated = prev.includes(data.name) ? prev : [...prev, data.name];

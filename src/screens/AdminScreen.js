@@ -47,7 +47,11 @@ const AdminScreen = ({ onLogout, name }) => {
       console.log("[Admin] Received Status Report", data);
       const initialGhosts = {};
       data.nodes.forEach(node => {
-        initialGhosts[node.name] = { name: node.name, status: 'CONNECTED', lastSeen: Date.now() };
+        initialGhosts[node.name] = { 
+          ...node, 
+          status: node.status || (node.socketId ? 'CONNECTED' : 'OFFLINE'),
+          lastSeen: node.lastSeen || Date.now() 
+        };
       });
       setGhosts(prev => ({ ...prev, ...initialGhosts }));
     });
