@@ -227,12 +227,12 @@ const GhostScreen = ({ name, onLogout }) => {
 
       <View style={styles.footerActions}>
         <TouchableOpacity style={styles.pingBtn} onPress={updateVitals}>
-          <MaterialCommunityIcons name="radar" size={18} color="#10B981" style={{marginRight: 8}} />
+          <MaterialCommunityIcons name="radar" size={14} color="#10B981" style={{marginRight: 8}} />
           <Text style={styles.pingBtnText}>PUSH HEARTBEAT</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-          <MaterialCommunityIcons name="power" size={18} color="#EF4444" style={{marginRight: 8}} />
+          <MaterialCommunityIcons name="power" size={14} color="#EF4444" style={{marginRight: 8}} />
           <Text style={styles.logoutBtnText}>TERMINATE SESSION</Text>
         </TouchableOpacity>
       </View>
@@ -247,28 +247,28 @@ const styles = StyleSheet.create({
   nodeBadge: { backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#334155' },
   nodeBadgeText: { color: '#38BDF8', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
 
-  centerArea: { alignItems: 'center' },
-  orbContainer: { width: 220, height: 220, borderRadius: 110, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 10}, shadowOpacity: 0.4, shadowRadius: 15, elevation: 12 },
+  centerArea: { alignItems: 'center', marginVertical: 20 },
+  orbContainer: { width: 140, height: 140, borderRadius: 70, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.2, shadowRadius: 8, elevation: 8 },
   orbActive: { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.05)' },
-  orbInner: { width: 180, height: 180, borderRadius: 90, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
+  orbInner: { width: 110, height: 110, borderRadius: 55, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
   orbInnerPulse: { borderColor: '#38BDF8', shadowColor: '#38BDF8', shadowOpacity: 0.5, shadowRadius: 10 },
-  orbText: { color: '#444', fontSize: 13, fontWeight: '800', letterSpacing: 2, marginTop: 12 },
-  orbRing: { position: 'absolute', width: 240, height: 240, borderRadius: 120, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.2)' },
+  orbText: { color: '#444', fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginTop: 8 },
+  orbRing: { position: 'absolute', width: 156, height: 156, borderRadius: 78, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.15)' },
   
-  statusLabel: { color: '#64748B', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginTop: 30, textAlign: 'center' },
+  statusLabel: { color: '#64748B', fontSize: 9, fontWeight: '700', letterSpacing: 1.2, marginTop: 16, textAlign: 'center' },
 
-  dataGrid: { gap: 16 },
-  gridItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#334155' },
-  gridText: { marginLeft: 16 },
-  gridLabel: { color: '#64748B', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-  gridVal: { color: '#F8FAFC', fontSize: 14, fontWeight: '800', marginTop: 2 },
+  dataGrid: { gap: 10 },
+  gridItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#334155' },
+  gridText: { marginLeft: 12 },
+  gridLabel: { color: '#64748B', fontSize: 9, fontWeight: '700', letterSpacing: 1 },
+  gridVal: { color: '#F8FAFC', fontSize: 13, fontWeight: '800', marginTop: 1 },
 
-  footerActions: { gap: 12 },
-  pingBtn: { height: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 25, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' },
-  pingBtnText: { color: '#10B981', fontSize: 12, fontWeight: '800', letterSpacing: 1 },
+  footerActions: { gap: 10 },
+  pingBtn: { height: 44, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' },
+  pingBtnText: { color: '#10B981', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   
-  logoutBtn: { height: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 25, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
-  logoutBtnText: { color: '#EF4444', fontSize: 12, fontWeight: '800', letterSpacing: 1 }
+  logoutBtn: { height: 44, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  logoutBtnText: { color: '#EF4444', fontSize: 11, fontWeight: '800', letterSpacing: 1 }
 });
 
 export default GhostScreen;

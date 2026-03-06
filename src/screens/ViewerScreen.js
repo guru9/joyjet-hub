@@ -12,27 +12,34 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [], onShowGuide }) => {
   const assignedNodesRef = useRef(allowedNodes);
 
   useEffect(() => {
+    // Normalize allowedNodes to lowercase
+    const normalizedAllowed = allowedNodes.map(n => n.toLowerCase());
+    setAssignedNodes(normalizedAllowed);
+    assignedNodesRef.current = normalizedAllowed;
+
     // Initialize ghosts state with allowed nodes as offline
     const initialGhosts = {};
-    allowedNodes.forEach(node => {
+    normalizedAllowed.forEach(node => {
       initialGhosts[node] = { name: node, status: 'OFFLINE' };
     });
     setGhosts(initialGhosts);
 
     socket.on('ghost_online', (data) => {
-      setGhosts(prev => ({ ...prev, [data.name]: { name: data.name, status: 'CONNECTED' } }));
+      const lowerName = data.name.toLowerCase();
+      setGhosts(prev => ({ ...prev, [lowerName]: { name: lowerName, status: 'CONNECTED' } }));
       setAssignedNodes(prev => {
-        const updated = prev.includes(data.name) ? prev : [...prev, data.name];
+        const updated = prev.includes(lowerName) ? prev : [...prev, lowerName];
         assignedNodesRef.current = updated;
         return updated;
       });
     });
 
-    socket.emit('join_viewer_rooms', { nodes: allowedNodes, viewerName: name });
+    socket.emit('join_viewer_rooms', { nodes: normalizedAllowed, viewerName: name });
     
     socket.on('heartbeat_update', (data) => {
-      if (assignedNodesRef.current.includes(data.name)) {
-        setGhosts(prev => ({ ...prev, [data.name]: data }));
+      const lowerName = data.name.toLowerCase();
+      if (assignedNodesRef.current.includes(lowerName)) {
+        setGhosts(prev => ({ ...prev, [lowerName]: { ...data, name: lowerName } }));
       }
     });
 

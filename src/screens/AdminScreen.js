@@ -27,7 +27,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
 
   useEffect(() => {
     socket.on('heartbeat_update', (data) => {
-      heartbeatCache.current[data.name] = { ...data, lastSeen: Date.now() };
+      const lowerName = data.name.toLowerCase();
+      heartbeatCache.current[lowerName] = { ...data, name: lowerName, lastSeen: Date.now() };
     });
 
     const syncInterval = setInterval(() => {
@@ -47,8 +48,10 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
       console.log("[Admin] Received Status Report", data);
       const initialGhosts = {};
       data.nodes.forEach(node => {
-        initialGhosts[node.name] = { 
+        const lowerName = node.name.toLowerCase();
+        initialGhosts[lowerName] = { 
           ...node, 
+          name: lowerName,
           status: node.status || (node.socketId ? 'CONNECTED' : 'OFFLINE'),
           lastSeen: node.lastSeen || Date.now() 
         };
