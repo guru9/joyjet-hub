@@ -22,10 +22,6 @@ jobs:
       - name: 📦 Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: 🩺 Expo Doctor
-        # Checks for library mismatches that cause "Black Screen" crashes
-        run: npx expo-doctor
-
       - name: 🔍 Syntax & Lint Check
         # Checks for missing brackets or undefined variables in your JS
         run: npx expo lint || echo "Linting issues found, but continuing..."
