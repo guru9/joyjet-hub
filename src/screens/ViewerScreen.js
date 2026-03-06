@@ -83,10 +83,15 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [] }) => {
                     <MaterialCommunityIcons name="cellphone-link" size={16} color="#38BDF8" style={{marginRight: 6}} />
                     <Text style={styles.nodeTitle}>{nodeName.toUpperCase()}</Text>
                   </View>
-                  <View style={ghost ? styles.statusBadgeOnline : styles.statusBadgeOffline}>
-                    <View style={[styles.dot, ghost ? styles.dotGreen : styles.dotRed]} />
-                    <Text style={[styles.statusText, ghost ? styles.textGreen : styles.textRed]}>
-                      {ghost ? 'ONLINE' : 'OFFLINE'}
+                  <View style={(!ghost || ghost.status === 'OFFLINE') ? styles.statusBadgeOffline : styles.statusBadgeOnline}>
+                    <MaterialCommunityIcons 
+                      name={(!ghost || ghost.status === 'OFFLINE') ? "shield-off-outline" : "shield-check-outline"} 
+                      size={14} 
+                      color={(!ghost || ghost.status === 'OFFLINE') ? "#EF4444" : "#10B981"} 
+                      style={{ marginRight: 6 }} 
+                    />
+                    <Text style={[styles.statusText, (!ghost || ghost.status === 'OFFLINE') ? styles.textRed : styles.textGreen]}>
+                      {(!ghost || ghost.status === 'OFFLINE') ? 'OFFLINE' : (ghost.status === 'OPTIMIZED' ? 'SECURE' : 'CONNECTED')}
                     </Text>
                   </View>
                 </View>

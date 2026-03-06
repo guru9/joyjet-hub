@@ -291,26 +291,36 @@ const AdminScreen = ({ onLogout, name }) => {
               <Text style={styles.emptyText}>SCANNING FOR SIGNALS...</Text>
             </View>
           ) : (
-            Object.values(ghosts).map((ghost) => (
-              <TouchableOpacity 
-                key={ghost.name} 
-                style={[
-                  styles.selectorChip, 
-                  selectedGhostId === ghost.name && styles.selectorChipActive,
-                  ghost.status === 'OFFLINE' && styles.selectorChipOffline
-                ]}
-                onPress={() => setSelectedGhostId(ghost.name)}
-              >
-                <View style={[styles.dot, ghost.status === 'CONNECTED' ? styles.dotGreen : (ghost.status === 'OFFLINE' ? styles.dotRed : styles.dotOrange)]} />
-                <Text style={[
-                  styles.selectorText, 
-                  selectedGhostId === ghost.name && styles.selectorTextActive,
-                  ghost.status === 'OFFLINE' && styles.selectorTextOffline
-                ]}>
-                  {ghost.name?.split('_').pop()?.toUpperCase() || 'NODE'}
-                </Text>
-              </TouchableOpacity>
-            ))
+            Object.values(ghosts).map((ghost) => {
+              const isActive = ghost.status === 'CONNECTED' || ghost.status === 'OPTIMIZED';
+              const isOffline = ghost.status === 'OFFLINE';
+              
+              return (
+                <TouchableOpacity 
+                  key={ghost.name} 
+                  style={[
+                    styles.selectorChip, 
+                    selectedGhostId === ghost.name && styles.selectorChipActive,
+                    isOffline && styles.selectorChipOffline
+                  ]}
+                  onPress={() => setSelectedGhostId(ghost.name)}
+                >
+                  <MaterialCommunityIcons 
+                    name={isOffline ? "lan-disconnect" : (isActive ? "lan-check" : "lan-pending")} 
+                    size={14} 
+                    color={isActive ? "#10B981" : (isOffline ? "#EF4444" : "#F59E0B")} 
+                    style={{ marginRight: 6 }} 
+                  />
+                  <Text style={[
+                    styles.selectorText, 
+                    selectedGhostId === ghost.name && styles.selectorTextActive,
+                    isOffline && styles.selectorTextOffline
+                  ]}>
+                    {ghost.name?.split('_').pop()?.toUpperCase() || 'NODE'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
       </View>
