@@ -8,7 +8,6 @@ const TacticalMap = ({ location, ghostName }) => {
   return (
     <View style={styles.container}>
       <MapView
-        provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={{
           latitude: location.lat,
@@ -16,7 +15,6 @@ const TacticalMap = ({ location, ghostName }) => {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
-        customMapStyle={mapStyle}
       >
         <Marker 
           coordinate={{ latitude: location.lat, longitude: location.lng }}

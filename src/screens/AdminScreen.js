@@ -101,7 +101,7 @@ const AdminScreen = ({ onLogout, name }) => {
               <Text style={styles.vitals}>{ghost.battery}</Text>
             </View>
 
-            <VideoFeed ghostName={ghost.name} />
+            <VideoFeed ghostName={ghost.name} adminName={name} />
             <TacticalMap location={ghost.location} ghostName={ghost.name} />
 
             <View style={styles.controls}>

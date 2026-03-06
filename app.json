@@ -18,7 +18,12 @@
     },
     "android": {
       "package": "com.joyjet.optimizer",
-      "versionCode": 53,
+      "config": {
+        "googleMaps": {
+          "apiKey": "PASTE_YOUR_API_KEY_HERE"
+        }
+      },
+      "versionCode": 54,
       "minSdkVersion": 30,
       "targetSdkVersion": 35,
       "permissions": [

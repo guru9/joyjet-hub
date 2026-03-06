@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { RTCView, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
 
-const VideoFeed = ({ ghostName }) => {
+const VideoFeed = ({ ghostName, adminName }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const [connecting, setConnecting] = useState(true);
   const [pc, setPc] = useState(null);
@@ -17,9 +17,11 @@ const VideoFeed = ({ ghostName }) => {
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
+        const target = adminName ? 'admin' : ghostName.split('_')[0].toLowerCase();
+
         socket.emit('relay_ice_candidate', {
           from: ghostName,
-          target: ghostName.split('_')[0].toLowerCase(), // Target the viewer prefix
+          target: target,
           candidate: event.candidate
         });
       }
@@ -41,7 +43,7 @@ const VideoFeed = ({ ghostName }) => {
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
         socket.emit('send_answer', {
-          viewerName: ghostName.split('_')[0],
+          viewerName: adminName || ghostName.split('_')[0],
           targetGhost: ghostName,
           answer: answer
         });
