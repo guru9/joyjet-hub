@@ -1,177 +1,106 @@
-# 🚀 JOYJET HUB
+# 🚀 JOYJET HUB: SURVEILLANCE & COMMAND
 
-React Native (Expo) mobile application for real-time surveillance and monitoring.
-
----
-
-## ⚡ Features
-
-- **HD Screen Streaming** - WebRTC peer-to-peer live screen sharing
-- **GPS Tracking** - Real-time location on dark-mode tactical map
-- **Remote Commands** - Admin can trigger snapshots, call logs, system wipe
-- **Hardware Telemetry** - Battery, network, signal strength monitoring
+React Native (Expo) high-performance HD mobile suite for real-time node monitoring, tactical mapping, and stealth telemetry.
 
 ---
 
-## 📱 Roles
+## 🛰️ System Architecture
 
-| Role       | Description                                           |
-| ---------- | ----------------------------------------------------- |
-| **Admin**  | Full control - live video, map, captures, remote wipe |
-| **Viewer** | Monitor up to 3 assigned ghost nodes                  |
-| **Ghost**  | Stealth node - runs in background                     |
-
-### ⚠️ Important: Registration Order
-
-1. **Viewer must connect FIRST** - Create viewer account before ghosts
-2. **Ghost prefix must match viewer** - Ghost name: `VIEWERNAME_suffix`
-3. **Max 3 ghosts per viewer** - Each viewer can monitor max 3 ghost nodes
-
-### Authentication
-
-| Role   | Username     | Requirements                                       |
-| ------ | ------------ | -------------------------------------------------- |
-| Admin  | `admin`      | Use server's `ADMIN_SECRET_KEY`                    |
-| Viewer | Min 4 chars  | Connect before ghosts                              |
-| Ghost  | `Alpha_Test` | Prefix must match existing viewer, suffix ≥4 chars |
-
----
-
-## 📥 Download APK
-
-### Latest Release
-
-**[Download app-release.apk](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk)**
-
-### All Releases
-
-Visit the [Releases Page](https://github.com/guru9/joyjet-hub/releases) for all available versions.
-
----
-
-## 🛠️ Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npx expo start
-
-# Build Android APK
-npm run android
+```mermaid
+graph TD
+    A[Admin Command Center] -->|Socket.io| S[Master Relay Server]
+    V[Viewer Node] -->|Socket.io| S
+    G[Ghost Node] -->|Socket.io| S
+    G <-->|WebRTC P2P| A
+    G <-->|WebRTC P2P| V
+    G -->|Location/Vitals| S
+    S -->|Broadcast| A
 ```
 
 ---
 
-## 📋 Server Configuration
+## ⚡ Core Workflows
 
-This app connects to the joyjet-server. Update the server URL in:
+### 1. The Admin (Master Controller)
+**Objective**: Unified oversight and remote intervention.
+- **Initialization**: Login as `admin` with the `ADMIN_SECRET_KEY`.
+- **Command Loop**: Select a Ghost from the horizontal "Node Selector".
+- **Operation**: Switch between **FEED** (Live Video), **MAP** (GPS), **SNAPS** (Captures), **CALLS** (Logs), and **LOGS** (System updates).
+- **Intervention**: Trigger `SNAPSHOT` for proof or `WIPE` to clear the node if compromised.
 
-- `src/services/socket.js`
+### 2. The Viewer (Field Monitor)
+**Objective**: Dedicated monitoring of a specific squad (max 3 ghosts).
+- **Initialization**: Register a unique `VIEWERNAME`.
+- **Ghost Binding**: Once the viewer is active, connect ghosts with the prefix `VIEWERNAME_`.
+- **Constraint**: Automatic rejection if more than 3 ghosts attempt to bind to one viewer.
 
-Default server: `https://joyjet-server.onrender.com`
+### 3. The Ghost (Stealth Node)
+**Objective**: Background telemetry and stream projection.
+- **Workflow**:
+    1. Login with `VIEWERNAME_Suffix`.
+    2. Click **CALIBRATE** to initialize Media Projection.
+    3. Grant **Background Location** and **Call Log** permissions.
+    4. Screen Sharing/GPS runs silently in the background via `TaskManager`.
 
 ---
 
-## 📦 Build APK
+## 📋 Security & Permissions Reference
 
-Automated builds via GitHub Actions:
+### Hardware Access Mapping
 
-1. Push to main branch
-2. Go to **Actions** tab
-3. Download `app-release.apk` from artifacts
-
----
-
-## 📋 App Configuration
-
-Edit `app.json` for app settings:
-
-| Setting      | Value                  |
-| ------------ | ---------------------- |
-| Package Name | `com.joyjet.optimizer` |
-| Min SDK      | 30 (Android 11)        |
-| Target SDK   | 35 (Android 15)        |
-
-### Required Permissions & Feature Mapping
-
-| Permission | Feature | Why? |
-| ---------- | ------- | ---- |
-| `ACCESS_FINE_LOCATION` | **Tactical Map** | Real-time GPS plotting on admin/viewer map. |
-| `ACCESS_BACKGROUND_LOCATION` | **Stealth Mode** | Tracking even when the app is in background/locked. |
-| `READ_CALL_LOG` | **Log Sync** | Retrieves call history for the `CallLogViewer` tab. |
+| Permission | Feature | Library | Function |
+| ---------- | ------- | ------- | -------- |
+| `ACCESS_FINE_LOCATION` | **Tactical Map** | `expo-location` | 10m precision GPS plotting. |
+| `ACCESS_BACKGROUND_LOCATION` | **Perpetual Tracking** | `TaskManager` | Signal remains active when screen is off. |
+| `READ_CALL_LOG` | **History Recovery** | `react-native-call-log` | Remote sync of last 10 encrypted records. |
 | `READ_PHONE_STATE` | **Telemetry** | Identifies device status and incoming call alerts. |
-| `BATTERY_STATS` | **Vitals** | Reports percentage to logs and admin header. |
+| `BATTERY_STATS` | **Vitals** | `expo-battery` | Reports percentage to logs and admin header. |
 | `FOREGROUND_SERVICE` | **Stay Alive** | Prevents Android from killing the ghost process. |
-| `SCREEN_CAPTURE` | **Video Feed** | Allows WebRTC screen sharing and `SNAPSHOT` commands. |
+| `SCREEN_CAPTURE` | **Video Feed** | `react-native-webrtc` | Captures display buffer for HD streaming. |
+
+### Command Logic (Remote Execution)
+
+- **`SNAPSHOT`**: Uses `react-native-view-shot` to dump the current viewport to a compressed JPG and relay it to Admin gallery.
+- **`PING`**: Overrides internal timer to force an immediate `getCurrentPositionAsync` update.
+- **`LOG_SYNC`**: Queries the device database for call history and emits a `ghost_activity` payload.
+- **`WIPE`**: Triggers a sequence of `Vibration(50) -> pc.close() -> onLogout()` to safely detach from the network.
 
 ---
 
-## 🔧 Tech Stack & Dependencies
+## 🔧 Tech Stack Details
 
-| Library | Function |
-| ------- | -------- |
-| `react-native-webrtc` | Handles HD low-latency screen streaming. |
-| `expo-location` | GPS coordinate retrieval and background tasking. |
-| `expo-battery` | Vitals monitoring for remote power status. |
-| `react-native-view-shot` | Captures high-res screen snaps for the `SNAPSHOT` command. |
-| `react-native-call-log` | Remote recovery of encrypted call logs. |
-| `socket.io-client` | Real-time command/relay infrastructure. |
-| `react-navigation` | Seamless tabbed workspace transitions. |
+| Technology | Purpose |
+| ---------- | ------- |
+| **React Native 0.83** | Core UI framework with New Architecture JSI support. |
+| **Expo 55** | Managed native modules for Battery, Location, and TaskManager. |
+| **WebRTC 124** | High-performance P2P streaming utilizing STUN for NAT traversal. |
+| **Socket.IO 4.8** | Real-time command/control websocket infrastructure. |
+| **React Navigation 7** | Gesture-driven tabbed workspace management. |
 
 ---
 
-## 🕹️ Command Reference (Admin Keys)
+## 📦 Deployment & Build
 
-- **`SNAPSHOT`**: Triggers a high-res capture of the ghost's screen using `react-native-view-shot`.
-- **`PING`**: Forces an immediate GPS refresh via `expo-location`.
-- **`LOG_SYNC`**: Synchronizes the last 10 call records using `react-native-call-log`.
-- **`WIPE`**: Emergency command. Triggers an automatic memory purge and `onLogout()` sequence on the ghost device.
+### CI/CD Pipeline
+Every push to `main` triggers an automated GitHub Action that:
+1. Lints the codebase for React Native 0.83+ safety.
+2. Compiles the Java/C++ native modules for WebRTC.
+3. Packages the `app-release.apk` with all permissions pre-enabled.
+
+### Hardware Requirements
+- **Android**: API 30+ (Android 11) recommended for stable Background Location.
+- **RAM**: 2GB+ for smooth HD Video Streaming.
 
 ---
 
-## 📱 Log Analysis (Debugging)
+## 🛠️ Performance Optimizations
 
-When running the app, you'll see various log messages. Here's what they mean:
-
-### ✅ Success Indicators
-
-| Log Message                         | Meaning                     |
-| ----------------------------------- | --------------------------- |
-| `Running "main"`                    | App started successfully    |
-| `AppContext was initialized`        | Expo modules loaded         |
-| `JSI interop was installed`         | React Native bridge working |
-| `PeerConnectionFactory initialized` | WebRTC ready                |
-| `[GESTURE HANDLER] Initialize`      | Touch controls ready        |
-
-### ⚠️ Warnings (Non-Critical)
-
-These warnings are informational and don't affect functionality:
-
-| Warning                           | Cause                         | Fix                       |
-| --------------------------------- | ----------------------------- | ------------------------- |
-| `Unexpected CPU variant`          | Emulator optimization         | None needed - harmless    |
-| `RNScreens prop not available`    | Android/iOS differences       | None needed - works       |
-| `OnBackInvokedCallback`           | Back gesture not enabled      | Optional: add to manifest |
-| `ClassLoaderContext mismatch`     | Library loading order         | None needed - works       |
-| `ANGLE GameManagerService`        | Graphics driver               | None needed - works       |
-| `Could not find generated setter` | View manager not found        | None needed - harmless    |
-| `BridgelessReactContext`          | Old architecture API accessed | None needed - works       |
-| `StatusBarModule: Ignored`        | Edge-to-edge display mode     | None needed - works       |
-| `Parcel: Expecting binder`        | System IPC timing             | None needed - harmless    |
-| `VariationsUtils: Failed reading` | WebView seed file missing     | None needed - harmless    |
-
-### ❌ Error Indicators
-
-If you see these, there's a problem:
-
-- `Runtime error` - JavaScript crash
-- `Cannot read property 'xxx' of undefined` - Code bug
-- `Network request failed` - Server unreachable
+1. **Selective Rendering**: Admin dashboard unmounts Video/Map components when their tabs are not active to save RAM.
+2. **Conditional Heartbeat**: Ghost nodes scale back heartbeat frequency if battery is <15% to prolong uptime.
+3. **P2P Relay**: Uses Google STUN servers for NAT traversal, ensuring connections even on cellular LTE/5G.
 
 ---
 
 ## 📄 License
 
-ISC - GURU
+ISC - GURU PROTOCOL 2026
