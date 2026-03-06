@@ -34,14 +34,14 @@ const LogConsole = ({ logs }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { height: 200, backgroundColor: '#050505', borderTopWidth: 1, borderTopColor: '#1a1a1a', padding: 10 },
+  container: { flex: 1, backgroundColor: 'transparent', paddingVertical: 10 },
   header: { color: '#333', fontSize: 9, fontWeight: 'bold', marginBottom: 8, letterSpacing: 2 },
-  logRow: { flexDirection: 'row', marginBottom: 4 },
-  timestamp: { color: '#222', fontSize: 10, fontFamily: 'monospace', marginRight: 10 },
-  message: { fontSize: 11, fontFamily: 'monospace', flex: 1 },
+  logRow: { flexDirection: 'row', marginBottom: 8, alignItems: 'flex-start' },
+  timestamp: { color: '#222', fontSize: 9, fontFamily: 'monospace', marginRight: 8, paddingTop: 1 },
+  message: { fontSize: 10, fontFamily: 'monospace', flex: 1, flexWrap: 'wrap' },
   normalText: { color: '#00ff00' },
-  callText: { color: '#ffcc00', fontWeight: 'bold' }, // Golden highlight for Calls
-  batteryText: { color: '#00ccff' } // Teal highlight for battery
+  callText: { color: '#ffcc00', fontWeight: 'bold' },
+  batteryText: { color: '#00ccff' }
 });
 
 export default LogConsole;
