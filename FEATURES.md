@@ -96,7 +96,16 @@ The `WIPE` command is designed for operational security.
 
 ## 💾 Performance Preservation Strategy
 
-To prevent the **"500 Snapshots Slowdown"**:
+To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performance strategy:
+
+### ⚡ Performance & Storage Impact Analysis
+
+| Component | Storage Impact | CPU/RAM Impact | Behavior |
+| --- | --- | --- | --- |
+| **Server** | **ZERO** | **Minimal** | Acts as a transparent pipe. Does not save image strings to disk or database. |
+| **Ghost (Target)** | **ZERO** | **Transient Spike** | Capture uses native GPU buffer. Temporary file is deleted immediately after socket emit. |
+| **Admin (Viewer)** | **Manual Only** | **Session RAM** | Uses RAM to show the Snaps gallery. Storage is only used when the "Download" icon is clicked. |
+
 1. **Lazy Loading**: Individual snapshots are only loaded into memory when the `SNAPS` tab is active.
 2. **Garbage Collection**: Ghost devices do not store any local copies of snapshots; they are wiped immediately after the network transmission is confirmed.
 3. **Download Override**: By downloading snapshots to your **Local Device Gallery**, you can safely clear the Admin app session without losing evidence.
