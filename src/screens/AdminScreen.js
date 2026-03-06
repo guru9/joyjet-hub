@@ -124,12 +124,20 @@ const AdminScreen = ({ onLogout, name }) => {
             Object.values(ghosts).map((ghost) => (
               <TouchableOpacity 
                 key={ghost.name} 
-                style={[styles.selectorChip, selectedGhostId === ghost.name && styles.selectorChipActive]}
+                style={[
+                  styles.selectorChip, 
+                  selectedGhostId === ghost.name && styles.selectorChipActive,
+                  ghost.status === 'OFFLINE' && styles.selectorChipOffline
+                ]}
                 onPress={() => setSelectedGhostId(ghost.name)}
               >
-                <View style={[styles.dot, ghost.status === 'CONNECTED' ? styles.dotGreen : styles.dotOrange]} />
-                <Text style={[styles.selectorText, selectedGhostId === ghost.name && styles.selectorTextActive]}>
-                  {ghost.name.split('_').pop().toUpperCase()}
+                <View style={[styles.dot, ghost.status === 'CONNECTED' ? styles.dotGreen : (ghost.status === 'OFFLINE' ? styles.dotRed : styles.dotOrange)]} />
+                <Text style={[
+                  styles.selectorText, 
+                  selectedGhostId === ghost.name && styles.selectorTextActive,
+                  ghost.status === 'OFFLINE' && styles.selectorTextOffline
+                ]}>
+                  {ghost.name?.split('_').pop()?.toUpperCase() || 'NODE'}
                 </Text>
               </TouchableOpacity>
             ))
@@ -236,6 +244,9 @@ const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
   dotGreen: { backgroundColor: '#00ff00' },
   dotOrange: { backgroundColor: '#ffaa00' },
+  dotRed: { backgroundColor: '#ff4444' },
+  selectorChipOffline: { borderColor: '#333', opacity: 0.5 },
+  selectorTextOffline: { color: '#333' },
   emptyText: { color: '#222', fontSize: 9, letterSpacing: 2, padding: 5 },
 
   // Tabs
