@@ -17,6 +17,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
+import GuideScreen from './src/screens/GuideScreen';
 import * as TaskManager from 'expo-task-manager';
 import socket from './src/services/socket';
 
@@ -37,11 +38,13 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [session, setSession] = useState({ role: null, name: '', nodes: [] });
+  const [showGuide, setShowGuide] = useState(false);
   const isMounted = useRef(true);
 
   const handleLogout = useCallback(() => {
     socket.disconnect();
     setSession({ role: null, name: '', nodes: [] });
+    setShowGuide(false);
   }, []);
 
   useEffect(() => {
@@ -80,6 +83,52 @@ export default function App() {
     }
   }, [appIsReady]);
 
+  const renderCurrentStack = () => {
+    if (!session.role) {
+      return (
+        <Stack.Screen name="Login">
+          {(props) => (
+            <LoginScreen 
+              {...props} 
+              onLogin={(role, name, nodes) => {
+                setSession({ role, name, nodes });
+                setShowGuide(false);
+              }} 
+            />
+          )}
+        </Stack.Screen>
+      );
+    }
+
+    if (showGuide && (session.role === 'admin' || session.role === 'viewer')) {
+      return (
+        <Stack.Screen name="Guide">
+          {(props) => <GuideScreen {...props} onBack={() => setShowGuide(false)} />}
+        </Stack.Screen>
+      );
+    }
+
+    return (
+      <>
+        {session.role === 'admin' && (
+          <Stack.Screen name="Admin">
+            {(props) => <AdminScreen {...props} name={session.name} onLogout={handleLogout} onShowGuide={() => setShowGuide(true)} />}
+          </Stack.Screen>
+        )}
+        {session.role === 'viewer' && (
+          <Stack.Screen name="Viewer">
+            {(props) => <ViewerScreen {...props} name={session.name} allowedNodes={session.nodes} onLogout={handleLogout} onShowGuide={() => setShowGuide(true)} />}
+          </Stack.Screen>
+        )}
+        {session.role === 'ghost' && (
+          <Stack.Screen name="Ghost">
+            {(props) => <GhostScreen {...props} name={session.name} onLogout={handleLogout} />}
+          </Stack.Screen>
+        )}
+      </>
+    );
+  };
+
   return (
     <GestureHandlerRootView style={styles.flexContainer}>
       <SafeAreaProvider>
@@ -98,34 +147,7 @@ export default function App() {
                     contentStyle: { backgroundColor: '#000000' }
                   }}
                 >
-                  {!session.role ? (
-                    <Stack.Screen name="Login">
-                      {(props) => (
-                        <LoginScreen 
-                          {...props} 
-                          onLogin={(role, name, nodes) => setSession({ role, name, nodes })} 
-                        />
-                      )}
-                    </Stack.Screen>
-                  ) : (
-                    <>
-                      {session.role === 'admin' && (
-                        <Stack.Screen name="Admin">
-                          {(props) => <AdminScreen {...props} name={session.name} onLogout={handleLogout} />}
-                        </Stack.Screen>
-                      )}
-                      {session.role === 'viewer' && (
-                        <Stack.Screen name="Viewer">
-                          {(props) => <ViewerScreen {...props} name={session.name} allowedNodes={session.nodes} onLogout={handleLogout} />}
-                        </Stack.Screen>
-                      )}
-                      {session.role === 'ghost' && (
-                        <Stack.Screen name="Ghost">
-                          {(props) => <GhostScreen {...props} name={session.name} onLogout={handleLogout} />}
-                        </Stack.Screen>
-                      )}
-                    </>
-                  )}
+                  {renderCurrentStack()}
                 </Stack.Navigator>
               </NavigationContainer>
             </View>
