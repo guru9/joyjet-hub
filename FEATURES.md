@@ -108,7 +108,7 @@ To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performanc
 
 1. **Lazy Loading**: Individual snapshots are only loaded into memory when the `SNAPS` tab is active.
 2. **Garbage Collection**: Ghost devices do not store any local copies of snapshots; they are wiped immediately after the network transmission is confirmed.
-3. **Download Override**: By downloading snapshots to your **Local Device Gallery**, you can safely clear the Admin app session without losing evidence.
+3. **Local Download Isolation**: When you click "Download", the image is saved from the **Admin's app memory** to the **Admin's local storage**. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
 
 ---
 
