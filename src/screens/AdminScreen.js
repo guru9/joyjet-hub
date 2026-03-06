@@ -115,9 +115,10 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
     });
 
     socket.on('ghost_online', (data) => {
+      const lowerName = data.name.toLowerCase();
       setGhosts(prev => ({
         ...prev,
-        [data.name]: { name: data.name, status: 'CONNECTED', lastSeen: Date.now() }
+        [lowerName]: { name: lowerName, status: 'CONNECTED', lastSeen: Date.now() }
       }));
     });
 

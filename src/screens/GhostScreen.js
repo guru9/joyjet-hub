@@ -247,28 +247,28 @@ const styles = StyleSheet.create({
   nodeBadge: { backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#334155' },
   nodeBadgeText: { color: '#38BDF8', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
 
-  centerArea: { alignItems: 'center', marginVertical: 20 },
-  orbContainer: { width: 140, height: 140, borderRadius: 70, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.2, shadowRadius: 8, elevation: 8 },
+  centerArea: { alignItems: 'center', marginVertical: 12 },
+  orbContainer: { width: 110, height: 110, borderRadius: 55, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.1, shadowRadius: 5, elevation: 4 },
   orbActive: { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.05)' },
-  orbInner: { width: 110, height: 110, borderRadius: 55, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
+  orbInner: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
   orbInnerPulse: { borderColor: '#38BDF8', shadowColor: '#38BDF8', shadowOpacity: 0.5, shadowRadius: 10 },
-  orbText: { color: '#444', fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginTop: 8 },
-  orbRing: { position: 'absolute', width: 156, height: 156, borderRadius: 78, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.15)' },
+  orbText: { color: '#444', fontSize: 8, fontWeight: '800', letterSpacing: 1.2, marginTop: 4 },
+  orbRing: { position: 'absolute', width: 126, height: 126, borderRadius: 63, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.1)' },
   
-  statusLabel: { color: '#64748B', fontSize: 9, fontWeight: '700', letterSpacing: 1.2, marginTop: 16, textAlign: 'center' },
+  statusLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 1, marginTop: 10, textAlign: 'center' },
 
-  dataGrid: { gap: 10 },
-  gridItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#334155' },
-  gridText: { marginLeft: 12 },
-  gridLabel: { color: '#64748B', fontSize: 9, fontWeight: '700', letterSpacing: 1 },
-  gridVal: { color: '#F8FAFC', fontSize: 13, fontWeight: '800', marginTop: 1 },
+  dataGrid: { gap: 8 },
+  gridItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#334155' },
+  gridText: { marginLeft: 10 },
+  gridLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 0.8 },
+  gridVal: { color: '#F8FAFC', fontSize: 11, fontWeight: '800', marginTop: 1 },
 
-  footerActions: { gap: 10 },
-  pingBtn: { height: 44, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' },
-  pingBtnText: { color: '#10B981', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  footerActions: { gap: 8 },
+  pingBtn: { height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' },
+  pingBtnText: { color: '#10B981', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
   
-  logoutBtn: { height: 44, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
-  logoutBtnText: { color: '#EF4444', fontSize: 11, fontWeight: '800', letterSpacing: 1 }
+  logoutBtn: { height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  logoutBtnText: { color: '#EF4444', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 }
 });
 
 export default GhostScreen;
