@@ -7,42 +7,30 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 const GuideScreen = ({ onBack }) => {
   const sections = [
     {
-      title: "SYSTEM ARCHITECTURE",
-      icon: "lan-connect",
-      color: "#38BDF8",
+      title: "TACTICAL INTERFACE",
+      icon: "view-grid-plus-outline",
+      color: "#F59E0B",
       items: [
-        { label: "ADMIN HUB", desc: "System-wide node management and command center." },
-        { label: "VIEWER NODE", desc: "Role-restricted dashboard for specific assigned nodes." },
-        { label: "GHOST CLIENT", desc: "Headless background service for telemetry and streaming." }
+        { label: "VITALS GRID", desc: "2x2 high-density display of node identity, power, uplink, and telemetry age." },
+        { label: "AUTO-SYNC", desc: "Node data is automatically refreshed on selection via background signaling." }
       ]
     },
     {
-      title: "CONNECTION SYMBOLOLOGY",
-      icon: "signal",
-      color: "#10B981",
+      title: "CONNECTION ARCHITECTURE",
+      icon: "lan-connect",
+      color: "#38BDF8",
       items: [
-        { label: "SHIELD CHECK (GREEN)", desc: "Node is online, encrypted, and streaming." },
-        { label: "SHIELD OFF (RED)", desc: "Node is unreachable or offline." },
-        { label: "PENDING (ORANGE)", desc: "Establishing secure handshake or WebRTC tunnel." }
+        { label: "UNIFIED ROUTING", desc: "All node IDs are normalized to lowercase for universal reliability." },
+        { label: "SECURE TUNNEL", desc: "Encrypted WebRTC streams with 15s handshake timeout protection." }
       ]
     },
     {
       title: "COMMAND PROTOCOLS",
       icon: "console-line",
-      color: "#F59E0B",
+      color: "#10B981",
       items: [
-        { label: "PING / ACTIVATE", desc: "Tap any node card to force a telemetry update." },
-        { label: "REMOTE SNAP", desc: "Request a high-resolution screen capture." },
-        { label: "WIPE SESSION", desc: "Purge remote node memory and terminate connection." }
-      ]
-    },
-    {
-      title: "VIDEO STREAMING",
-      icon: "cctv",
-      color: "#8B5CF6",
-      items: [
-        { label: "LIVE FEED", desc: "Low-latency WebRTC stream from the remote device." },
-        { label: "TIMEOUT PROTECT", desc: "Feeds stop after 15s if connection fails to establish." }
+        { label: "REMOTE SNAP", desc: "Request a high-resolution screen capture from any active node." },
+        { label: "WIPE SESSION", desc: "Remotely terminate and purge ghost node memory sessions." }
       ]
     }
   ];

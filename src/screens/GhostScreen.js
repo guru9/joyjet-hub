@@ -177,9 +177,13 @@ const GhostScreen = ({ name, onLogout }) => {
       
       <View style={styles.headerArea}>
         <AppHeader />
-        <View style={styles.nodeBadge}>
+        <TouchableOpacity 
+          activeOpacity={0.7} 
+          onLongPress={onLogout}
+          style={styles.nodeBadge}
+        >
           <Text style={styles.nodeBadgeText}>NODE: {name.toUpperCase()}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.centerArea}>
@@ -232,18 +236,6 @@ const GhostScreen = ({ name, onLogout }) => {
           </View>
         </View>
       </View>
-
-      <View style={styles.footerActions}>
-        <TouchableOpacity style={styles.pingBtn} onPress={updateVitals}>
-          <MaterialCommunityIcons name="radar" size={14} color="#10B981" style={{marginRight: 8}} />
-          <Text style={styles.pingBtnText}>PUSH HEARTBEAT</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-          <MaterialCommunityIcons name="power" size={14} color="#EF4444" style={{marginRight: 8}} />
-          <Text style={styles.logoutBtnText}>TERMINATE SESSION</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -271,12 +263,7 @@ const styles = StyleSheet.create({
   gridLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 0.8 },
   gridVal: { color: '#F8FAFC', fontSize: 11, fontWeight: '800', marginTop: 1 },
 
-  footerActions: { gap: 8 },
-  pingBtn: { height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' },
-  pingBtnText: { color: '#10B981', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  
-  logoutBtn: { height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 20, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
-  logoutBtnText: { color: '#EF4444', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 }
+  logoutBtn: { visibility: 'hidden' }
 });
 
 export default GhostScreen;
