@@ -7,6 +7,7 @@ React Native (Expo) high-performance HD mobile suite for real-time node monitori
 ## 📘 Documentation & Downloads
 
 - **[TECHNICAL FEATURES MANUAL](./FEATURES.md)** - Detailed flowcharts and technical deep-dives.
+- **[LATEST BUILD CHANGELOG](./CHANGELOG.md)** - Version history and new feature highlights.
 - **[DOWNLOAD LATEST APK](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk)** - Compiled for Android 11+ (API 30-35).
 
 ---
