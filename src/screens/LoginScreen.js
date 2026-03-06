@@ -75,7 +75,7 @@ const LoginScreen = ({ onLogin }) => {
 
   return (
     <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : null}
       style={styles.container}
     >
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
