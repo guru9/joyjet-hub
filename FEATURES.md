@@ -113,8 +113,16 @@ To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performanc
 ---
 
 ## 📥 Local Storage & Preservation
-*   **Downloaded Images**: Located in your phone's Gallery under the album **"JOYJET_SNAPS"**.
+
+For professional evidence management, Joyjet organizes assets into two distinct albums in your device gallery:
+
+| Asset Type | Album Name | Naming Convention |
+| --- | --- | --- |
+| **Evidence Downloads** | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[HHMMSS]_[DDMMYY].jpg` |
+| **Dashboard Captures** | `JOYJET_SCREENSHOTS` | `DASHBOARD_[GHOSTNAME]_[TIMESTAMP].jpg` |
+
 *   **File Format**: Standard high-quality `.jpg`.
+*   **Traceability**: Every filename includes the target's unique Ghost ID and a precise timestamp for legal/operational verification.
 
 ---
 *Document Version: 1.1.0*

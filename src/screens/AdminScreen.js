@@ -108,6 +108,12 @@ const AdminScreen = ({ onLogout, name }) => {
     Vibration.vibrate(50);
   };
 
+  const getFormattedTimestamp = () => {
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear().toString().slice(-2)}`;
+  };
+
   const captureLocalView = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -121,11 +127,14 @@ const AdminScreen = ({ onLogout, name }) => {
         quality: 0.8,
       });
 
+      const nodeInfo = selectedGhost ? selectedGhost.name.replace(/[^a-z0-9]/gi, '_').toUpperCase() : 'NONE';
+      const filename = `DASHBOARD_${nodeInfo}_${getFormattedTimestamp()}.jpg`;
+      
       const asset = await MediaLibrary.createAssetAsync(uri);
-      await MediaLibrary.createAlbumAsync('JOYJET_DASHBOARD', asset, false);
+      await MediaLibrary.createAlbumAsync('JOYJET_SCREENSHOTS', asset, false);
       
       Vibration.vibrate([0, 50, 50, 50]);
-      Alert.alert("Tactical Save", "Local dashboard view preserved in gallery.");
+      Alert.alert("DASHBOARD CAPTURED", `Manifest: ${filename}`);
     } catch (e) {
       console.error("Local capture failed", e);
       Alert.alert("Error", "Dashboard capture failed.");

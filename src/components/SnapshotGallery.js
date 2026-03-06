@@ -8,6 +8,12 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
   const [selectedSnap, setSelectedSnap] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  const getFormattedTimestamp = () => {
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear().toString().slice(-2)}`;
+  };
+
   const downloadSnap = async (uri) => {
     try {
       setIsDownloading(true);
@@ -17,7 +23,9 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
         return;
       }
 
-      const filename = `GHOST_SNAP_${Date.now()}.jpg`;
+      // Tactical Filename: GHOST_TIME_DATE.jpg
+      const cleanGhostName = ghostName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+      const filename = `${cleanGhostName}_${getFormattedTimestamp()}.jpg`;
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
       
       let sourceUri = uri;
@@ -28,9 +36,9 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
       }
 
       const asset = await MediaLibrary.createAssetAsync(sourceUri);
-      await MediaLibrary.createAlbumAsync('JOYJET_SNAPS', asset, false);
+      await MediaLibrary.createAlbumAsync('JOYJET_DOWNLOADS', asset, false);
       
-      Alert.alert("Success", "Evidence preserved in gallery.");
+      Alert.alert("Success", `Evidence preserved: ${filename}`);
     } catch (err) {
       console.error("[Download] Save failed", err);
       Alert.alert("System", "Failed to preserve evidence.");
