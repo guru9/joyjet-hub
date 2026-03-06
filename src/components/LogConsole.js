@@ -14,13 +14,14 @@ const LogConsole = ({ logs }) => {
         onContentSizeChange={() => flatListRef.current.scrollToEnd()}
         renderItem={({ item }) => {
           const isCall = item.message.includes('CALL:');
+          const isBattery = item.message.includes('Battery');
           
           return (
             <View style={styles.logRow}>
               <Text style={styles.timestamp}>[{item.timestamp}]</Text>
               <Text style={[
                 styles.message, 
-                isCall ? styles.callText : styles.normalText
+                isCall ? styles.callText : (isBattery ? styles.batteryText : styles.normalText)
               ]}>
                 {item.message}
               </Text>
@@ -39,7 +40,8 @@ const styles = StyleSheet.create({
   timestamp: { color: '#222', fontSize: 10, fontFamily: 'monospace', marginRight: 10 },
   message: { fontSize: 11, fontFamily: 'monospace', flex: 1 },
   normalText: { color: '#00ff00' },
-  callText: { color: '#ffcc00', fontWeight: 'bold' } // Golden highlight for Calls
+  callText: { color: '#ffcc00', fontWeight: 'bold' }, // Golden highlight for Calls
+  batteryText: { color: '#00ccff' } // Teal highlight for battery
 });
 
 export default LogConsole;
