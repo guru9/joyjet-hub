@@ -142,6 +142,7 @@ The system architecture follows a "Triangle of Authority" to ensure maximum cont
 
 *   **Global Visibility (Admin Exclusive)**: When logged in as `admin`, the Tactical Map and Node Selector automatically display **every active node on the network**, including those registered to sub-viewers (e.g., Alpha, Bravo). 
 *   **The "Parent" Authorization**: The Admin is explicitly recognized by the server as a valid "Parent" for Ghost nodes. Any node using the prefix `admin_` (e.g., `admin_Ghost01`) bypasses viewer-specific registration and binds directly to the Master Hub.
+*   **Root Authority Rationale**: This "Admin-First" binding is required for system bootstrapping. It allows tactical deployment of Ghost nodes even when no sub-viewers are active or registered, ensuring the Master Hub—as the root user—retains absolute control from the first second of operation.
 *   **Unlimited Operational Scale**: While subordinate Viewers are strictly capped at 3 ghosts to ensure stability for localized field teams, the **Admin Hub has no software cap** on the number of `admin_` prefixed nodes it can manage simultaneously.
 *   **Encapsulated Security**: While the Admin can see and control "Alpha's" ghosts, the reverse is impossible. A `Viewer` can never see or detect the presence of `admin_` prefixed ghosts, keeping the Master Hub's primary targets completely isolated from the field teams.
 
