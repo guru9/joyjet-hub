@@ -241,7 +241,7 @@ const GhostScreen = ({ name, onLogout }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', paddingVertical: 60, paddingHorizontal: 24, justifyContent: 'space-between' },
+  container: { flex: 1, backgroundColor: '#0F172A', paddingTop: 60, paddingBottom: 100, paddingHorizontal: 24, justifyContent: 'space-between' },
   
   headerArea: { alignItems: 'center' },
   nodeBadge: { backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#334155' },
