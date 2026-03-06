@@ -23,7 +23,6 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
         return;
       }
 
-      // Tactical Filename: GHOST_TIME_DATE.jpg
       const cleanGhostName = ghostName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
       const filename = `${cleanGhostName}_${getFormattedTimestamp()}.jpg`;
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
@@ -41,7 +40,7 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
       Alert.alert("Success", `Evidence preserved: ${filename}`);
     } catch (err) {
       console.error("[Download] Save failed", err);
-      Alert.alert("System", "Failed to preserve evidence.");
+      Alert.alert("System Error", "Failed to preserve evidence.");
     } finally {
       setIsDownloading(false);
     }
@@ -51,8 +50,11 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
     <TouchableOpacity style={styles.snapCard} onPress={() => setSelectedSnap(item.uri)}>
       <Image source={{ uri: item.uri }} style={styles.thumb} />
       <View style={styles.cardFooter}>
-        <Text style={styles.time}>{item.timestamp}</Text>
-        <MaterialCommunityIcons name="eye-outline" size={12} color="#00ff00" />
+        <View style={styles.timeTag}>
+          <MaterialCommunityIcons name="clock-outline" size={10} color="#94A3B8" style={{marginRight: 4}}/>
+          <Text style={styles.time}>{item.timestamp}</Text>
+        </View>
+        <MaterialCommunityIcons name="arrow-expand-all" size={14} color="#38BDF8" />
       </View>
     </TouchableOpacity>
   );
@@ -61,7 +63,7 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
     <View style={styles.container}>
       {snapshots.length === 0 ? (
         <View style={styles.placeholder}>
-          <MaterialCommunityIcons name="image-off-outline" size={40} color="#111" />
+          <MaterialCommunityIcons name="camera-off" size={48} color="#334155" />
           <Text style={styles.placeholderText}>NO SNAPSHOTS DETECTED</Text>
         </View>
       ) : (
@@ -71,6 +73,8 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
           keyExtractor={(item) => item.id}
           numColumns={2}
           contentContainerStyle={styles.list}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
@@ -91,10 +95,10 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
                 disabled={isDownloading}
               >
                 {isDownloading ? (
-                  <ActivityIndicator color="#00ff00" size="small" />
+                  <ActivityIndicator color="#1E293B" size="small" />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="cloud-download-outline" size={20} color="#00ff00" style={{ marginRight: 10 }} />
+                    <MaterialCommunityIcons name="download" size={20} color="#1E293B" style={{ marginRight: 8 }} />
                     <Text style={styles.actionBtnTxt}>DOWNLOAD EVIDENCE</Text>
                   </>
                 )}
@@ -113,25 +117,26 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, marginTop: 10 },
-  placeholder: { height: 300, justifyContent: 'center', alignItems: 'center', backgroundColor: '#050505', borderRadius: 4, borderWidth: 1, borderColor: '#111' },
-  placeholderText: { color: '#222', fontSize: 9, letterSpacing: 2, marginTop: 10 },
-  list: { gap: 10 },
-  snapCard: { flex: 1, backgroundColor: '#080808', borderRadius: 4, padding: 5, marginBottom: 10, borderWidth: 1, borderColor: '#111' },
-  thumb: { width: '100%', aspectRatio: 9 / 16, borderRadius: 2, backgroundColor: '#000' },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5, paddingHorizontal: 2 },
-  time: { color: '#00ff00', fontSize: 8 },
+  placeholder: { height: 250, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F172A', borderRadius: 10, borderWidth: 1, borderColor: '#1E293B' },
+  placeholderText: { color: '#64748B', fontSize: 11, letterSpacing: 1.5, marginTop: 16, fontWeight: '600' },
+  list: { paddingBottom: 20 },
+  row: { gap: 12, marginBottom: 12 },
+  snapCard: { flex: 1, backgroundColor: '#1E293B', borderRadius: 10, padding: 6, borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 },
+  thumb: { width: '100%', aspectRatio: 3 / 4, borderRadius: 6, backgroundColor: '#0F172A' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingHorizontal: 4, paddingBottom: 4 },
+  timeTag: { flexDirection: 'row', alignItems: 'center' },
+  time: { color: '#94A3B8', fontSize: 10, fontWeight: '500' },
   
-  // Modal
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', justifyContent: 'center', alignItems: 'center' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.95)', justifyContent: 'center', alignItems: 'center' },
   closeArea: { position: 'absolute', width: '100%', height: '100%' },
-  modalContent: { width: '90%', height: '90%', justifyContent: 'center', alignItems: 'center' },
-  fullImage: { width: '100%', height: '70%' },
-  modalActions: { width: '100%', gap: 10, marginTop: 30 },
-  actionBtn: { width: '100%', height: 50, borderWidth: 1, borderColor: '#00ff00', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 5, backgroundColor: '#00ff0005' },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
-  closeBtn: { width: '100%', height: 40, justifyContent: 'center', alignItems: 'center' },
-  closeBtnTxt: { color: '#444', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }
+  modalContent: { width: '90%', height: '85%', justifyContent: 'center', alignItems: 'center' },
+  fullImage: { width: '100%', height: '75%', borderRadius: 12 },
+  modalActions: { width: '100%', gap: 12, marginTop: 24, paddingHorizontal: 20 },
+  actionBtn: { width: '100%', height: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 25, backgroundColor: '#38BDF8', shadowColor: '#38BDF8', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  actionBtnDisabled: { opacity: 0.7, backgroundColor: '#64748B', shadowOpacity: 0 },
+  actionBtnTxt: { color: '#1E293B', fontSize: 13, fontWeight: '800', letterSpacing: 1 },
+  closeBtn: { width: '100%', height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 25, borderWidth: 1, borderColor: '#334155', backgroundColor: '#1E293B' },
+  closeBtnTxt: { color: '#F8FAFC', fontSize: 13, fontWeight: '700', letterSpacing: 1 }
 });
 
 export default SnapshotGallery;

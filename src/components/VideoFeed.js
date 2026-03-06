@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { RTCView, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import socket from '../services/socket';
 
 const VideoFeed = ({ ghostName, adminName }) => {
@@ -18,7 +19,6 @@ const VideoFeed = ({ ghostName, adminName }) => {
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         const target = adminName ? 'admin' : ghostName.split('_')[0].toLowerCase();
-
         socket.emit('relay_ice_candidate', {
           from: ghostName,
           target: target,
@@ -34,8 +34,7 @@ const VideoFeed = ({ ghostName, adminName }) => {
       }
     };
 
-    // Listen for signaling data from the Ghost Node
-    socket.on('webrtc_signal', async (data) => {
+    const handleSignal = async (data) => {
       if (data.from !== ghostName) return;
 
       if (data.type === 'offer') {
@@ -54,39 +53,63 @@ const VideoFeed = ({ ghostName, adminName }) => {
           console.error("Error adding ICE candidate", e);
         }
       }
-    });
+    };
+
+    socket.on('webrtc_signal', handleSignal);
 
     setPc(peerConnection);
 
+    // Initial timeout to handle failed connections without getting stuck spinning
+    const connectionTimeout = setTimeout(() => {
+      if (!remoteStream && connecting) {
+        setConnecting(false);
+      }
+    }, 15000); // 15 seconds wait max
+
     return () => {
+      clearTimeout(connectionTimeout);
       peerConnection.close();
-      socket.off('webrtc_signal');
+      socket.off('webrtc_signal', handleSignal);
     };
   }, [ghostName]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>LIVE FEED: {ghostName}</Text>
+      <View style={styles.labelContainer}>
+        <View style={remoteStream ? styles.dotGreen : styles.dotOrange} />
+        <Text style={styles.label}>LIVE STREAM: {ghostName}</Text>
+      </View>
       
       {remoteStream ? (
-        <RTCView
-          streamURL={remoteStream.toURL()}
-          style={styles.rtcView}
-          objectFit="contain"
-          zOrder={1}
-        />
+        <>
+          <RTCView
+            streamURL={remoteStream.toURL()}
+            style={styles.rtcView}
+            objectFit="cover"
+            zOrder={1}
+          />
+          <View style={styles.overlay}>
+            <MaterialCommunityIcons name="record-circle-outline" size={12} color="#EF4444" style={{marginRight: 4}} />
+            <Text style={styles.overlayText}>REC • 1080p</Text>
+          </View>
+        </>
       ) : (
         <View style={styles.placeholder}>
-          <ActivityIndicator color="#00ff00" size="small" />
-          <Text style={styles.statusText}>
-            {connecting ? "ESTABLISHING SECURE TUNNEL..." : "FEED INTERRUPTED"}
-          </Text>
+          {connecting ? (
+            <>
+              <ActivityIndicator color="#38BDF8" size="large" />
+              <Text style={styles.statusText}>ESTABLISHING SECURE TUNNEL...</Text>
+              <Text style={styles.subText}>Negotiating peer connection</Text>
+            </>
+          ) : (
+            <>
+              <MaterialCommunityIcons name="video-off" size={48} color="#334155" />
+              <Text style={styles.statusText}>FEED UNAVAILABLE</Text>
+              <Text style={styles.subText}>The ghost node stream could not be established</Text>
+            </>
+          )}
         </View>
       )}
-      
-      <View style={styles.overlay}>
-        <Text style={styles.overlayText}>REC ● 1080p</Text>
-      </View>
     </View>
   );
 };
@@ -95,21 +118,38 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     aspectRatio: 16 / 9,
-    backgroundColor: '#050505',
-    borderRadius: 4,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#111',
+    borderColor: '#334155',
     marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8
   },
-  label: {
+  labelContainer: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    color: '#333',
-    fontSize: 9,
-    fontWeight: 'bold',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
     zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)'
+  },
+  dotGreen: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 },
+  dotOrange: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F59E0B', marginRight: 6 },
+  label: {
+    color: '#F8FAFC',
+    fontSize: 10,
+    fontWeight: '700',
     letterSpacing: 1
   },
   rtcView: {
@@ -121,26 +161,38 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#0F172A'
   },
   statusText: {
-    color: '#222',
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 16,
+    letterSpacing: 1
+  },
+  subText: {
+    color: '#64748B',
     fontSize: 10,
-    marginTop: 10,
-    letterSpacing: 2
+    marginTop: 6
   },
   overlay: {
     position: 'absolute',
-    bottom: 10,
-    right: 10,
+    bottom: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 2
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)'
   },
   overlayText: {
-    color: '#ff0000',
-    fontSize: 8,
-    fontWeight: 'bold'
+    color: '#EF4444',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5
   }
 });
 

