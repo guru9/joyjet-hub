@@ -17,7 +17,20 @@ import LoginScreen from './src/screens/LoginScreen';
 import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
+import * as TaskManager from 'expo-task-manager';
 import socket from './src/services/socket';
+
+// Define background location task to prevent crash on Android
+TaskManager.defineTask('GHOST_LOCATION', ({ data, error }) => {
+  if (error) return;
+  if (data) {
+    const { locations } = data;
+    const loc = locations[0];
+    if (loc) {
+      // Background ping can be added here if needed
+    }
+  }
+});
 
 const Stack = createNativeStackNavigator();
 
