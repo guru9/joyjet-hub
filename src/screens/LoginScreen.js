@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   input: { 
     backgroundColor: '#050505', 
     borderWidth: 1, 
-    borderColor: '#111', 
+    borderColor: '#00ff00', // Green Outline
     color: '#00ff00', 
     padding: 15, 
     borderRadius: 5, 
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
   button: { 
     width: '100%', 
     height: 55, 
+    backgroundColor: '#00ff0022', // Subtle green glow
     borderWidth: 1, 
     borderColor: '#00ff00', 
     justifyContent: 'center', 
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   buttonText: { color: '#00ff00', fontWeight: 'bold', letterSpacing: 3, fontSize: 12 },
-  footer: { position: 'absolute', bottom: 30, color: '#222', fontSize: 9, letterSpacing: 1 }
+  footer: { position: 'absolute', bottom: 30, color: '#00ff00', opacity: 0.6, fontSize: 9, letterSpacing: 1 } // More visible color
 });
 
 export default LoginScreen;
