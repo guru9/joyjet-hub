@@ -94,26 +94,40 @@ Edit `app.json` for app settings:
 | Min SDK      | 30 (Android 11)        |
 | Target SDK   | 35 (Android 15)        |
 
-### Required Permissions
+### Required Permissions & Feature Mapping
 
-- Camera
-- Microphone
-- Location (Fine + Background)
-- Call Log
-- Phone State
-- Storage (Media Projection)
+| Permission | Feature | Why? |
+| ---------- | ------- | ---- |
+| `ACCESS_FINE_LOCATION` | **Tactical Map** | Real-time GPS plotting on admin/viewer map. |
+| `ACCESS_BACKGROUND_LOCATION` | **Stealth Mode** | Tracking even when the app is in background/locked. |
+| `READ_CALL_LOG` | **Log Sync** | Retrieves call history for the `CallLogViewer` tab. |
+| `READ_PHONE_STATE` | **Telemetry** | Identifies device status and incoming call alerts. |
+| `BATTERY_STATS` | **Vitals** | Reports percentage to logs and admin header. |
+| `FOREGROUND_SERVICE` | **Stay Alive** | Prevents Android from killing the ghost process. |
+| `SCREEN_CAPTURE` | **Video Feed** | Allows WebRTC screen sharing and `SNAPSHOT` commands. |
 
 ---
 
-## 🔧 Tech Stack
+## 🔧 Tech Stack & Dependencies
 
-| Technology       | Version |
-| ---------------- | ------- |
-| React Native     | 0.83.1  |
-| Expo             | 55.0.0  |
-| Socket.IO Client | 4.8.3   |
-| WebRTC           | 124.0.7 |
-| React Navigation | 7.0.0   |
+| Library | Function |
+| ------- | -------- |
+| `react-native-webrtc` | Handles HD low-latency screen streaming. |
+| `expo-location` | GPS coordinate retrieval and background tasking. |
+| `expo-battery` | Vitals monitoring for remote power status. |
+| `react-native-view-shot` | Captures high-res screen snaps for the `SNAPSHOT` command. |
+| `react-native-call-log` | Remote recovery of encrypted call logs. |
+| `socket.io-client` | Real-time command/relay infrastructure. |
+| `react-navigation` | Seamless tabbed workspace transitions. |
+
+---
+
+## 🕹️ Command Reference (Admin Keys)
+
+- **`SNAPSHOT`**: Triggers a high-res capture of the ghost's screen using `react-native-view-shot`.
+- **`PING`**: Forces an immediate GPS refresh via `expo-location`.
+- **`LOG_SYNC`**: Synchronizes the last 10 call records using `react-native-call-log`.
+- **`WIPE`**: Emergency command. Triggers an automatic memory purge and `onLogout()` sequence on the ghost device.
 
 ---
 

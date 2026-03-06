@@ -176,6 +176,9 @@ const AdminScreen = ({ onLogout, name }) => {
                   <TouchableOpacity style={styles.btn} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
                     <Text style={styles.btnTxt}>CAPTURE SCREEN</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity style={[styles.btn, styles.wipeBtn]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
+                    <Text style={styles.wipeBtnTxt}>[ EMERGENCY WIPE ]</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -266,9 +269,11 @@ const styles = StyleSheet.create({
   sectionLabel: { color: '#333', fontSize: 9, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 },
   
   // Controls
-  controls: { marginTop: 15 },
+  controls: { marginTop: 15, gap: 10 },
   btn: { width: '100%', height: 45, borderWidth: 1, borderColor: '#00ff00', justifyContent: 'center', alignItems: 'center', borderRadius: 4, backgroundColor: '#00ff0005' },
   btnTxt: { color: '#00ff00', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
+  wipeBtn: { borderColor: '#ff4444', backgroundColor: '#ff444405' },
+  wipeBtnTxt: { color: '#ff4444', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 },
   
   // Placeholders
   snapPlaceholder: { height: 200, backgroundColor: '#030303', borderWidth: 1, borderColor: '#111', borderRadius: 5, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
