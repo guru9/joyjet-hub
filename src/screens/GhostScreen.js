@@ -197,7 +197,7 @@ const GhostScreen = ({ name, onLogout }) => {
         </TouchableOpacity>
         
         <Text style={styles.statusLabel}>
-          {isSyncing ? "CORE SYNCHRONIZATION ACTIVE" : "AWAITING HARDWARE CALIBRATION"}
+          {isSyncing ? "CORE SYNC ACTIVE" : "AWAITING CALIBRATION"}
         </Text>
       </View>
 

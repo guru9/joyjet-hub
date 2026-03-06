@@ -247,8 +247,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
               </View>
               <SnapshotGallery ghostName={selectedGhost.name} snapshots={selectedGhost.snapshots || []} />
               <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                <MaterialCommunityIcons name="camera-plus" size={20} color="#0F172A" style={{ marginRight: 8 }} />
-                <Text style={styles.primaryBtnTxt}>REQUEST NEW REMOTE CAPTURE</Text>
+                <MaterialCommunityIcons name="camera-plus" size={18} color="#0F172A" style={{ marginRight: 8 }} />
+                <Text style={styles.primaryBtnTxt}>REMOTE CAPTURE</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -259,8 +259,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
             <View style={styles.card}>
               <CallLogViewer logs={selectedGhost.callLogs || []} />
               <TouchableOpacity style={[styles.secondaryBtn, { marginTop: 16 }]} onPress={() => sendCommand(selectedGhost.name, 'LOG_SYNC')}>
-                <MaterialCommunityIcons name="sync" size={20} color="#38BDF8" style={{ marginRight: 8 }} />
-                <Text style={styles.secondaryBtnTxt}>FORCE SYNC TELEMETRY</Text>
+                <MaterialCommunityIcons name="sync" size={18} color="#38BDF8" style={{ marginRight: 8 }} />
+                <Text style={styles.secondaryBtnTxt}>RE-SYNC DATA</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -295,11 +295,10 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.guideBtn} onPress={onShowGuide}>
-            <MaterialCommunityIcons name="help-circle-outline" size={24} color="#38BDF8" />
+            <MaterialCommunityIcons name="help-circle-outline" size={22} color="#38BDF8" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-            <MaterialCommunityIcons name="logout-variant" size={16} color="#EF4444" style={{marginRight: 6}} />
-            <Text style={styles.logoutTxt}>DISCONNECT</Text>
+            <MaterialCommunityIcons name="power" size={22} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
@@ -452,9 +451,8 @@ const styles = StyleSheet.create({
   headerSubtitle: { color: '#38BDF8', fontSize: 10, fontWeight: '600', letterSpacing: 1.5, marginTop: 2 },
   
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  guideBtn: { marginRight: 16, padding: 4 },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)', borderRadius: 20 },
-  logoutTxt: { color: '#EF4444', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  guideBtn: { width: 34, height: 34, borderRadius: 8, backgroundColor: 'rgba(56, 189, 248, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.2)' },
+  logoutBtn: { width: 34, height: 34, borderRadius: 8, backgroundColor: 'rgba(239, 68, 68, 0.1)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
   
   // Ghost Selector
   selectorContainer: { backgroundColor: '#0B0F19', borderBottomWidth: 1, borderBottomColor: '#1E293B', paddingVertical: 12 },
