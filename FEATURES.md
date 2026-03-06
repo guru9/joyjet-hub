@@ -66,6 +66,15 @@ Unlike traditional screen recorders, Joyjet uses **WebRTC P2P (Peer-to-Peer)**.
 
 ---
 
+## 3b. Local Tactical Capture (Admin View)
+**Objective**: Permanent preservation of the Admin's current monitoring screen.
+- **Icon**: Located in the Admin Header (Camera Plus icon).
+- **Behavior**: This captures the *Admin's own screen*, including the live feed, map coordinates, and log console as one unified image.
+- **Storage**: Saved to the device gallery in the **`JOYJET_DASHBOARD`** album.
+- **Tactical Value**: Proof of monitoring activity without alerting the target node.
+
+---
+
 ## 4. Telemetry & Vitals Logging
 
 ### 🔋 Battery & Signal Monitoring
