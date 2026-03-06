@@ -43,7 +43,7 @@ const GhostScreen = ({ name, onLogout }) => {
 
       // Initial Vitals
       updateVitals();
-      setInterval(updateVitals, 60000);
+      setInterval(updateVitals, 10000); // Changed to 10 seconds for faster updates
     };
 
     startup();
@@ -76,13 +76,29 @@ const GhostScreen = ({ name, onLogout }) => {
   }, []);
 
   const updateVitals = async () => {
-    const bat = await Battery.getBatteryLevelAsync();
-    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-    
+    let bat = 1;
+    let loc = { coords: { latitude: 0, longitude: 0 } };
+
+    try {
+      const batLevel = await Battery.getBatteryLevelAsync();
+      if (batLevel !== -1) bat = batLevel;
+    } catch (e) {
+      console.warn("Battery read failed", e);
+    }
+
+    try {
+      loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
+    } catch (e) {
+      console.warn("Location read failed", e);
+      try {
+        loc = await Location.getLastKnownPositionAsync();
+      } catch (e2) {}
+    }
+
     socket.emit('heartbeat_update', {
       name,
       battery: Math.floor(bat * 100) + '%',
-      location: { lat: loc.coords.latitude, lng: loc.coords.longitude },
+      location: loc ? { lat: loc?.coords?.latitude || 0, lng: loc?.coords?.longitude || 0 } : { lat: 0, lng: 0 },
       status: 'OPTIMIZED',
       lastSeen: Date.now()
     });
