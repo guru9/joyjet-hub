@@ -93,7 +93,6 @@ Edit `app.json` for app settings:
 | Package Name | `com.joyjet.optimizer` |
 | Min SDK      | 30 (Android 11)        |
 | Target SDK   | 35 (Android 15)        |
-| Version      | 4.2.6                  |
 
 ### Required Permissions
 
