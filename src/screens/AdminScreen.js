@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { captureRef } from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
 import socket from '../services/socket';
 
 // Import Child Components
@@ -16,6 +18,7 @@ const AdminScreen = ({ onLogout, name }) => {
   const [logs, setLogs] = useState([]);
   const [selectedGhostId, setSelectedGhostId] = useState(null);
   const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, CALLS, LOGS
+  const viewRef = useRef();
 
   const selectedGhost = selectedGhostId ? ghosts[selectedGhostId] : null;
 
@@ -105,12 +108,41 @@ const AdminScreen = ({ onLogout, name }) => {
     Vibration.vibrate(50);
   };
 
+  const captureLocalView = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Permission", "Storage access required to save screenshot.");
+        return;
+      }
+
+      const uri = await captureRef(viewRef, {
+        format: 'jpg',
+        quality: 0.8,
+      });
+
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      await MediaLibrary.createAlbumAsync('JOYJET_DASHBOARD', asset, false);
+      
+      Vibration.vibrate([0, 50, 50, 50]);
+      Alert.alert("Tactical Save", "Local dashboard view preserved in gallery.");
+    } catch (e) {
+      console.error("Local capture failed", e);
+      Alert.alert("Error", "Dashboard capture failed.");
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} ref={viewRef} collapsable={false}>
       <StatusBar barStyle="light-content" />
       
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>JOYJET HUB / COMMAND CENTER</Text>
+          <TouchableOpacity style={{ marginLeft: 15 }} onPress={captureLocalView}>
+            <MaterialCommunityIcons name="camera-plus-outline" size={20} color="#00ff00" />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
           <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
