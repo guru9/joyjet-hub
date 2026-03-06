@@ -129,13 +129,18 @@ For professional evidence management, Joyjet organizes assets into two distinct 
 
 ## 6. Tactical Role Mapping
 
-Joyjet enforces a strict "Binding" protocol to ensure operational security:
+Joyjet enforces a strict "Binding" protocol to ensure operational security and specialized oversight:
 
-| Role | Access Key | Behavior |
-| --- | --- | --- |
-| **Admin** | `ADMIN_SECRET_KEY` | Master access. Acts as a **Global Viewer**. |
-| **Viewer** | Username | Dynamic registration. Can only see Ghosts with matching prefix. |
-| **Ghost** | `VIEWERNAME_Suffix` | Binds to specific Viewer. If prefix is `admin_`, it binds to the Master Hub. |
+| Role | Oversight | Node Capacity | Description |
+| --- | --- | --- | --- |
+| **Admin** | **Global** | **Unlimited** | Primary controller. Can see all nodes across all viewers. |
+| **Viewer** | Restricted | 3 Nodes Max | Field monitor. Bound to specific prefixed ghosts. |
+| **Ghost** | Stealth Node | N/A | Telemetry provider. Prefix determines its primary controller. |
+
+### 🛂 Binding Logic
+*   **Admin Preference**: Any Ghost node prefixed with `admin_` (e.g., `admin_Unit01`) is exclusively controlled by the Master Hub.
+*   **Hierarchy**: The Admin is the only role capable of seeing Viewer-specific ghosts (Global Oversight).
+*   **Scaling**: Individual Viewers are capped at 3 ghosts to maintain system stability, while the Admin has no such restriction.
 
 ---
-*Document Version: 1.1.5*
+*Document Version: 1.1.6*
