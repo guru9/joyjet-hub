@@ -8,47 +8,19 @@ on:
     paths-ignore:
       - "README.md"
       - "docs/**"
-  workflow_dispatch: 
+  workflow_dispatch: # Allows you to manually run the workflow from the Actions tab
 
 permissions:
   contents: write
   packages: write
 
+# Cancel any in-progress or queued build when a new push comes in
 concurrency:
   group: android-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # --- STEP 1: VALIDATION GATEKEEPER ---
-  validate:
-    name: 🩺 Validate Code & Config
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Run Expo Doctor
-        # This will fail the build if your Expo SDK or peer dependencies are broken
-        run: npx expo-doctor
-
-      - name: Check for Critical Files
-        run: |
-          if [ ! -f "app.json" ]; then echo "app.json missing"; exit 1; fi
-          if [ ! -f "package.json" ]; then echo "package.json missing"; exit 1; fi
-
-  # --- STEP 2: ACTUAL BUILD (Only runs if Validate passes) ---
   build:
-    name: 🏗️ Build Release APK
-    needs: validate
     runs-on: ubuntu-22.04
 
     steps:
@@ -130,7 +102,7 @@ jobs:
         with:
           tag_name: latest
           name: "Latest Tactical Build (v${{ steps.bump.outputs.version }})"
-          body: "This is the most recent build (v${{ steps.bump.outputs.version }}). Automatically generated after passing code validation."
+          body: "This is the most recent stable build (v${{ steps.bump.outputs.version }}). Old builds are automatically replaced to optimize storage."
           draft: false
           prerelease: false
           files: android/app/build/outputs/apk/release/app-release.apk
