@@ -137,10 +137,13 @@ Joyjet enforces a strict "Binding" protocol to ensure operational security and s
 | **Viewer** | Restricted | 3 Nodes Max | Field monitor. Bound to specific prefixed ghosts. |
 | **Ghost** | Stealth Node | N/A | Telemetry provider. Prefix determines its primary controller. |
 
-### 🛂 Binding Logic
-*   **Admin Preference**: Any Ghost node prefixed with `admin_` (e.g., `admin_Unit01`) is exclusively controlled by the Master Hub.
-*   **Hierarchy**: The Admin is the only role capable of seeing Viewer-specific ghosts (Global Oversight).
-*   **Scaling**: Individual Viewers are capped at 3 ghosts to maintain system stability, while the Admin has no such restriction.
+### 🛂 Binding Logic & Oversight
+The system architecture follows a "Triangle of Authority" to ensure maximum control for the lead investigator:
+
+*   **Global Visibility (Admin Exclusive)**: When logged in as `admin`, the Tactical Map and Node Selector automatically display **every active node on the network**, including those registered to sub-viewers (e.g., Alpha, Bravo). 
+*   **The "Parent" Authorization**: The Admin is explicitly recognized by the server as a valid "Parent" for Ghost nodes. Any node using the prefix `admin_` (e.g., `admin_Ghost01`) bypasses viewer-specific registration and binds directly to the Master Hub.
+*   **Unlimited Operational Scale**: While subordinate Viewers are strictly capped at 3 ghosts to ensure stability for localized field teams, the **Admin Hub has no software cap** on the number of `admin_` prefixed nodes it can manage simultaneously.
+*   **Encapsulated Security**: While the Admin can see and control "Alpha's" ghosts, the reverse is impossible. A `Viewer` can never see or detect the presence of `admin_` prefixed ghosts, keeping the Master Hub's primary targets completely isolated from the field teams.
 
 ---
-*Document Version: 1.1.6*
+*Document Version: 1.2.0*
