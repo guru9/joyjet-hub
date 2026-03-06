@@ -44,6 +44,24 @@ graph TD
 
 ---
 
+## 📸 Visual Intelligence: Streaming vs. Capture
+
+It is critical to distinguish between the two methods of remote viewing available in the Command Center:
+
+### A. Live HD Streaming (Real-Time)
+*   **Technology**: WebRTC Peer-to-Peer.
+*   **Usage**: Used for active, second-by-second observation of the device screen.
+*   **Behavior**: High bandwidth, low latency. Data is **transient** (not saved to server). If the connection drops or the tab is closed, the stream terminates.
+*   **Best For**: Watching live interactions, social media usage, or real-time navigation.
+
+### B. Remote Snapshots (Static Proof)
+*   **Technology**: `react-native-view-shot` + Base64 Socket Relay.
+*   **Usage**: Used for capturing specific evidence or "frozen" states of the device.
+*   **Behavior**: High resolution, fixed image. Data is **persistent for the session**. All captures are stored in the `SNAPS` gallery until the Admin logs out.
+*   **Best For**: Capturing chats, account details, or proving a node's exact state at a specific time.
+
+---
+
 ## 📋 Security & Permissions Reference
 
 ### Hardware Access Mapping
@@ -98,6 +116,17 @@ Every push to `main` triggers an automated GitHub Action that:
 1. **Selective Rendering**: Admin dashboard unmounts Video/Map components when their tabs are not active to save RAM.
 2. **Conditional Heartbeat**: Ghost nodes scale back heartbeat frequency if battery is <15% to prolong uptime.
 3. **P2P Relay**: Uses Google STUN servers for NAT traversal, ensuring connections even on cellular LTE/5G.
+
+---
+
+## 💾 Data Lifecycle & Session Storage
+
+| Feature | Storage Level | Behavior |
+| --- | --- | --- |
+| **Snapshots** | **App Memory (Admin)** | Persists until Admin logout. Accessible in `SNAPS` gallery. |
+| **Call Logs** | **App Memory (Admin)** | Persists until Admin logout. Accessible in `CALLS` tab. |
+| **GPS Points** | **Transient (Map Path)** | Redrawn on ogni signal. Not stored as history. |
+| **Vitals (Battery)** | **Server Memory** | Last known state recovered instantly on Admin login. |
 
 ---
 
