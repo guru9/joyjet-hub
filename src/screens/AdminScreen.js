@@ -74,11 +74,24 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
 
     // Request full status on entry
     socket.emit('get_status');
-    setLogs(prev => [...prev, { 
-      type: 'SYSTEM', 
-      message: 'COMMAND CENTER INITIALIZED. SCANNING NODES...', 
-      timestamp: new Date().toLocaleTimeString() 
-    }]);
+    
+    // Simulate elitist system boot-up
+    const bootLogs = [
+        "COMMAND CENTER INITIALIZED. SCANNING NODES...",
+        "ENCRYPTED NEURAL MAPPING: SUCCESS",
+        "DIRECT SAT-LINK: ACTIVE",
+        "MASTER HUB STANDING BY..."
+    ];
+    
+    bootLogs.forEach((msg, i) => {
+        setTimeout(() => {
+            setLogs(prev => [...prev, { 
+                type: 'SYSTEM', 
+                message: msg, 
+                timestamp: new Date().toLocaleTimeString() 
+            }].slice(-50));
+        }, i * 400);
+    });
 
     socket.on('log_update', (newLog) => {
       const logWithTime = {

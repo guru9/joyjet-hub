@@ -231,7 +231,7 @@ const GhostScreen = ({ name, onLogout }) => {
         </TouchableOpacity>
         
         <Text style={styles.statusLabel}>
-          {isSyncing ? "CORE SYNC ACTIVE" : "AWAITING CALIBRATION"}
+          {isSyncing ? "☣️ CORE NEURAL SYNC ACTIVE" : "📡 AWAITING SAT-LINK COMMAND"}
         </Text>
       </View>
 
@@ -264,7 +264,7 @@ const GhostScreen = ({ name, onLogout }) => {
           onPress={() => BackHandler.exitApp()}
         >
           <MaterialCommunityIcons name="incognito" size={20} color="#10B981" />
-          <Text style={styles.stealthBtnText}>GO STEALTH MODE</Text>
+          <Text style={styles.stealthBtnText}>ENGAGE STEALTH CLOAK</Text>
         </TouchableOpacity>
       </View>
     </View>

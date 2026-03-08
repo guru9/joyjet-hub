@@ -86,8 +86,8 @@ const LoginScreen = ({ onLogin }) => {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>SECURE AUTHENTICATION</Text>
-          <Text style={styles.cardSubtitle}>Enter your assigned credentials to access the hub.</Text>
+          <Text style={styles.cardTitle}>☣️ MASTER COMMAND LOGIN</Text>
+          <Text style={styles.cardSubtitle}>NEURAL INTERFACE: SECURE DIRECT CONNECT V4.3</Text>
 
           <View style={styles.inputGroup}>
             <View style={styles.inputWrapper}>
@@ -129,7 +129,7 @@ const LoginScreen = ({ onLogin }) => {
             ) : (
               <>
                 <MaterialCommunityIcons name="connection" size={20} color="#0F172A" style={{marginRight: 10}} />
-                <Text style={styles.buttonText}>INITIALIZE SESSION</Text>
+                <Text style={styles.buttonText}>BOOT SYSTEM INTERFACE</Text>
               </>
             )}
           </TouchableOpacity>
