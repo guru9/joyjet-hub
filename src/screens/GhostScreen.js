@@ -179,7 +179,6 @@ const GhostScreen = ({ name, onLogout }) => {
         <AppHeader />
         <TouchableOpacity 
           activeOpacity={0.7} 
-          onLongPress={onLogout}
           style={styles.nodeBadge}
         >
           <Text style={styles.nodeBadgeText}>NODE: {name.toUpperCase()}</Text>
