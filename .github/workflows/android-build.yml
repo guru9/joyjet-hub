@@ -38,6 +38,16 @@ jobs:
           distribution: "zulu"
           java-version: "17"
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
@@ -81,9 +91,33 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
+      - name: Patch Gradle HTTP timeouts for JitPack
+        run: |
+          # Increase Gradle HTTP timeouts to handle slow JitPack responses
+          # Default is 10s connect / 10s read; JitPack can take up to 60s on first build
+          echo "systemProp.org.gradle.internal.http.connectionTimeout=120000" >> android/gradle.properties
+          echo "systemProp.org.gradle.internal.http.socketTimeout=120000" >> android/gradle.properties
+
       - name: Build Android APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
+        run: |
+          # Attempt 1
+          echo "=== Build Attempt 1 ==="
+          ./gradlew assembleRelease --no-daemon --warning-mode none && exit 0 || true
+
+          # Attempt 2 (retry on transient network failures like JitPack timeout)
+          echo "=== Build Attempt 1 failed. Retrying in 30s... ==="
+          sleep 30
+          echo "=== Build Attempt 2 ==="
+          ./gradlew assembleRelease --no-daemon --warning-mode none && exit 0 || true
+
+          # Attempt 3 (final)
+          echo "=== Build Attempt 2 failed. Final retry in 60s... ==="
+          sleep 60
+          echo "=== Build Attempt 3 (Final) ==="
+          ./gradlew assembleRelease --no-daemon --warning-mode none
 
       - name: Upload APK Artifact (Temporary)
         uses: actions/upload-artifact@v4

