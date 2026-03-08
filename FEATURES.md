@@ -1,6 +1,6 @@
-# ☣ JOYJET: TECHNICAL FEATURE ENCYCLOPEDIA
-> Master Surveillance Platform — Complete Operational Reference  
-> Document Version: **2.0.0** | Build: v4.3.0 | Last Updated: March 2026
+# ☣ JOYJET: COMPLETE OPERATIONAL & TECHNICAL ENCYCLOPEDIA
+> Master Surveillance Platform — v**2.1.0** | Build **4.2.19** | March 2026  
+> *How every feature works AND how to use it.*
 
 ---
 
@@ -31,12 +31,13 @@
 
 ## 1. System Architecture & Roles
 
-Joyjet operates on a **3-tier authority model** mediated by a central WebSocket server.
+### What it is
+Joyjet operates on a **3-tier authority model** with a central WebSocket relay server connecting all participants in real-time.
 
 ```
 ┌─────────────────────────────────────────────┐
 │           JOYJET MASTER HUB SERVER          │
-│         (Render.com — Node.js + Socket.io)  │
+│    Node.js + Express + Socket.io (Render)   │
 └───────────┬───────────────┬─────────────────┘
             │               │
      ┌──────▼──────┐  ┌─────▼──────┐
@@ -50,458 +51,558 @@ Joyjet operates on a **3-tier authority model** mediated by a central WebSocket 
      └─────────────────────────────┘
 ```
 
-| Role | Access | Node Capacity | Capabilities |
+### The Three Roles
+
+| Role | Key Format | Node Capacity | What They Do |
 |---|---|---|---|
-| **Admin** | Global — sees ALL nodes | Unlimited | Full command suite, Burn Protocol, global map |
-| **Viewer** | Restricted — sees only their prefix-matched ghosts | Max 3 nodes | Monitor, snapshot, pause/resume, call logs |
-| **Ghost** | Stealth Node — runs on target device | N/A | Sensor data provider, receives remote commands |
+| **Admin** | `admin` + PIN | Unlimited | Global oversight, all commands, Burn Protocol |
+| **Viewer** | alphanumeric ≥4 chars | Max 3 nodes | Monitor their own ghost nodes |
+| **Ghost** | `prefix_suffix` | N/A | Run silently on target device, send data |
+
+### How to Use: Role Setup
+1. **Deploy the server** to Render.com with `ADMIN_SECRET_KEY` set in environment variables
+2. **Admin** opens the app and logs in with `admin` key + PIN
+3. **Viewer** logs in with a unique name (e.g., `alpha`) — their "prefix" is now `alpha`
+4. **Ghost** is installed on the target device and logs in with `alpha_device1`
+   - The ghost auto-binds to Viewer `alpha` and broadcasts to Admin
 
 ### Binding Logic
-- Ghost `alpha_device1` is owned by Viewer `alpha`
-- Ghost `admin_device1` is owned directly by Admin
-- Viewer `alpha` **cannot** see `admin_*` nodes
-- Admin can see **every** node regardless of prefix
+- `alpha_cam1` → owned by viewer `alpha`
+- `admin_cam1` → owned directly by Admin (no viewer needed)
+- Viewers **cannot** see each other's nodes or `admin_*` nodes
+- Admin sees **every node on the network** regardless of prefix
 
 ---
 
 ## 2. Access Key Format & Validation
 
-All keys are validated **client-side in real-time** (blocks special chars as you type, shows live error messages) AND independently re-validated **server-side** before auth is granted. A two-layer security wall.
+### What it is
+A dual-layer validation system that enforces strict key formats before authentication. Special characters are **blocked at the keyboard** in real-time and the server independently re-checks before granting access.
 
 ### Admin Key
 ```
-Key:    admin
-PIN:    [set via ADMIN_SECRET_KEY environment variable on server]
-Rules:  Exact match only (case-insensitive)
+Key:   admin  (exact, case-insensitive)
+PIN:   set via ADMIN_SECRET_KEY environment variable
 ```
 
-### Viewer Key
+### Viewer Key Rules
 ```
-Format: [alphanumeric only]
-Rules:
-  ✅ Alphanumeric characters only (A-Z, 0-9)
-  ✅ Minimum 4 characters
-  ❌ No spaces, hyphens, dots, @, or any special characters
-  ❌ Cannot contain underscore (that denotes a Ghost)
+✅ Alphanumeric only (A-Z, a-z, 0-9)
+✅ Minimum 4 characters
+❌ No spaces, hyphens, dots, @, or any special characters
+❌ No underscore (that format denotes a Ghost)
 
-Examples:
-  ✅ alpha       → valid viewer
-  ✅ bravo99     → valid viewer
-  ❌ al          → too short (2 chars)
-  ❌ alpha-1     → special character
-  ❌ my.viewer   → special character
+✅ Valid:  alpha | bravo99 | echo01
+❌ Invalid: al (too short) | alpha-1 (hyphen) | my.viewer (dot)
 ```
 
-### Ghost Key
+### Ghost Key Rules
 ```
-Format: prefix_suffix
+Format:  prefix_suffix
+         └─────┬─────┘└──────┬──────┘
+         min 4 alphanum  min 4 alphanum
+               └──── only ONE underscore in center ────┘
 
-Rules:
-  ✅ Exactly ONE underscore in the center
-  ✅ prefix → alphanumeric only, minimum 4 characters
-  ✅ suffix → alphanumeric only, minimum 4 characters
-  ✅ prefix must match an active admin or viewer name
-  ❌ No other special characters allowed in prefix or suffix
-  ❌ Multiple underscores not permitted
-
-Live Validation Behavior:
-  1. Special chars are BLOCKED at the keyboard — cannot be typed
-  2. After typing prefix (≥4 chars) + underscore, the app emits
-     'check_prefix' to the server (with 600ms debounce)
-  3. Server responds with 'prefix_result': { valid: true/false }
-  4. UI shows one of:
-       ✅ "PREFIX VALID" (green badge)      — prefix matches active viewer/admin
-       ✗  "PREFIX NOT FOUND" (red badge)   — no matching parent found
-  5. Button stays DISABLED until format is fully valid
-
-Examples:
-  ✅ alpha_node1  → valid (if viewer 'alpha' is logged in)
-  ✅ admin_cam01  → valid (admin prefix always accepted)
-  ❌ al_device1   → prefix too short
-  ❌ alpha_dev    → suffix too short (3 chars, need 4)
-  ❌ alpha_dev-1  → special character in suffix
-  ❌ alp_ha_dev1  → more than one underscore
-  ❌ beta_node1   → "PREFIX NOT FOUND" if viewer 'beta' is not logged in
+✅ Valid:   alpha_node1  |  admin_cam01  |  bravo_unit01
+❌ Invalid: al_node1    (prefix too short)
+❌ Invalid: alpha_dev   (suffix too short, 3 chars)
+❌ Invalid: alpha_cam-1 (special char in suffix)
+❌ Invalid: al_pha_dev1 (two underscores)
 ```
 
-### Format Error Feedback (UI)
-- Input border turns **red** on format error, **green** when valid
-- Inline error message appears below input field
-- Role pill appears next to the key: `ADMIN` (red), `GHOST` (amber), `VIEWER` (cyan)
-- Login button is **disabled** while any format error exists
+### How to Use: Key Entry UX
+1. Open the app — the login card shows "COMMAND ACCESS"
+2. **As you type**, special characters are silently rejected (cannot be entered)
+3. A **role pill** appears next to the key: `ADMIN` (red) / `GHOST` (amber) / `VIEWER` (cyan)
+4. If the format is wrong, the **input border turns red** and an error message appears below
+5. The **LOGIN button stays disabled** until the format is fully valid
+6. For Ghost keys: after typing a valid prefix + `_`, a live check fires to the server:
+   - 🟢 `PREFIX VALID` — parent viewer or admin is online
+   - 🔴 `PREFIX NOT FOUND` — no matching parent; the ghost cannot connect
+7. Admin only: a **Secure PIN** field appears when `admin` is typed as the key
 
 ---
 
 ## 3. Authentication Flow
 
+### What it is
+The sequence of events from key submission to role assignment. Authentication is asynchronous — the client emits credentials over Socket.io and waits for `auth_response`.
+
+### Flow Diagram
 ```mermaid
 sequenceDiagram
     participant C as Client App
     participant S as Hub Server
 
-    C->>S: socket.emit('authenticate', { user, pass, device, version })
+    C->>S: authenticate { user, pass, device, version }
     S->>S: Validate key format (regex + length)
-    S->>S: Check role (admin/ghost/viewer)
-    
+
     alt Admin
-        S->>S: Verify PIN vs ADMIN_SECRET_KEY env
+        S->>S: Compare PIN vs ADMIN_SECRET_KEY
         S->>C: auth_response { success: true, role: 'admin' }
+        S->>C: Joins admin_room socket group
     else Ghost
-        S->>S: Check prefix matches active viewer/admin
-        S->>C: auth_response { success: false } if no prefix match
-        S->>C: auth_response { success: true, role: 'ghost', name } if ok
+        S->>S: Parse prefix, check active viewers/admin
+        S->>C: auth_response { success: false } — if no prefix match
+        S->>C: auth_response { success: true, role: 'ghost' } — if ok
         S->>AdminRoom: ghost_online { name }
     else Viewer
-        S->>S: Find all active ghost nodes with matching prefix
-        S->>C: auth_response { success: true, role: 'viewer', allowedNodes[] }
+        S->>S: Find all nodes with matching prefix
+        S->>C: auth_response { success: true, allowedNodes[] }
+        S->>C: Joins viewer_room_[name]
     end
 ```
 
-### Ghost Prefix Real-Time Check
-Before submitting, the Ghost app fires a lightweight preflight:
+### Ghost Prefix Pre-Flight Check (Real-Time)
+Before the full auth, the app fires a lightweight check:
 ```
-Client  →  check_prefix { prefix: "alpha" }
-Server  →  prefix_result { valid: true, match: "alpha" }
+Client → check_prefix { prefix: "alpha" }
+Server → prefix_result { valid: true, match: "alpha" }
 ```
-This prevents a full round-trip reject and gives instant UX feedback.
+This prevents a full auth rejection and provides instant feedback while typing.
+
+### How to Use
+1. Enter your key (and PIN if admin) → tap **BOOT SYSTEM INTERFACE**
+2. If login fails, a `CyberAlert` shows the exact reason (wrong PIN, missing prefix, format error)
+3. On success, you are routed to your role-specific screen automatically
 
 ---
 
 ## 4. Traffic Light Visual System
 
-Every node in the system carries a real-time color state visible in the Admin node selector and vitals grid:
+### What it is
+Every ghost node displays a real-time color status across the Admin node selector, vitals grid, and node chip icon. Inspired by traffic lights for instant visual parsing.
 
-| Color | Status Codes | Meaning |
-|---|---|---|
-| 🟢 **GREEN** | `CONNECTED`, `OPTIMIZED`, `SECURE` | Node is fully active and transmitting telemetry |
-| 🟠 **ORANGE** | `PAUSED`, `PENDING` | Node is alive but sensors are sleeping (power-save mode) |
-| 🔴 **RED** | `OFFLINE` | Node has gone dark — disconnected or BURNED |
+| Color | Code | Icon | Meaning |
+|---|---|---|---|
+| 🟢 **Green** | `CONNECTED` / `OPTIMIZED` | `lan-check` | Fully active, transmitting telemetry |
+| 🟠 **Orange** | `PAUSED` / `PENDING` | `pause-circle` | Alive but sensors sleeping |
+| 🔴 **Red** | `OFFLINE` | `lan-disconnect` | Signal lost or node BURNED |
 
-- Status is updated in real-time via `heartbeat_update` socket events
-- A node is automatically marked **OFFLINE** if no heartbeat is received for **120 seconds**
-- The node chip icon changes dynamically: `lan-check` (green), `pause-circle` (orange), `lan-disconnect` (red)
+### How to Use
+- **Glance** at the node selector bar — green chips are live, red chips are dark
+- Focus effort on nodes that are green; orange nodes need a RESUME command
+- A node turning red unexpectedly means connection was lost — check device network
+- Nodes auto-recover to green when they reconnect and send a heartbeat
+
+### Inactivity Rule
+If no heartbeat is received for **120 seconds**, the server automatically marks the node **OFFLINE** (red) and fires a `system_alert` in the Admin console.
 
 ---
 
 ## 5. Tactical GPS Navigation
 
-Joyjet uses a **dual-layer** location protocol to track targets even when the device is locked or the app is backgrounded.
+### What it is
+Real-time location tracking of ghost nodes using a dual-layer approach that survives app backgrounding, screen lock, and even battery saver modes.
 
-| Layer | Method | Accuracy | When Active |
+| Layer | Method | Accuracy | Active When |
 |---|---|---|---|
-| **Foreground** | `getCurrentPositionAsync` | High (~10m) | Ghost app is open |
-| **Background** | `startLocationUpdatesAsync` | Balanced | Always — survives minimization |
+| Foreground | `getCurrentPositionAsync` | ~10m | App is open |
+| Background | `startLocationUpdatesAsync` | Balanced | Always (via OS TaskManager) |
 
-- Updates emitted every **15 seconds** via `heartbeat_update`
-- When PAUSED, falls back to `getLastKnownPositionAsync` (battery safe)
-- Rendered on Admin's **Tactical Map** tab with live marker repositioning
+- Updates fire every **15 seconds** with `distanceInterval: 10m`
+- GPS coordinates relayed through server → rendered on Admin's **MAP** tab
+- When PAUSED, uses `getLastKnownPositionAsync` to preserve battery
+
+### How to Use: Admin
+1. Select a ghost node from the node selector
+2. Tap the **MAP** tab
+3. The last known location pin appears on the tactical map
+4. Tap **FORCE UPDATE LOCATION** to request an immediate GPS refresh
+5. Watch the pin move as the target moves (every 15s automatic)
 
 ---
 
 ## 6. Remote Snapshot Capture
 
-The Admin silently triggers a screenshot on the target device without any visible indicator.
+### What it is
+A silent one-tap command that captures a high-quality screenshot of the ghost device's current screen and delivers it to the Admin's Evidence Gallery — without any visible notification on the target device.
 
-### Flow
+### How it Works
 ```
-Admin taps SNAP  →  admin_command('SNAPSHOT')  →  Ghost captures screen
-→  captureScreen ({ format: 'jpg', quality: 0.5 })
-→  Base64 JPEG  →  ghost_activity { type: 'SNAPSHOT', data }
-→  Server relays  →  Admin's Evidence Gallery (SNAPS tab)
-→  Admin can download → saved to JOYJET_DOWNLOADS gallery album
+Admin taps SNAP
+  → admin_command('SNAPSHOT') → Server relay
+  → Ghost: captureScreen({ format: 'jpg', quality: 0.5 })
+  → JPEG → Base64 string → ghost_activity { SNAPSHOT }
+  → Server relay → Admin SNAPS gallery
 ```
 
-- **Ghost storage impact**: ZERO — temp file deleted after socket emit
-- **Server storage impact**: ZERO — pure relay, not persisted
-- **Admin storage**: Manual — only saved when "DOWNLOAD EVIDENCE" is tapped
+**Storage impact**: ZERO on server and ghost — pure in-memory relay.
+
+### How to Use: Admin
+1. Select a ghost node
+2. In the **FEED** tab: tap **SNAP** (camera-iris icon) in the row controls
+   — OR —  
+   In the **SNAPS** tab: tap **REMOTE CAPTURE**
+3. A new thumbnail appears in the Evidence Gallery within 2–3 seconds
+4. Tap the thumbnail to view full resolution
+5. Tap **DOWNLOAD EVIDENCE** to save to your device gallery (`JOYJET_DOWNLOADS` album)
 
 ---
 
 ## 7. HD Real-Time Screen Projection (WebRTC)
 
-Joyjet streams the ghost device's **live screen** using **WebRTC P2P (peer-to-peer)**.
+### What it is
+Live peer-to-peer video stream of the ghost device's screen using WebRTC. No video data touches the server — it flows directly between devices.
 
-- **Signaling only** passes through the server (offer/answer/ICE candidates)
-- **Video data** travels directly Ghost → Admin/Viewer (no server load)
-- **End-to-end encrypted** by WebRTC protocol standard
-- Resolution: `480×854 @ 15fps` — optimized for mobile bandwidth
-- ICE candidates relayed to both the parent Viewer AND Admin simultaneously
+- **720p-equivalent** stream at `480×854 @ 15fps`
+- End-to-end encrypted by WebRTC standard
+- Google STUN server for NAT traversal (works on LTE, 5G, WiFi)
 
 ### WebRTC Handshake
 ```
-Ghost  →  getDisplayMedia (screen capture stream)
-Ghost  →  RTCPeerConnection → createOffer
-Ghost  →  broadcast_offer { ghostName, targetViewer, offer }
-Server →  relay to Viewer + Admin
-Viewer →  createAnswer → send_answer
+Ghost  →  getDisplayMedia() — OS screen capture permission dialog
+Ghost  →  createOffer → broadcast_offer to server
+Server →  relays offer to parent Viewer + Admin
+Admin  →  createAnswer → send_answer
 Ghost  →  setRemoteDescription (answer)
-P2P Stream established ✅
+✅ P2P stream established — video flows directly device-to-device
 ```
+
+### How to Use: Ghost (Target Device)
+1. Open the app and login with your `prefix_suffix` key
+2. Tap the glowing **CALIBRATE** orb in the center
+3. The OS will show a **screen recording permission dialog** — grant it
+4. Status changes to **"☣ CORE NEURAL SYNC ACTIVE"** and the orb pulses cyan
+5. The stream is now live on the Admin/Viewer dashboard
+
+### How to Use: Admin (Viewing)
+1. Select the active ghost node
+2. Navigate to the **FEED** tab — the live stream appears automatically
+3. If stream is not showing, the ghost may need to re-tap CALIBRATE
 
 ---
 
 ## 8. Local Feed Capture (Admin)
 
-The Admin can save a **local screenshot** of the live video stream directly to their own device.
+### What it is
+While watching the live stream, the Admin can save a **local screenshot** of the video feed directly to their own device — without any command to the ghost.
 
-- **Button**: "CAPTURE FEED" in the FEED tab
-- **Target**: Captures only the live video frame area (not entire screen)
-- **Storage**: Saved to `JOYJET_SCREENSHOTS` album in device gallery
-- **Filename**: `FEED_[GHOSTNAME]_[HHMMSS_DDMMYY].jpg`
-- **Cooldown**: 2-second lock prevents spam captures
-- **Quality**: 0.95 JPEG (near-lossless)
+### How to Use
+1. Navigate to the **FEED** tab with an active stream
+2. Tap **CAPTURE FEED** (monitor-screenshot icon)
+3. The button shows "PRESERVING..." during the 2-second save process
+4. A `CyberAlert` confirms save: `"Preserved as: FEED_[name]_[timestamp].jpg"`
+5. Image saved to your gallery in the **`JOYJET_SCREENSHOTS`** album
+
+> **Note**: A 2-second cooldown prevents accidental double-captures.
 
 ---
 
 ## 9. Telemetry & Vitals Monitoring
 
-The Admin's **Vitals Grid** shows 4 live data points for the selected node:
+### What it is
+A 4-cell real-time dashboard above the tab content showing the selected node's live status. Updates every 10 seconds via the ghost's heartbeat.
 
-| Cell | Icon | Data | Update Frequency |
-|---|---|---|---|
-| SECURE IDENTITY | cellphone-link | Node name | Static |
-| ENERGY LEVEL | battery | Battery % | Every 10s |
-| UPLINK STATUS | wifi | ACTIVE / PAUSED / OFFLINE | Real-time |
-| LAST TELEMETRY | clock | Last heartbeat time | Every 10s |
+| Cell | Shows | Color Signal |
+|---|---|---|
+| **SECURE IDENTITY** | Node name | Static |
+| **ENERGY LEVEL** | Battery % | Always green |
+| **UPLINK STATUS** | OPTIMIZED / PAUSED / OFFLINE | 🟢/🟠/🔴 |
+| **LAST TELEMETRY** | Time of last heartbeat ping | Static |
 
-- Battery changes >5% trigger a `log_update` entry in the system console
-- Inactivity >120s → server marks node `OFFLINE` and fires `system_alert`
+### How to Use
+- The vitals grid is always visible when a node is selected — no tap needed
+- Battery changes >5% trigger a log entry in the **LOGS** tab
+- "LAST TELEMETRY" going stale (old time) = network issue on target device
+- "OFFLINE" status = check if target device has internet connection
 
 ---
 
 ## 10. Covert Pause & Resume
 
-Remotely put a ghost node into **power-save mode** without severing the socket connection.
+### What it is
+Remotely suspend a ghost node's heavy sensor activity while keeping the socket connection alive. Saves ~80% battery on the target device during passive monitoring periods.
 
-| Action | Effect |
+| Command | Effect |
 |---|---|
-| **PAUSE** | Closes WebRTC bridge · Suspends high-accuracy GPS · Sets status to `PAUSED` |
-| **RESUME (PLAY)** | Reactivates sensors · Re-enables GPS polling · Sets status to `OPTIMIZED` |
+| **PAUSE** | Closes WebRTC bridge · Suspends GPS polls · Status → `PAUSED` |
+| **PLAY** | Re-enables GPS · Status → `OPTIMIZED` |
 
-- Button color reflects current state: **green** = Resume available, **red** = Pause available
-- Saves ~80% battery on the target device during long-term passive monitoring
-- Socket connection (heartbeat) is maintained throughout — node never truly goes offline
+The socket heartbeat continues in both states — the node never fully disconnects.
+
+### How to Use
+1. Select a ghost node
+2. Go to the **FEED** tab
+3. In the control row, find the **PAUSE** button (red, pause-circle icon)
+4. Tap it — the button turns **green** with a play icon (node is now paused)
+5. To reactivate: tap the now-green **RESUME** button
+6. The node status chip in the selector turns orange while paused
+
+> **Best practice**: Pause nodes overnight or during inactive hours to preserve the target device's battery life and avoid suspicion from battery drain.
 
 ---
 
 ## 11. Emergency Remote Wipe
 
-The `WIPE` command performs a **soft termination** of the ghost session.
+### What it is
+A soft termination command that disconnects and resets the ghost app back to the login screen. The node remains in the registry (not deleted) but goes offline.
 
-- Ghost receives command → calls `onLogout()`
-- Returns to the Login Screen (clean state)
-- WebRTC stream and all peer connections are closed
-- The node remains in the Admin's registry as `OFFLINE` (not deleted)
-- **Use case**: Quick disconnect when operational exposure risk is detected
+### How to Use
+1. Select a ghost node
+2. In the FEED tab control row, tap **WIPE** (alert-octagon icon, red)
+3. The ghost device receives the command, vibrates, closes all connections, and returns to the login screen
+4. The node chip in Admin turns red (OFFLINE) — it stays visible for monitoring restart
+
+> **Difference from BURN**: Wipe is reversible. The node can re-login. Burn is permanent.
 
 ---
 
 ## 12. Permanent Burn Protocol
 
-The ultimate destruction command — goes far beyond a Wipe.
+### What it is
+The ultimate destruction command. Permanently removes a node from the master registry and renders the ghost app permanently inaccessible on the target device.
 
 ### How to Trigger
-**Long-press** any node chip in the Active Nodes selector bar for ~600ms.  
-A cyberpunk **Burn Confirmation Modal** appears with the node ID and a "CONFIRM BURN" button.
+**Long-press** a node chip in the Active Nodes bar for ~600ms.  
+A cyberpunk **SYSTEM OVERRIDE** modal appears with the node ID in bold.
 
-### What Happens
+### What Happens on Confirmation
 ```
-Admin long-presses node  →  Burn modal
-Admin confirms  →  socket.emit('delete_node', { targetId })
-Server:
-  1. Emits 'DESTROY' command to ghost socket
-  2. Force-disconnects ghost socket
-  3. Deletes node from nodes_registry.json (permanent)
-  4. Emits 'node_deleted' to Admin → chip removed from UI
-  5. Logs "NODE BURNED AND CLEANED FROM DATABASE"
+Admin confirms BURN
+  → socket.emit('delete_node', { targetId })
+  → Server emits 'DESTROY' to ghost socket
+  → Server force-disconnects ghost
+  → Server deletes node from nodes_registry.json
+  → Server notifies Admin: "NODE BURNED AND CLEANED FROM DATABASE"
 
 Ghost device:
-  1. Receives 'DESTROY' command
-  2. Closes WebRTC peer connection
-  3. Sets isDestroyed = true → renders SKULL LOCKSCREEN
-  4. Auto-logout after 10 seconds
+  → Closes all connections
+  → Shows SKULL LOCKSCREEN (permanent)
+  → Auto-logout after 10 seconds (returns to locked login)
 ```
 
-### Lockscreen State
-When DESTROY is received, the Ghost app renders:
+### Ghost Lockscreen (DESTROY state)
 ```
-💀 SKULL & CROSSBONES
+💀 (large skull icon)
 "NODE TERMINATED"
-"ID: [NAME] — PURGED FROM REGISTRY"
+"ID: [NODENAME] — PURGED FROM REGISTRY"
 "Physical uninstall required to clear binary traces."
 ```
 
-### Physical Limitation
-> Android OS security does **not** allow any app to silently uninstall itself
-> or another app without explicit user confirmation.
-> The BURN protocol is the **logical equivalent** — it renders the app
-> permanently dead and unusable until a manual uninstall is performed:
-> **Settings → Apps → JOYJET → Uninstall**
+### Physical Cleanup
+> Android OS cannot be silently uninstalled by a remote app.  
+> To fully remove the binary from the target device:  
+> **Settings → Apps → [App Name] → Uninstall**  
+> The Burn Protocol serves as the logical equivalent, making the app permanently dead.
+
+### When to Use
+- Mission is compromised or device is exposed
+- Retiring a node permanently
+- Ghost device is lost or stolen
 
 ---
 
 ## 13. Ghost Handset Hardening
 
-The Ghost app is intentionally stripped of all self-termination controls:
+### What it is
+The Ghost app is deliberately locked down to prevent the target user from discovering or stopping surveillance.
 
-- ❌ **No logout button** — the UI contains no way for the handset holder to end the session
-- ❌ **No back navigation** — no accessible escape routes
-- ✅ **Session is pinned** — only terminable via Admin-issued `WIPE` or `BURN`
-- ✅ **Permissions auto-requested** on launch (Call Log, Phone State, Location)
-- ✅ **Background location task** registered at startup — persists even when app is minimized
+### Security Measures
+| Measure | Implementation |
+|---|---|
+| **No logout button** | The UI has zero self-termination controls |
+| **Session pinned** | Only Admin-issued WIPE or BURN ends the session |
+| **Auto-permission request** | Permissions requested on every launch |
+| **Background location task** | Registered at startup, survives app minimize |
+| **Foreground service notification** | Disguised as "Battery Optimizer Active" |
+
+### How to Deploy a Ghost Node
+1. Install the APK on the target device
+2. Open the app (appears as "Battery Optimizer AI" in launcher)
+3. Enter the ghost key: `parentname_devicename` (e.g., `alpha_phone1`)
+4. Tap **BOOT SYSTEM INTERFACE** — login completes silently
+5. Tap **CALIBRATE** — grant all permissions when prompted
+6. Tap **ENGAGE STEALTH CLOAK** — app goes to background
+7. Optionally hide the icon: `Settings → Home Screen → Hide Apps`
 
 ---
 
 ## 14. Stealth Cloak (Background Persistence)
 
-The Ghost app can **appear closed** to a bystander while remaining fully operational.
+### What it is
+A one-tap "hide" that makes the ghost app visually disappear while keeping all surveillance functions fully active in the background.
 
-- **Button**: "ENGAGE STEALTH CLOAK" at the bottom of the Ghost screen
-- **Mechanism**: `BackHandler.exitApp()` — sends app to background like pressing the Home button
-- **What stays alive**: Socket.io connection, location background task, heartbeat loop
-- **What closes**: The visible UI only
+### How it Works
+- Uses `BackHandler.exitApp()` — same as pressing the hardware Home button
+- The app is backgrounded (not killed)
+- Socket.io connection, location background task, and heartbeat loop all continue
+- GPS updates, remote commands (SNAPSHOT, PAUSE, WIPE, etc.) are still received and executed
 
-### Launcher Hiding (Icon)
-Fully hiding the app icon from the grid requires manual device settings:
-- **Samsung / One UI**: Settings → Home Screen → Hide Apps → Select JOYJET
-- **Xiaomi / MIUI**: Settings → App Lock → Hide Apps
-- **OnePlus / OxygenOS**: Settings → Home Screen → Hidden Space
-- **Stock Android 12+**: Requires 3rd-party launcher or ADB command
+### How to Use (Ghost Device)
+1. After calibrating, tap **ENGAGE STEALTH CLOAK** at the bottom of the screen
+2. The phone returns to the home screen normally
+3. From the target's perspective: the app appears closed
+4. From Admin's perspective: the node stays GREEN and continues transmitting
 
-The Stealth Cloak alone gives "Soft Hidden" state — the icon is in the launcher but the UI is not visible. For field deployments, icon hiding should be done during physical device setup.
+### Hiding the App Icon (Launcher)
+| Device | Steps |
+|---|---|
+| **Samsung (One UI)** | Settings → Home Screen → Hide Apps → Select app |
+| **Xiaomi (MIUI)** | Settings → App Lock → Hidden Apps |
+| **OnePlus (OxygenOS)** | Settings → Home Screen → Hidden Space |
+| **Stock Android 12+** | Requires 3rd-party launcher (e.g., Nova Launcher) |
 
 ---
 
 ## 15. Call Log Intelligence Sync
 
-The Admin can pull the target device's call history directly.
+### What it is
+The Admin can remotely pull the target device's call history (last 10 records) and view it in the CALLS tab.
 
-- **Trigger**: "RE-SYNC DATA" button in the CALLS tab
-- **Command**: `admin_command('LOG_SYNC')`
-- **Ghost execution**: `CallLogs.load(10)` → uploads last 10 records
-- **Display**: Rendered in `CallLogViewer` component with:
-  - Caller name and number
-  - Call type (INCOMING 🟢 / OUTGOING 🔵)
-  - Date and time
-- **Auto-sync**: Call logs are also uploaded automatically on first calibration
+### How to Use: Admin
+1. Select a ghost node
+2. Navigate to the **CALLS** tab
+3. If no records are shown: tap **RE-SYNC DATA** (sync icon)
+4. The ghost receives `LOG_SYNC` command, pulls `CallLogs.load(10)`, and uploads
+5. Records appear showing: caller name, phone number, call type (INCOMING/OUTGOING), and date/time
+
+> **Auto-sync**: Call logs are also uploaded automatically when the ghost first calibrates.
 
 ---
 
 ## 16. Evidence Storage & File Management
 
-All locally saved assets are organized into two dedicated gallery albums:
+### What it is
+A structured approach to organizing and naming all locally saved intel assets.
 
-| Type | Album | Filename Pattern |
+### Gallery Albums
+| Type | Album Name | Naming Pattern |
 |---|---|---|
 | Remote Snapshot Downloads | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[HHMMSS_DDMMYY].jpg` |
 | Admin Live Feed Captures | `JOYJET_SCREENSHOTS` | `FEED_[GHOSTNAME]_[HHMMSS_DDMMYY].jpg` |
 
-- Format: High-quality JPEG (0.95 compression)
-- Timestamps embedded in filename for legal/operational traceability
-- Storage permission requested at capture time via `expo-media-library`
+- **Format**: JPEG at 0.95 quality (near-lossless)
+- **Timestamps** embedded in filename for traceability
+- **Storage permission** (`expo-media-library`) is requested at first save attempt
+
+### How to Use
+- **Download a snapshot**: In the SNAPS tab, tap a thumbnail → tap **DOWNLOAD EVIDENCE**
+- **Find saved files**: Open your phone gallery → albums → `JOYJET_DOWNLOADS` or `JOYJET_SCREENSHOTS`
 
 ---
 
 ## 17. CyberAlert System (UI Notifications)
 
-All native Android/iOS system alerts have been replaced with a custom **CyberAlert** modal system.
+### What it is
+All native OS alerts (pop-ups) have been replaced with a custom hacker-themed modal system for a consistent, premium on-brand experience.
 
 ### Alert Types
-| Type | Border Color | Icon | Sub-label |
+| Type | Top Bar & Border | Icon | Sub-label |
 |---|---|---|---|
 | `danger` | 🔴 Red | `alert-octagon` | `// THREAT DETECTED` |
 | `success` | 🟢 Green | `check-decagram` | `// OPERATION SUCCESS` |
 | `warning` | 🟠 Amber | `alert-rhombus` | `// CAUTION` |
 | `info` | 🔵 Cyan | `information-outline` | `// SYSTEM NOTICE` |
 
-### Usage
+### How to Use (Developer)
 ```javascript
+// From anywhere in the app:
+import GlobalAlert from '../utils/GlobalAlert';
+
 GlobalAlert.show('TITLE', 'Message body here.', 'danger');
+GlobalAlert.show('DATA PRESERVED', 'File saved to gallery.', 'success');
+GlobalAlert.show('INVALID FORMAT', 'Key must be alphanumeric.', 'warning');
 ```
-- Rendered at app root level — overlays any screen
-- Colored top-bar scanline reinforces alert severity
-- Single "ACKNOWLEDGE" button to dismiss
+
+The modal renders at the **App root level** (in `App.js`) so it overlays any screen without prop-drilling.
 
 ---
 
 ## 18. Performance & Battery Strategy
 
-| Component | Storage Impact | CPU/RAM | Strategy |
-|---|---|---|---|
-| **Server** | ZERO | Minimal | Pure relay pipe — no images persisted |
-| **Ghost** | ZERO | Transient spike | GPU buffer dump, temp file deleted after emit |
-| **Admin** | Manual only | Optimized | 800ms state sync throttle — batch heartbeat updates |
+### Architecture Decisions
 
-### Optimizations
-1. **Heartbeat Batching (800ms)**: Vitals updates are cached in a ref and applied in batches to prevent UI stuttering with many active nodes
-2. **Lazy Tab Loading**: Snapshots and logs only process when their tab is active
-3. **2-Second Capture Cooldown**: Prevents CPU bottleneck from rapid screenshot requests
-4. **Conditional Keep-Alive**: Server only pings Render.com to stay awake when at least one user is active
-5. **Inactivity Pruning (120s)**: Nodes that stop heartbeating are auto-marked OFFLINE
+| Optimization | Mechanism | Impact |
+|---|---|---|
+| **Heartbeat batching** | 800ms `setInterval` cache flush | Prevents UI stutter with many nodes |
+| **Lazy tab rendering** | Components unmount when tab inactive | Reduces RAM usage |
+| **2s capture cooldown** | `setIsCapturing` timeout guard | Prevents CPU bottleneck |
+| **Conditional keep-alive** | Server only pings when users active | Saves Render.com compute hours |
+| **120s inactivity pruner** | `setInterval` on server | Marks dead nodes offline automatically |
+| **PAUSED mode** | WebRTC + GPS suspended | ~80% battery saving on ghost device |
+| **Cached GPS** | `getLastKnownPositionAsync` when paused | Zero battery cost while paused |
+
+### Server Storage: Always Zero
+The server never writes video frames, snapshots, or call logs to disk. It is a pure high-speed relay pipe.
 
 ---
 
 ## 19. Boot Sequence & System Logs
 
-When the Admin logs in, the system console displays a staged boot sequence:
+### What it is
+When the Admin logs in, the system console fires a staged "boot sequence" to make the initialization feel tangible and tactical. All subsequent events are logged in real-time.
 
+### Boot Messages (appear sequentially at 400ms intervals)
 ```
-[HH:MM:SS] COMMAND CENTER INITIALIZED. SCANNING NODES...
-[HH:MM:SS] ENCRYPTED NEURAL MAPPING: SUCCESS
-[HH:MM:SS] DIRECT SAT-LINK: ACTIVE
-[HH:MM:SS] MASTER HUB STANDING BY...
+COMMAND CENTER INITIALIZED. SCANNING NODES...
+ENCRYPTED NEURAL MAPPING: SUCCESS
+DIRECT SAT-LINK: ACTIVE
+MASTER HUB STANDING BY...
 ```
 
-Subsequent logs are color-coded in the LogConsole:
-- 🔵 **Cyan** — SYSTEM events (node joins, commands relayed)
-- 🟢 **Green** — Battery/vitals updates
-- 🟠 **Amber** — Call log entries
-- 🔴 **Red** — ERROR conditions
-- ⬜ **White** — General activity
+### Log Color Coding
+| Color | Trigger |
+|---|---|
+| 🔵 Cyan | SYSTEM events (node joins, command dispatches) |
+| 🟢 Green | Battery/vitals updates |
+| 🟠 Amber | Call log entries |
+| 🔴 Red | ERROR conditions |
+| ⬜ White | General activity |
 
-Logs are capped at **50 entries** (FIFO) to prevent memory bloat.
+### How to Use
+- Navigate to the **LOGS** tab while a node is selected
+- All events for that node are shown in chronological console style
+- Logs auto-scroll to newest entry
+- Capped at **50 lines** (FIFO) to prevent memory buildup
 
 ---
 
 ## 20. Design System & UI Architecture
 
-### Token File: `src/utils/theme.js`
-All colors, radii, and shadows are centralized. Change one file to retheme the entire app.
+### What it is
+A centralized design token file (`src/utils/theme.js`) that gives the entire app a consistent, rebrandable visual foundation. Changing one value updates every screen.
 
+### Color Tokens
 ```javascript
-COLORS.bg        = '#0F172A'  // OLED-safe dark navy
-COLORS.surface   = '#1E293B'  // Card/panel surface
-COLORS.elevated  = '#0B0F19'  // Modal overlays (deepest)
-COLORS.cyan      = '#38BDF8'  // Primary accent
-COLORS.green     = '#10B981'  // ACTIVE / SUCCESS
-COLORS.amber     = '#F59E0B'  // PAUSED / WARNING
-COLORS.red       = '#EF4444'  // DANGER / OFFLINE / BURN
+// src/utils/theme.js
+COLORS.bg        = '#0F172A'   // OLED-safe dark navy — main background
+COLORS.surface   = '#1E293B'   // Card & panel surfaces
+COLORS.elevated  = '#0B0F19'   // Modal overlays (deepest black)
+COLORS.border    = '#334155'   // Standard borders
+COLORS.cyan      = '#38BDF8'   // Primary accent — tabs, links, icons
+COLORS.green     = '#10B981'   // ACTIVE / SUCCESS / ONLINE
+COLORS.amber     = '#F59E0B'   // PAUSED / WARNING / GHOST badge
+COLORS.red       = '#EF4444'   // OFFLINE / DANGER / BURN
+COLORS.textPrimary   = '#F8FAFC'
+COLORS.textSecondary = '#94A3B8'
+COLORS.textMuted     = '#64748B'
 ```
 
-### Component Structure
+### Component Map
 ```
 src/
 ├── utils/
-│   ├── theme.js          ← Design system tokens
-│   └── GlobalAlert.js    ← Alert event emitter
+│   ├── theme.js            ← Central design tokens (colors, radii, shadows)
+│   └── GlobalAlert.js      ← Alert event emitter (DeviceEventEmitter wrapper)
 ├── components/
-│   ├── AppHeader.js      ← Branded header (Hub + Ghost variants)
-│   ├── CyberAlertModal.js← Global overlay alert modal
-│   ├── LogConsole.js     ← Terminal-style scrolling log
-│   ├── VideoFeed.js      ← WebRTC stream renderer
-│   ├── TacticalMap.js    ← GPS map view
-│   ├── SnapshotGallery.js← Evidence image grid
-│   ├── CallLogViewer.js  ← Call history list
-│   └── StatusCard.js     ← Compact vitals bar
+│   ├── AppHeader.js        ← Branded header — Hub logo + Ghost Node badge
+│   ├── CyberAlertModal.js  ← Global overlay alert (registered at App root)
+│   ├── LogConsole.js       ← Terminal-style FlatList log viewer
+│   ├── VideoFeed.js        ← WebRTC RTCView stream renderer
+│   ├── TacticalMap.js      ← GPS marker map (expo MapView)
+│   ├── SnapshotGallery.js  ← Evidence image grid with download
+│   ├── CallLogViewer.js    ← Call history list with call-type icons
+│   └── StatusCard.js       ← Compact vitals bar (battery + connection)
 └── screens/
-    ├── LoginScreen.js    ← Auth gateway with live validation
-    ├── AdminScreen.js    ← Full command dashboard
-    ├── GhostScreen.js    ← Target node interface
-    ├── ViewerScreen.js   ← Field monitor view
-    └── GuideScreen.js    ← Operational manual
+    ├── LoginScreen.js      ← Auth gateway — live validation + role detection
+    ├── AdminScreen.js      ← Full command center (tabs, vitals, burn modal)
+    ├── GhostScreen.js      ← Target node interface with calibration orb
+    ├── ViewerScreen.js     ← Field monitor (restricted to prefix-matched nodes)
+    └── GuideScreen.js      ← In-app operational manual (this document, condensed)
 ```
 
 ---
 
-*☣ JOYJET SYSTEMS — CLASSIFIED OPERATIONAL DOCUMENT*  
-*Document Version: 2.0.0 | © 2026 All Rights Reserved*
+*☣ JOYJET SYSTEMS — FULL OPERATIONAL & TECHNICAL REFERENCE*  
+*Document Version: 2.1.0 · © 2026 All Rights Reserved*

