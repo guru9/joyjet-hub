@@ -177,4 +177,35 @@ The target Ghost application interface is intentionally stripped of user-control
 - The session can only be formally terminated via a remote `WIPE` command issued by an authorized Admin.
 
 ---
-*Document Version: 1.3.0*
+
+## 10. Direct Hacker UI & CyberAlert System
+
+### 📟 High-Contrast Modal Feedback
+Standard system "Alerts" have been eradicated in favor of a centralized **CyberAlert** pipeline.
+- **Visuals**: Employs an OLED-black background with high-saturation tactical borders (Red for Danger, Green for Success, Blue for Info).
+- **Triggers**: Every event—from authentication failures to successful video captures—is communicated via these sleek, terminal-style popups.
+- **Rationale**: Elevates the user experience to feel like an elite command platform while ensuring high visibility in field environments.
+
+---
+
+## 11. Permanent Burn Protocol (Strategic Purge)
+
+### 💀 The Terminal Kill-Switch
+A step beyond the `WIPE` command, the `BURN` protocol is designed for permanent extraction of a node.
+- **Trigger**: Long-pressing a node chip in the Active Nodes selector.
+- **Server Action**: The server permanently deletes the node's record from the `nodes_registry.json`. No traces are left behind in the database once the server restarts.
+- **Handset Action**: Instantly severs all bridges and locks the app.
+- **Tactical Context**: Used when a mission is compromised or a device is retired. The node ID becomes "Free" once burned and can be recycled.
+
+---
+
+## 12. Stealth Backdoor & Backend Persistence
+
+### 👤 Incognito Operations
+The Ghost application features a **"GO STEALTH MODE"** exit strategy.
+- **Operation**: Clicking the stealth button uses the `BackHandler` native bridge to minimize the app instantly.
+- **Persistence**: Unlike swiping-to-kill, the app continues to run its high-priority Socket.io thread and Location Task in the background.
+- **Visibility**: The app "hides" in plain sight by returning the handset holder to their normal home screen while maintaining the surveillance pipeline.
+
+---
+*Document Version: 1.4.0*

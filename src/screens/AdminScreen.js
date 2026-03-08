@@ -22,6 +22,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [nodeToDelete, setNodeToDelete] = useState(null);
+  
+  // -- REFS & CACHES --
   const viewRef = useRef();
   const feedRef = useRef();
   const heartbeatCache = useRef({});
@@ -153,6 +155,7 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
     }
   }, [selectedGhostId]);
 
+  // -- PROTOCOL: COMMAND DISPATCH --
   const sendCommand = (target, cmd) => {
     socket.emit('admin_command', { targetId: target, cmd });
     Vibration.vibrate(50);
@@ -164,6 +167,7 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
     return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear().toString().slice(-2)}`;
   };
 
+  // -- PROTOCOL: EVIDENCE PRESERVATION --
   const captureLocalView = async (targetRef, typeLabel = "DASHBOARD") => {
     if (isCapturing) return;
 
