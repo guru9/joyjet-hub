@@ -92,12 +92,25 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
-      - name: Patch Gradle HTTP timeouts for JitPack
+      - name: Patch Gradle files for JitPack timeout fix
         run: |
-          # Increase Gradle HTTP timeouts to handle slow JitPack responses
-          # Default is 10s connect / 10s read; JitPack can take up to 60s on first build
+          # ── gradle.properties ──────────────────────────────────────────────
+          # expo prebuild regenerates android/ completely with no trailing newline.
+          # We MUST add an explicit newline first or the values merge with the last line.
+          # e.g. without this: "android.minSdkVersion=30systemProp...." → PARSE ERROR
+          printf '\n' >> android/gradle.properties
           echo "systemProp.org.gradle.internal.http.connectionTimeout=120000" >> android/gradle.properties
           echo "systemProp.org.gradle.internal.http.socketTimeout=120000" >> android/gradle.properties
+          echo "Patched gradle.properties:"
+          tail -5 android/gradle.properties
+
+          # ── build.gradle ───────────────────────────────────────────────────
+          # expo prebuild also regenerates android/build.gradle, wiping the
+          # metadataSources block we added locally. Re-apply it via sed.
+          sed -i "s|maven { url 'https://www.jitpack.io' }|maven {\n      url 'https://www.jitpack.io'\n      metadataSources { mavenPom(); artifact() }\n    }|g" android/build.gradle
+          echo "Patched build.gradle (JitPack block):"
+          grep -A 4 "jitpack" android/build.gradle
+
 
       - name: Build Android APK
         working-directory: android
