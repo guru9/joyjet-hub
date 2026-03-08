@@ -55,10 +55,10 @@ const validateKey = (key) => {
       return `Prefix too short — need at least 4 characters (${prefix.length}/4).`;
 
     if (!/^[a-z0-9]+$/.test(suffix))
-      return 'Suffix (ghost name) must be alphanumeric only.';
+      return 'Suffix (ghost name) must be alphanumeric only (no special characters).';
 
-    if (suffix.length < 1)
-      return 'Suffix (ghost name) cannot be empty after underscore.';
+    if (suffix.length < 4)
+      return `Suffix too short — need at least 4 characters (${suffix.length}/4).`;
 
     return null;
   }
@@ -264,8 +264,8 @@ const LoginScreen = ({ onLogin }) => {
             {/* Ghost format hint */}
             {role === 'ghost' && !formatError && (
               <Text style={styles.hintText}>
-                Format: <Text style={{ color: COLORS.cyan }}>viewerName_ghostName</Text>
-                {'  ·  '}Prefix must match an active viewer or admin.
+                Format: <Text style={{ color: COLORS.cyan }}>prefix_suffix</Text>
+                {'  ·  '}Both prefix & suffix must be alphanumeric, min 4 chars each.
               </Text>
             )}
 
