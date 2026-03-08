@@ -48,22 +48,132 @@ graph TD
 
 ---
 
-## ✨ Core Features
+## 🎯 Main Features
 
-| Feature | Description |
-|---|---|
-| 📡 **Live HD Streaming** | WebRTC P2P encrypted screen stream `480×854 @ 15fps` |
-| 🛰️ **Tactical GPS** | Dual-layer location tracking — foreground + background task |
-| 📸 **Silent Snapshots** | Remote JPG capture with zero visible indication on target |
-| ☣ **Burn Protocol** | Permanent node destruction + skull lockscreen on target |
-| 🚨 **Remote Wipe** | Soft disconnect — node returns to login without data deletion |
-| ⏸️ **Pause / Resume** | Power-save sleep mode — ~80% battery saving on target |
-| 📞 **Call Log Sync** | Pull last 10 call records from target device silently |
-| 🃏 **Stealth Cloak** | One-tap background hide — surveillance continues invisibly |
-| 🔴🟠🟢 **Traffic Lights** | Real-time color-coded node status system |
-| 🔐 **Smart Validation** | Real-time key format validation + live server prefix check |
-| 📟 **CyberAlert UI** | Hacker-themed alert modal replacing all native OS popups |
-| 📂 **Evidence Gallery** | Organised local snapshot storage in named gallery albums |
+### 📡 Live CCTV — Screen Sharing Stream
+> **Real-time HD video feed of the target device's screen**
+
+Uses **WebRTC peer-to-peer** technology to stream the ghost device's screen directly to the Admin dashboard. The video travels device-to-device — no data ever passes through or is stored on the server. The stream is end-to-end encrypted by WebRTC standard.
+
+- Resolution: `480×854 @ 15fps` — optimized for mobile bandwidth
+- Works over WiFi, LTE, and 5G networks
+- Admin and Viewers can watch simultaneously (independent P2P connections)
+- Zero server storage — stream is live-only, not recorded
+
+---
+
+### 📸 Silent Screen Capture
+> **One-tap remote screenshot — invisible to the target**
+
+Admin issues a `SNAPSHOT` command that silently captures the ghost device's current screen using a native GPU buffer dump. The JPEG is base64-encoded and relayed through the server to the Admin's **Evidence Gallery** with zero notification or UI change on the target device.
+
+- High-quality JPEG capture (GPU buffer)
+- Delivered to Admin within 2–3 seconds
+- Stored in session gallery — downloadable to `JOYJET_DOWNLOADS` album
+- Silent: no camera sound, no screen flash, no notification
+
+---
+
+### 🛰️ Live Pinpoint Location (GPS)
+> **Real-time tactical map tracking — works even when the screen is locked**
+
+A dual-layer location system keeps track of the ghost device at all times:
+
+| Mode | Method | When Active |
+|---|---|---|
+| **Foreground** | `getCurrentPositionAsync` (10m precision) | App is open |
+| **Background** | `startLocationUpdatesAsync` via OS TaskManager | Always — survives minimize & screen lock |
+
+- Updates every **15 seconds** or every **10 metres** of movement
+- Renders as a live pin on the Admin's **Tactical Map** tab
+- Works through cellular data when GPS is available
+- Fallback to last known position during Pause mode
+
+---
+
+### 📞 Call Log Intelligence
+> **Silent remote extraction of the target's call history**
+
+The Admin can pull the last 10 call records from the target device's internal database with a single tap. Logs show caller name, phone number, call direction, and timestamp — all without any visible activity on the target.
+
+- Displays: caller name, number, INCOMING 🟢 / OUTGOING 🔵, date & time
+- Auto-synced on first calibration
+- Re-sync anytime from the **CALLS** tab
+- Data stays in Admin session memory (not persisted to server)
+
+---
+
+### 🔋 Live Battery & Vitals Monitoring
+> **Real-time device health dashboard for every connected node**
+
+The Admin's vitals grid shows live battery percentage, uplink status, and last-seen timestamp for the selected node. Battery updates are reported every 10 seconds and logged in the system console when they change by more than 5%.
+
+---
+
+### ☣ Burn Protocol (Permanent Node Destruction)
+> **Long-press any node to permanently destroy it**
+
+The most powerful Admin command. Long-pressing a node chip triggers a cyberpunk confirmation modal. On confirmation:
+1. The server permanently removes the node from its registry
+2. The ghost app receives a DESTROY command and displays an irrecoverable **Skull Lockscreen**
+3. The node is gone forever — cannot reconnect without fresh credentials
+
+---
+
+### 🚨 Remote Wipe
+> **Instantly disconnect and reset a ghost node**
+
+A soft kill-switch that forces the ghost app back to the login screen and closes all connections. Unlike Burn, the node stays in the registry and can reconnect. Used when a quick disconnect is needed without permanent deletion.
+
+---
+
+### ⏸️ Covert Pause & Resume
+> **Put a node to sleep remotely — preserves ~80% battery**
+
+When a ghost node doesn't need active monitoring, Admin can remotely suspend its heavy sensors (WebRTC video + high-accuracy GPS) while keeping the socket alive. The node stays reachable and instantly reactivatable with a Resume tap.
+
+---
+
+### 🃏 Stealth Cloak
+> **One tap hides the app — surveillance continues in background**
+
+The Ghost screen has an **"ENGAGE STEALTH CLOAK"** button that sends the app to the background (like pressing the Home button) while keeping the GPS task, socket connection, and heartbeat fully active. The target sees their normal home screen.
+
+---
+
+### 🔴🟠🟢 Traffic Light Status System
+> **Instant visual node health at a glance**
+
+Every node chip shows a real-time color state:
+- 🟢 **Green** — Fully active and transmitting
+- 🟠 **Orange** — Alive but paused / sensors sleeping
+- 🔴 **Red** — Offline / disconnected / burned
+
+Nodes are automatically marked offline after **120 seconds** of silence.
+
+---
+
+### 🔐 Smart Key Validation
+> **Real-time format enforcement + live server prefix check**
+
+Keys are validated character-by-character as you type — special chars are blocked at the keyboard. The Login button stays **disabled** until the format is 100% valid. For Ghost keys, the app pings the server live to confirm the parent viewer is online before you even tap Login.
+
+---
+
+### 📟 CyberAlert System
+> **Hacker-themed notifications replace all native OS popups**
+
+Every event — login failures, successful captures, burn confirmations — goes through a custom branded modal with color-coded scanline borders (`danger` = red, `success` = green, `warning` = amber, `info` = cyan).
+
+---
+
+### 📂 Organised Evidence Gallery
+> **Named album storage for all captured intel**
+
+Downloaded snapshots and feed captures are saved to dedicated gallery albums on the Admin device:
+- `JOYJET_DOWNLOADS` — remote snapshot downloads
+- `JOYJET_SCREENSHOTS` — local live-feed captures  
+Filenames include the node name and timestamp for traceability.
 
 ---
 
