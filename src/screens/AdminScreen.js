@@ -210,14 +210,22 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
                   <Text style={styles.primaryBtnTxt}>{isCapturing ? "PRESERVING..." : "CAPTURE FEED"}</Text>
                 </TouchableOpacity>
                 <View style={styles.rowControls}>
+                  <TouchableOpacity 
+                    style={[styles.secondaryBtn, {flex: 1, marginRight: 8, borderColor: selectedGhost?.status === 'PAUSED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)', backgroundColor: selectedGhost?.status === 'PAUSED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}]} 
+                    onPress={() => sendCommand(selectedGhost.name, selectedGhost?.status === 'PAUSED' ? 'PLAY' : 'PAUSE')}
+                  >
+                    <MaterialCommunityIcons name={selectedGhost?.status === 'PAUSED' ? "play-circle" : "pause-circle"} size={16} color={selectedGhost?.status === 'PAUSED' ? "#10B981" : "#EF4444"} style={{ marginRight: 4 }} />
+                    <Text style={[styles.secondaryBtnTxt, {color: selectedGhost?.status === 'PAUSED' ? "#10B981" : "#EF4444", fontSize: 10}]}>{selectedGhost?.status === 'PAUSED' ? "RESUME" : "PAUSE"}</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity style={[styles.secondaryBtn, {flex: 1, marginRight: 8}]} onPress={() => sendCommand(selectedGhost.name, 'SNAPSHOT')}>
-                    <MaterialCommunityIcons name="camera-iris" size={20} color="#38BDF8" style={{ marginRight: 8 }} />
-                    <Text style={styles.secondaryBtnTxt}>REMOTE SNAP</Text>
+                    <MaterialCommunityIcons name="camera-iris" size={16} color="#38BDF8" style={{ marginRight: 4 }} />
+                    <Text style={[styles.secondaryBtnTxt, {fontSize: 10}]}>SNAP</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={[styles.dangerBtn, {flex: 1}]} onPress={() => sendCommand(selectedGhost.name, 'WIPE')}>
-                    <MaterialCommunityIcons name="alert-octagon" size={20} color="#EF4444" style={{ marginRight: 8 }} />
-                    <Text style={styles.dangerBtnTxt}>WIPE NODE</Text>
+                    <MaterialCommunityIcons name="alert-octagon" size={16} color="#EF4444" style={{ marginRight: 4 }} />
+                    <Text style={[styles.dangerBtnTxt, {fontSize: 10}]}>WIPE</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -315,7 +323,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
             </View>
           ) : (
             Object.values(ghosts).map((ghost) => {
-              const isActive = ghost.status === 'CONNECTED' || ghost.status === 'OPTIMIZED';
+              const isPaused = ghost.status === 'PAUSED';
+              const isActive = ghost.status === 'CONNECTED' || ghost.status === 'OPTIMIZED' || isPaused;
               const isOffline = ghost.status === 'OFFLINE';
               
               return (
@@ -329,9 +338,9 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
                   onPress={() => setSelectedGhostId(ghost.name)}
                 >
                   <MaterialCommunityIcons 
-                    name={isOffline ? "lan-disconnect" : (isActive ? "lan-check" : "lan-pending")} 
+                    name={isOffline ? "lan-disconnect" : (isPaused ? "pause-circle" : (isActive ? "lan-check" : "lan-pending"))} 
                     size={14} 
-                    color={isActive ? "#10B981" : (isOffline ? "#EF4444" : "#F59E0B")} 
+                    color={isActive ? (isPaused ? "#F59E0B" : "#10B981") : (isOffline ? "#EF4444" : "#F59E0B")} 
                     style={{ marginRight: 6 }} 
                   />
                   <Text style={[
@@ -408,19 +417,19 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
               <View style={[styles.gridCell, { borderBottomWidth: 0, borderLeftWidth: 0 }]}>
                 <View style={[
                   styles.cellIconBox, 
-                  selectedGhost?.status === 'OFFLINE' ? { backgroundColor: 'rgba(239, 68, 68, 0.1)' } : { backgroundColor: 'rgba(16, 185, 129, 0.1)' }
+                  selectedGhost?.status === 'OFFLINE' ? { backgroundColor: 'rgba(239, 68, 68, 0.1)' } : (selectedGhost?.status === 'PAUSED' ? { backgroundColor: 'rgba(245, 158, 11, 0.1)' } : { backgroundColor: 'rgba(16, 185, 129, 0.1)' })
                 ]}>
                   <MaterialCommunityIcons 
-                    name={selectedGhost?.status === 'OFFLINE' ? "wifi-off" : "wifi"} 
+                    name={selectedGhost?.status === 'OFFLINE' ? "wifi-off" : (selectedGhost?.status === 'PAUSED' ? "pause-circle" : "wifi")} 
                     size={16} 
-                    color={selectedGhost?.status === 'OFFLINE' ? "#EF4444" : "#10B981"} 
+                    color={selectedGhost?.status === 'OFFLINE' ? "#EF4444" : (selectedGhost?.status === 'PAUSED' ? "#F59E0B" : "#10B981")} 
                   />
                 </View>
                 <View>
                   <Text style={styles.cellLabel}>UPLINK STATUS</Text>
                   <Text style={[
                     styles.cellVal, 
-                    selectedGhost?.status === 'OFFLINE' ? { color: '#EF4444' } : { color: '#10B981' }
+                    selectedGhost?.status === 'OFFLINE' ? { color: '#EF4444' } : (selectedGhost?.status === 'PAUSED' ? { color: '#F59E0B' } : { color: '#10B981' })
                   ]}>
                     {selectedGhost?.status || 'UNKNOWN'}
                   </Text>
