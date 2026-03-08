@@ -18,6 +18,7 @@ import GhostScreen from './src/screens/GhostScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
 import GuideScreen from './src/screens/GuideScreen';
+import CyberAlertModal from './src/components/CyberAlertModal';
 import * as TaskManager from 'expo-task-manager';
 import socket from './src/services/socket';
 
@@ -150,6 +151,7 @@ export default function App() {
                   {renderCurrentStack()}
                 </Stack.Navigator>
               </NavigationContainer>
+              <CyberAlertModal />
             </View>
           )}
         </View>

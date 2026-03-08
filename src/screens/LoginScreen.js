@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import socket from '../services/socket'; 
 import AppHeader from '../components/AppHeader';
+import GlobalAlert from '../utils/GlobalAlert';
 import appConfig from '../../app.json';
 
 const APP_VERSION = appConfig.expo.version;
@@ -33,14 +34,14 @@ const LoginScreen = ({ onLogin }) => {
       if (response.success) {
         onLogin(response.role, response.name, response.allowedNodes || []);
       } else {
-        Alert.alert('Access Denied', response.message || 'Invalid credentials');
+        GlobalAlert.show('Access Denied', response.message || 'Invalid credentials', 'danger');
       }
     };
 
     socket.on('auth_response', onAuthResponse);
     socket.on('connect_error', () => {
       setLoading(false);
-      Alert.alert('Connection Error', 'The master server is unreachable.');
+      GlobalAlert.show('Connection Error', 'The master server is unreachable.', 'danger');
     });
 
     return () => {
@@ -51,8 +52,8 @@ const LoginScreen = ({ onLogin }) => {
 
   const handleLogin = () => {
     const key = accessKey.trim();
-    if (!key) return Alert.alert('Error', 'Please enter an Access Key');
-    if (isAdmin && !pin.trim()) return Alert.alert('Error', 'Admin requires a Secure PIN');
+    if (!key) return GlobalAlert.show('Error', 'Please enter an Access Key', 'info');
+    if (isAdmin && !pin.trim()) return GlobalAlert.show('Error', 'Admin requires a Secure PIN', 'info');
 
     setLoading(true);
     if (!socket.connected) socket.connect();

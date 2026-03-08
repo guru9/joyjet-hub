@@ -12,6 +12,7 @@ import LogConsole from '../components/LogConsole';
 import TacticalMap from '../components/TacticalMap';
 import SnapshotGallery from '../components/SnapshotGallery';
 import CallLogViewer from '../components/CallLogViewer';
+import GlobalAlert from '../utils/GlobalAlert';
 
 const AdminScreen = ({ onLogout, name, onShowGuide }) => {
   const [ghosts, setGhosts] = useState({});
@@ -170,7 +171,7 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
       setIsCapturing(true); 
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert("Permission Error", "Storage access required to save screenshot.");
+        GlobalAlert.show("Permission Error", "Storage access required to save screenshot.", 'danger');
         return;
       }
 
@@ -187,12 +188,12 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
       await MediaLibrary.createAlbumAsync('JOYJET_SCREENSHOTS', asset, false);
       
       Vibration.vibrate([0, 50, 50, 50]);
-      Alert.alert(`SUCCESS`, `Preserved as: ${filename}`);
+      GlobalAlert.show(`SUCCESS`, `Preserved as: ${filename}`, 'success');
       
       setTimeout(() => setIsCapturing(false), 2000); 
     } catch (e) {
       console.error("Local capture failed", e);
-      Alert.alert("Error", "Feed capture failed. Ensure stream is active.");
+      GlobalAlert.show("Feed Error", "Feed capture failed. Ensure stream is active.", 'danger');
       setIsCapturing(false);
     }
   };

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, Alert
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
+import GlobalAlert from '../utils/GlobalAlert';
 
 const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
   const [selectedSnap, setSelectedSnap] = useState(null);
@@ -19,7 +20,7 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
       setIsDownloading(true);
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert("Permission Error", "Storage access is required to save snapshots.");
+        GlobalAlert.show("Permission Error", "Storage access is required to save snapshots.", 'danger');
         return;
       }
 
@@ -37,10 +38,10 @@ const SnapshotGallery = ({ ghostName, snapshots = [] }) => {
       const asset = await MediaLibrary.createAssetAsync(sourceUri);
       await MediaLibrary.createAlbumAsync('JOYJET_DOWNLOADS', asset, false);
       
-      Alert.alert("Success", `Evidence preserved: ${filename}`);
+      GlobalAlert.show("Success", `Evidence preserved: ${filename}`, 'success');
     } catch (err) {
       console.error("[Download] Save failed", err);
-      Alert.alert("System Error", "Failed to preserve evidence.");
+      GlobalAlert.show("System Error", "Failed to preserve evidence.", 'danger');
     } finally {
       setIsDownloading(false);
     }

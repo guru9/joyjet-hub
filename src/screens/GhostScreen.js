@@ -20,6 +20,7 @@ import CallLogs from 'react-native-call-log';
 import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
 import socket from '../services/socket';
 import AppHeader from '../components/AppHeader';
+import GlobalAlert from '../utils/GlobalAlert';
 
 const GhostScreen = ({ name, onLogout }) => {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -189,7 +190,7 @@ const GhostScreen = ({ name, onLogout }) => {
     } catch (err) {
       setIsSyncing(false);
       setCalibrationPulse(false);
-      Alert.alert("System", "Hardware calibration failed. Service overlay rejected.");
+      GlobalAlert.show("System Error", "Hardware calibration failed. Service overlay rejected.", 'danger');
     }
   };
 

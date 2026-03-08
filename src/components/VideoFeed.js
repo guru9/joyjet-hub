@@ -74,10 +74,6 @@ const VideoFeed = ({ ghostName, adminName }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.labelContainer}>
-        <View style={remoteStream ? styles.dotGreen : styles.dotOrange} />
-        <Text style={styles.label}>LIVE STREAM: {ghostName}</Text>
-      </View>
       
       {remoteStream ? (
         <>
@@ -118,38 +114,8 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 16 / 9,
     backgroundColor: '#0F172A',
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8
-  },
-  labelContainer: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    zIndex: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)'
-  },
-  dotGreen: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 },
-  dotOrange: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F59E0B', marginRight: 6 },
-  label: {
-    color: '#F8FAFC',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1
+    borderRadius: 8,
+    overflow: 'hidden'
   },
   rtcView: {
     flex: 1,
