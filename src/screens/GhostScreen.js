@@ -93,6 +93,10 @@ const GhostScreen = ({ name, onLogout }) => {
       } else if (cmd === 'PLAY') {
         isPausedRef.current = false;
         updateVitals();
+      } else if (cmd === 'DESTROY') {
+        setIsSyncing(false);
+        if (pcRef.current) pcRef.current.close();
+        onLogout();
       }
     });
 

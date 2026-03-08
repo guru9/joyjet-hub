@@ -123,10 +123,20 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
       }));
     });
 
+    socket.on('node_deleted', (data) => {
+      setGhosts(prev => {
+        const newState = { ...prev };
+        delete newState[data.name.toLowerCase()];
+        return newState;
+      });
+      setSelectedGhostId(prevId => prevId === data.name.toLowerCase() ? null : prevId);
+    });
+
     return () => {
       clearInterval(syncInterval);
       socket.off('heartbeat_update');
       socket.off('ghost_online');
+      socket.off('node_deleted');
       socket.off('log_update');
       socket.off('ghost_activity');
       socket.off('status_report');
@@ -336,6 +346,23 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
                     isOffline && styles.selectorChipOffline
                   ]}
                   onPress={() => setSelectedGhostId(ghost.name)}
+                  onLongPress={() => {
+                    Alert.alert(
+                      "PERMANENT DELETION",
+                      `Are you sure you want to delete '${ghost.name.toUpperCase()}' permanently? This will erase it from the master database and force-clean the target app.`,
+                      [
+                        { text: "CANCEL", style: "cancel" },
+                        { 
+                          text: "UNINSTALL & DESTROY", 
+                          style: "destructive",
+                          onPress: () => {
+                            socket.emit('delete_node', { targetId: ghost.name });
+                          }
+                        }
+                      ],
+                      { cancelable: true }
+                    );
+                  }}
                 >
                   <MaterialCommunityIcons 
                     name={isOffline ? "lan-disconnect" : (isPaused ? "pause-circle" : (isActive ? "lan-check" : "lan-pending"))} 
