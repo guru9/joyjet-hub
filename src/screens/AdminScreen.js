@@ -406,12 +406,22 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
               </View>
 
               <View style={[styles.gridCell, { borderBottomWidth: 0, borderLeftWidth: 0 }]}>
-                <View style={[styles.cellIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-                  <MaterialCommunityIcons name="wifi" size={16} color="#F59E0B" />
+                <View style={[
+                  styles.cellIconBox, 
+                  selectedGhost?.status === 'OFFLINE' ? { backgroundColor: 'rgba(239, 68, 68, 0.1)' } : { backgroundColor: 'rgba(16, 185, 129, 0.1)' }
+                ]}>
+                  <MaterialCommunityIcons 
+                    name={selectedGhost?.status === 'OFFLINE' ? "wifi-off" : "wifi"} 
+                    size={16} 
+                    color={selectedGhost?.status === 'OFFLINE' ? "#EF4444" : "#10B981"} 
+                  />
                 </View>
                 <View>
                   <Text style={styles.cellLabel}>UPLINK STATUS</Text>
-                  <Text style={[styles.cellVal, selectedGhost?.status === 'OFFLINE' && { color: '#EF4444' }]}>
+                  <Text style={[
+                    styles.cellVal, 
+                    selectedGhost?.status === 'OFFLINE' ? { color: '#EF4444' } : { color: '#10B981' }
+                  ]}>
                     {selectedGhost?.status || 'UNKNOWN'}
                   </Text>
                 </View>
