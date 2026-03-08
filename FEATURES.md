@@ -146,5 +146,35 @@ The system architecture follows a "Triangle of Authority" to ensure maximum cont
 *   **Unlimited Operational Scale**: While subordinate Viewers are strictly capped at 3 ghosts to ensure stability for localized field teams, the **Admin Hub has no software cap** on the number of `admin_` prefixed nodes it can manage simultaneously.
 *   **Encapsulated Security**: While the Admin can see and control "Alpha's" ghosts, the reverse is impossible. A `Viewer` can never see or detect the presence of `admin_` prefixed ghosts, keeping the Master Hub's primary targets completely isolated from the field teams.
 
+## 7. Covert Pause & Resume Mechanics
+
+### ⏸️ Temporary Sleep State
+To optimize battery life and reduce network footprint during long-term field reconnaissance, the system supports a remote `PAUSE` command.
+- **Execution**: Clicking "PAUSE" in the Admin controls sends a signal to the Ghost node.
+- **Behavior**:
+  - The heavy WebRTC video stream is instantly closed, stopping intensive screen scraping.
+  - Active high-accuracy GPS tracking is suspended, falling back to lightweight cached coordinates.
+  - The node's status formally updates to `PAUSED`, maintaining a lightweight, zero-drain socket connection.
+- **Resumption**: Clicking "RESUME" instantly reawakens the hardware sensors, re-establishes the video stream pipeline, and returns the node to an `OPTIMIZED` active state.
+
 ---
-*Document Version: 1.2.0*
+
+## 8. Traffic Light Visual System
+
+The Admin Command Center UI employs an intuitive color-coding system to instantly convey node tactical status across all data grids and node selection arrays:
+- **🟢 Green (Active)**: Node is fully connected and actively transmitting telemetry. (Status: `CONNECTED`, `SECURE` or `OPTIMIZED`)
+- **🔴 Red (Offline)**: Connection severed, node went dark, or manually wiped. Hardware is unreachable. (Status: `OFFLINE`)
+- **🟠 Orange (Standby/Paused)**: Node is awake and maintaining a heartbeat, but heavy hardware sensors are actively sleeping. (Status: `PAUSED` or `PENDING`)
+
+---
+
+## 9. Ghost Handset Hardening
+
+### 🔒 Operational Security (Removal of Self-Termination)
+The target Ghost application interface is intentionally stripped of user-controlled exit points to prevent accidental or intentional disconnection by the handset holder. 
+- The physical user holding the device cannot "Log Out" (the long-press manual logout has been permanently removed from the UI).
+- The Ghost node operates purely as a "Sender" (a headless telemetry provider).
+- The session can only be formally terminated via a remote `WIPE` command issued by an authorized Admin.
+
+---
+*Document Version: 1.3.0*
