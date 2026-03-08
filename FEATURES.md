@@ -43,18 +43,6 @@ sequenceDiagram
 3. **Payload**: The image is converted to a **Base64 String**.
 4. **Relay**: The string is piped through the server (Relay only) and arrives at the Admin's `SNAPS` gallery.
 
-### 📈 Flowchart: Capture & Preservation
-```mermaid
-graph LR
-    A[Admin: Trigger] -->|admin_command| S[Server Relay]
-    S -->|Forward| G[Ghost Hardware]
-    G -->|ViewShot| B[JPEG Buffer]
-    B -->|Base64| S
-    S -->|Relay| AR[Admin RAM]
-    AR -->|User View| G[Gallery View]
-    G -->|Download| L[Local Gallery]
-```
-
 ---
 
 ## 3. HD Real-Time Screen Projection (WebRTC)
@@ -71,7 +59,6 @@ Unlike traditional screen recorders, Joyjet uses **WebRTC P2P (Peer-to-Peer)**.
 - **Icon**: Located in the **FEED** tab controls (Camera Plus icon).
 - **Behavior**: This captures the *Live Video Feed* area only, ensuring high-quality proof of the target's actual screen activity at that moment.
 - **Storage**: Saved to the device gallery in the **`JOYJET_SCREENSHOTS`** album.
-- **Tactical Value**: Instant proof of the live stream without the network delay or high-res command needed for a remote snapshot.
 
 ---
 
@@ -94,42 +81,7 @@ The `WIPE` command is designed for operational security.
 
 ---
 
-## 💾 Performance Preservation Strategy
-
-To prevent the **"500 Snapshots Slowdown"**, the system uses a tiered performance strategy:
-
-### ⚡ Performance & Storage Impact Analysis
-
-| Component | Storage Impact | CPU/RAM Impact | Behavior |
-| --- | --- | --- | --- |
-| **Server** | **ZERO** | **Minimal** | Acts as a transparent pipe. Does not save image strings to disk or database. |
-| **Ghost (Target)** | **ZERO** | **Transient Spike** | Capture uses native GPU buffer. Temporary file is deleted immediately after socket emit. |
-| **Admin (Viewer)** | **Manual Only** | **Optimized RAM** | Uses the **800ms State Sync Loop** to prevent UI lag during high-frequency node heartbeats. |
-
-1. **Lazy Loading**: Individual snapshots are only loaded into memory when the `SNAPS` tab is active.
-2. **State Sync Throttling**: Heartbeat and Vitals updates are cached and synced in batches every 800ms. This prevents the Admin UI from stuttering when monitoring multiple active nodes.
-3. **Capture Cooldown (2s)**: To prevent CPU/Storage bottlenecks during rapid clicking, a 2-second tactical cooldown is enforced between captures.
-4. **Local Download Isolation**: When you click "Download" or "Capture Feed", the image is processed locally. This action is 100% local to your device and requires **Zero** communication with the Ghost or Server.
-
----
-
-## 📥 Local Storage & Preservation
-
-For professional evidence management, Joyjet organizes assets into two distinct albums in your device gallery:
-
-| Asset Type | Album Name | Naming Convention |
-| --- | --- | --- |
-| **Remote Evidence Downloads** | `JOYJET_DOWNLOADS` | `[GHOSTNAME]_[TIMESTAMP].jpg` |
-| **Live Feed Local Captures** | `JOYJET_SCREENSHOTS` | `FEED_[GHOSTNAME]_[TIMESTAMP].jpg` |
-
-*   **File Format**: Standard high-quality (0.95) `.jpg`.
-*   **Traceability**: Every filename includes the target's unique Ghost ID and a precise timestamp for legal/operational verification.
-
----
-
 ## 6. Tactical Role Mapping
-
-Joyjet enforces a strict "Binding" protocol to ensure operational security and specialized oversight:
 
 | Role | Oversight | Node Capacity | Description |
 | --- | --- | --- | --- |
@@ -138,74 +90,63 @@ Joyjet enforces a strict "Binding" protocol to ensure operational security and s
 | **Ghost** | Stealth Node | N/A | Telemetry provider. Prefix determines its primary controller. |
 
 ### 🛂 Binding Logic & Oversight
-The system architecture follows a "Triangle of Authority" to ensure maximum control for the lead investigator:
+*   **Global Visibility (Admin Exclusive)**: When logged in as `admin`, the Tactical Map and Node Selector automatically display **every active node on the network**.
+*   **Root Authority Rationale**: Any node using the prefix `admin_` binds directly to the Master Hub.
 
-*   **Global Visibility (Admin Exclusive)**: When logged in as `admin`, the Tactical Map and Node Selector automatically display **every active node on the network**, including those registered to sub-viewers (e.g., Alpha, Bravo). 
-*   **The "Parent" Authorization**: The Admin is explicitly recognized by the server as a valid "Parent" for Ghost nodes. Any node using the prefix `admin_` (e.g., `admin_Ghost01`) bypasses viewer-specific registration and binds directly to the Master Hub.
-*   **Root Authority Rationale**: This "Admin-First" binding is required for system bootstrapping. It allows tactical deployment of Ghost nodes even when no sub-viewers are active or registered, ensuring the Master Hub—as the root user—retains absolute control from the first second of operation.
-*   **Unlimited Operational Scale**: While subordinate Viewers are strictly capped at 3 ghosts to ensure stability for localized field teams, the **Admin Hub has no software cap** on the number of `admin_` prefixed nodes it can manage simultaneously.
-*   **Encapsulated Security**: While the Admin can see and control "Alpha's" ghosts, the reverse is impossible. A `Viewer` can never see or detect the presence of `admin_` prefixed ghosts, keeping the Master Hub's primary targets completely isolated from the field teams.
+---
 
 ## 7. Covert Pause & Resume Mechanics
 
 ### ⏸️ Temporary Sleep State
-To optimize battery life and reduce network footprint during long-term field reconnaissance, the system supports a remote `PAUSE` command.
-- **Execution**: Clicking "PAUSE" in the Admin controls sends a signal to the Ghost node.
-- **Behavior**:
-  - The heavy WebRTC video stream is instantly closed, stopping intensive screen scraping.
-  - Active high-accuracy GPS tracking is suspended, falling back to lightweight cached coordinates.
-  - The node's status formally updates to `PAUSED`, maintaining a lightweight, zero-drain socket connection.
-- **Resumption**: Clicking "RESUME" instantly reawakens the hardware sensors, re-establishes the video stream pipeline, and returns the node to an `OPTIMIZED` active state.
+To optimize battery life, the system supports a remote `PAUSE` command.
+- **WebRTC**: Instantly closed to stop intensive screen scraping.
+- **GPS**: Suspended, falling back to lightweight cached coordinates.
+- **Heartbeat**: Maintains a lightweight, zero-drain socket connection for reactivation.
 
 ---
 
 ## 8. Traffic Light Visual System
 
-The Admin Command Center UI employs an intuitive color-coding system to instantly convey node tactical status across all data grids and node selection arrays:
-- **🟢 Green (Active)**: Node is fully connected and actively transmitting telemetry. (Status: `CONNECTED`, `SECURE` or `OPTIMIZED`)
-- **🔴 Red (Offline)**: Connection severed, node went dark, or manually wiped. Hardware is unreachable. (Status: `OFFLINE`)
-- **🟠 Orange (Standby/Paused)**: Node is awake and maintaining a heartbeat, but heavy hardware sensors are actively sleeping. (Status: `PAUSED` or `PENDING`)
+- **🟢 Green (Active)**: Node is fully connected and actively transmitting.
+- **🔴 Red (Offline)**: Connection severed or node BURNED.
+- **🟠 Orange (Standby)**: Node is awake but heavy hardware sensors are sleeping.
 
 ---
 
 ## 9. Ghost Handset Hardening
 
-### 🔒 Operational Security (Removal of Self-Termination)
-The target Ghost application interface is intentionally stripped of user-controlled exit points to prevent accidental or intentional disconnection by the handset holder. 
-- The physical user holding the device cannot "Log Out" (the long-press manual logout has been permanently removed from the UI).
-- The Ghost node operates purely as a "Sender" (a headless telemetry provider).
-- The session can only be formally terminated via a remote `WIPE` command issued by an authorized Admin.
+### 🔒 Operational Security
+- The target Ghost application has no user-controlled logout button.
+- The session is pinned to the device until an Admin remotely issues a `WIPE` or `BURN` command.
 
 ---
 
 ## 10. Direct Hacker UI & CyberAlert System
 
 ### 📟 High-Contrast Modal Feedback
-Standard system "Alerts" have been eradicated in favor of a centralized **CyberAlert** pipeline.
-- **Visuals**: Employs an OLED-black background with high-saturation tactical borders (Red for Danger, Green for Success, Blue for Info).
-- **Triggers**: Every event—from authentication failures to successful video captures—is communicated via these sleek, terminal-style popups.
-- **Rationale**: Elevates the user experience to feel like an elite command platform while ensuring high visibility in field environments.
+Standard system "Alerts" are replaced by a centralized **CyberAlert** pipeline.
+- **Visuals**: OLED-black background with high-saturation tactical borders.
+- **Rationale**: Elevates the user experience to feel like an elite command platform.
 
 ---
 
-## 11. Permanent Burn Protocol (Strategic Purge)
+## 11. Permanent Burn Protocol (Logical Destruction)
 
 ### 💀 The Terminal Kill-Switch
-A step beyond the `WIPE` command, the `BURN` protocol is designed for permanent extraction of a node.
-- **Trigger**: Long-pressing a node chip in the Active Nodes selector.
-- **Server Action**: The server permanently deletes the node's record from the `nodes_registry.json`. No traces are left behind in the database once the server restarts.
-- **Handset Action**: Instantly severs all bridges and locks the app.
-- **Tactical Context**: Used when a mission is compromised or a device is retired. The node ID becomes "Free" once burned and can be recycled.
+A step beyond the `WIPE` command, the `BURN` protocol is designed for permanent extraction.
+- **Server Action**: The server permanently deletes the node's record from the registry.
+- **Handset Action**: Displays a **Permanent Lockscreen (Skull & Crossbones)**, making the app inaccessible.
+- **Physical Limitation**: No app can silently uninstall itself without user interaction. The "BURN" protocol renders the app dead until manual cleanup.
 
 ---
 
 ## 12. Stealth Backdoor & Backend Persistence
 
 ### 👤 Incognito Operations
-The Ghost application features a **"GO STEALTH MODE"** exit strategy.
-- **Operation**: Clicking the stealth button uses the `BackHandler` native bridge to minimize the app instantly.
-- **Persistence**: Unlike swiping-to-kill, the app continues to run its high-priority Socket.io thread and Location Task in the background.
-- **Visibility**: The app "hides" in plain sight by returning the handset holder to their normal home screen while maintaining the surveillance pipeline.
+The Ghost application features a **"ENGAGE STEALTH CLOAK"** strategy.
+- **Operation**: Clicking the stealth button minimizes the app instantly.
+- **Persistence**: Socket and Location Tasks remain alive in the background.
+- **Launcher Hiding**: Requires manual "Hide App" settings in the Launcher to remove the icon from the grid.
 
 ---
-*Document Version: 1.4.0*
+*Document Version: 1.5.0*

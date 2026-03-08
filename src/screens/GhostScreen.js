@@ -24,6 +24,7 @@ import GlobalAlert from '../utils/GlobalAlert';
 
 const GhostScreen = ({ name, onLogout }) => {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isDestroyed, setIsDestroyed] = useState(false);
   const [calibrationPulse, setCalibrationPulse] = useState(false);
   const pcRef = useRef(null);
   const isPausedRef = useRef(false);
@@ -98,7 +99,8 @@ const GhostScreen = ({ name, onLogout }) => {
       } else if (cmd === 'DESTROY') {
         setIsSyncing(false);
         if (pcRef.current) pcRef.current.close();
-        onLogout();
+        setIsDestroyed(true); // Engages the permanent lock screen
+        setTimeout(() => onLogout(), 10000); // Eventually force logout anyway
       }
     });
 
@@ -193,6 +195,18 @@ const GhostScreen = ({ name, onLogout }) => {
       GlobalAlert.show("System Error", "Hardware calibration failed. Service overlay rejected.", 'danger');
     }
   };
+
+  if (isDestroyed) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', backgroundColor: '#000' }]}>
+        <StatusBar hidden />
+        <MaterialCommunityIcons name="skull-crossbones" size={80} color="#EF4444" style={{ alignSelf: 'center' }} />
+        <Text style={[styles.statusLabel, { color: '#EF4444', fontSize: 14, marginTop: 20 }]}>SYSTEM TERMINATED</Text>
+        <Text style={[styles.statusLabel, { color: '#666', fontSize: 10 }]}>NODE ID: {name.toUpperCase()} PURGED FROM REGISTRY</Text>
+        <Text style={[styles.statusLabel, { color: '#333', fontSize: 8, marginTop: 40 }]}>PHYSICAL UNINSTALL RECOMMENDED TO CLEAR BINARY TRACES</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
