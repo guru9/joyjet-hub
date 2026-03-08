@@ -1,18 +1,25 @@
+/**
+ * LoginScreen — Master authentication gateway.
+ * Role is inferred from the access key format:
+ *   'admin'   → Admin role (requires PIN)
+ *   'X_Ghost' → Ghost node (underscore = ghost)
+ *   else      → Viewer
+ */
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-  StatusBar
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-import socket from '../services/socket'; 
+import socket from '../services/socket';
 import AppHeader from '../components/AppHeader';
 import GlobalAlert from '../utils/GlobalAlert';
+import { COLORS, RADIUS, SHADOW } from '../utils/theme';
 import appConfig from '../../app.json';
 
 const APP_VERSION = appConfig.expo.version;
 
+// Infer role without server round-trip for UX purposes
 const detectRole = (key) => {
   const k = key.trim().toLowerCase();
   if (k === 'admin') return 'admin';
@@ -22,26 +29,27 @@ const detectRole = (key) => {
 
 const LoginScreen = ({ onLogin }) => {
   const [accessKey, setAccessKey] = useState('');
-  const [pin, setPin] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [pin, setPin]             = useState('');
+  const [loading, setLoading]     = useState(false);
 
-  const role = detectRole(accessKey);
+  const role    = detectRole(accessKey);
   const isAdmin = role === 'admin';
 
+  // -- Socket auth listeners --
   useEffect(() => {
     const onAuthResponse = (response) => {
       setLoading(false);
       if (response.success) {
         onLogin(response.role, response.name, response.allowedNodes || []);
       } else {
-        GlobalAlert.show('Access Denied', response.message || 'Invalid credentials', 'danger');
+        GlobalAlert.show('ACCESS DENIED', response.message || 'Invalid credentials.', 'danger');
       }
     };
 
     socket.on('auth_response', onAuthResponse);
     socket.on('connect_error', () => {
       setLoading(false);
-      GlobalAlert.show('Connection Error', 'The master server is unreachable.', 'danger');
+      GlobalAlert.show('NO SIGNAL', 'Master server is unreachable. Check your network.', 'danger');
     });
 
     return () => {
@@ -50,22 +58,21 @@ const LoginScreen = ({ onLogin }) => {
     };
   }, [onLogin]);
 
+  // -- Authenticate --
   const handleLogin = () => {
     const key = accessKey.trim();
-    if (!key) return GlobalAlert.show('Error', 'Please enter an Access Key', 'info');
-    if (isAdmin && !pin.trim()) return GlobalAlert.show('Error', 'Admin requires a Secure PIN', 'info');
+    if (!key) return GlobalAlert.show('MISSING KEY', 'Enter your access key to proceed.', 'info');
+    if (isAdmin && !pin.trim()) return GlobalAlert.show('PIN REQUIRED', 'Admin access requires a Secure PIN.', 'info');
 
     setLoading(true);
     if (!socket.connected) socket.connect();
 
-    const attemptAuth = () => {
-      socket.emit('authenticate', {
-        user: key,
-        pass: isAdmin ? pin.trim() : 'nopass', 
-        device: Platform.OS,
-        version: APP_VERSION
-      });
-    };
+    const attemptAuth = () => socket.emit('authenticate', {
+      user: key,
+      pass: isAdmin ? pin.trim() : 'nopass',
+      device: Platform.OS,
+      version: APP_VERSION,
+    });
 
     if (socket.connected) {
       attemptAuth();
@@ -75,72 +82,87 @@ const LoginScreen = ({ onLogin }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : null}
       style={styles.container}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+
       <View style={styles.inner}>
-        <View style={styles.headerWrapper}>
-          <AppHeader isHub={true} />
+        {/* Logo */}
+        <View style={styles.logoWrapper}>
+          <AppHeader isHub />
         </View>
 
+        {/* Auth Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>☣️ MASTER COMMAND LOGIN</Text>
-          <Text style={styles.cardSubtitle}>NEURAL INTERFACE: SECURE DIRECT CONNECT V4.3</Text>
+          <Text style={styles.cardTitle}>☣ COMMAND ACCESS</Text>
+          <Text style={styles.cardSub}>NEURAL AUTH · SECURE DIRECT CONNECT</Text>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputWrapper}>
-              <MaterialCommunityIcons name="security" size={20} color="#38BDF8" style={styles.inputIcon} />
+          <View style={styles.fields}>
+            {/* Access Key */}
+            <View style={styles.fieldRow}>
+              <MaterialCommunityIcons name="security" size={18} color={COLORS.cyan} style={styles.fieldIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="ACCESS KEY"
-                placeholderTextColor="#64748B"
+                placeholderTextColor={COLORS.textMuted}
                 value={accessKey}
                 onChangeText={setAccessKey}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
+              {/* Live role indicator */}
+              {accessKey.length > 0 && (
+                <View style={[styles.roleTag, role === 'admin' ? styles.roleAdmin : (role === 'ghost' ? styles.roleGhost : styles.roleViewer)]}>
+                  <Text style={styles.roleText}>{role.toUpperCase()}</Text>
+                </View>
+              )}
             </View>
 
+            {/* PIN — admin only */}
             {isAdmin && (
-              <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="lock-numeric" size={20} color="#38BDF8" style={styles.inputIcon} />
+              <View style={styles.fieldRow}>
+                <MaterialCommunityIcons name="lock-numeric-outline" size={18} color={COLORS.cyan} style={styles.fieldIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="SECURE PIN"
-                  placeholderTextColor="#64748B"
+                  placeholderTextColor={COLORS.textMuted}
                   value={pin}
                   onChangeText={setPin}
                   secureTextEntry
                   autoCapitalize="none"
+                  keyboardType="numeric"
                 />
               </View>
             )}
           </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
+          {/* Login Button */}
+          <TouchableOpacity
+            style={[styles.btn, loading && styles.btnDisabled]}
             onPress={handleLogin}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#0F172A" />
+              <ActivityIndicator color={COLORS.bg} />
             ) : (
               <>
-                <MaterialCommunityIcons name="connection" size={20} color="#0F172A" style={{marginRight: 10}} />
-                <Text style={styles.buttonText}>BOOT SYSTEM INTERFACE</Text>
+                <MaterialCommunityIcons name="login-variant" size={18} color={COLORS.bg} style={{ marginRight: 10 }} />
+                <Text style={styles.btnText}>BOOT SYSTEM INTERFACE</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={styles.footerContainer}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>ENCRYPTED TLS v1.3</Text>
+        {/* Security Footer */}
+        <View style={styles.footer}>
+          <View style={styles.secBadge}>
+            <MaterialCommunityIcons name="shield-check" size={12} color={COLORS.green} style={{ marginRight: 5 }} />
+            <Text style={styles.secText}>TLS v1.3 ENCRYPTED</Text>
           </View>
-          <Text style={styles.footer}>SECURED BY RENDER CLOUD • 2026</Text>
-          <Text style={styles.versionTag}>JOYJET BUILD {APP_VERSION}</Text>
+          <Text style={styles.buildText}>JOYJET BUILD {APP_VERSION} · © 2026</Text>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -148,70 +170,65 @@ const LoginScreen = ({ onLogin }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
-  inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  headerWrapper: { marginBottom: 20 },
-  
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  inner: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+
+  logoWrapper: { marginBottom: 36 },
+
+  // Card
   card: {
     width: '100%',
-    backgroundColor: '#1E293B',
-    borderRadius: 24,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.xl,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#334155',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 10
+    borderColor: COLORS.border,
+    ...SHADOW.card,
   },
-  cardTitle: { color: '#F8FAFC', fontSize: 13, fontWeight: '800', letterSpacing: 2, marginBottom: 8, textAlign: 'center' },
-  cardSubtitle: { color: '#94A3B8', fontSize: 11, textAlign: 'center', marginBottom: 24, lineHeight: 16 },
-  
-  inputGroup: { marginBottom: 20 },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 12,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    height: 56
+  cardTitle: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '900', letterSpacing: 2.5, textAlign: 'center', marginBottom: 6 },
+  cardSub:   { color: COLORS.textMuted, fontSize: 10, letterSpacing: 2, textAlign: 'center', marginBottom: 24 },
+
+  // Fields
+  fields: { marginBottom: 20 },
+  fieldRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.bg,
+    borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 14,
+    height: 54,
+    marginBottom: 14,
   },
-  inputIcon: { marginRight: 12 },
-  input: { 
-    flex: 1,
-    color: '#F8FAFC', 
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' 
+  fieldIcon: { marginRight: 10 },
+  input: {
+    flex: 1, color: COLORS.textPrimary,
+    fontSize: 13, fontWeight: '700', letterSpacing: 1.5,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
-  
-  button: { 
-    width: '100%', 
-    height: 56, 
-    flexDirection: 'row',
-    backgroundColor: '#38BDF8',
-    justifyContent: 'center', 
-    alignItems: 'center',
-    borderRadius: 12,
-    shadowColor: '#38BDF8',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4
+
+  // Live role tag
+  roleTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
+  roleAdmin:  { backgroundColor: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.4)' },
+  roleGhost:  { backgroundColor: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.4)' },
+  roleViewer: { backgroundColor: 'rgba(56,189,248,0.1)', borderColor: 'rgba(56,189,248,0.3)' },
+  roleText: { fontSize: 8, fontWeight: '900', letterSpacing: 1, color: COLORS.textPrimary },
+
+  // Button
+  btn: {
+    height: 54, width: '100%',
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: COLORS.cyan,
+    borderRadius: RADIUS.md,
+    ...SHADOW.cyan,
   },
-  buttonDisabled: { backgroundColor: '#64748B', shadowOpacity: 0 },
-  buttonText: { color: '#0F172A', fontWeight: '800', letterSpacing: 1.5, fontSize: 13 },
-  
-  footerContainer: { position: 'absolute', bottom: 40, alignItems: 'center' },
-  badge: { backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', marginBottom: 16 },
-  badgeText: { color: '#10B981', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  footer: { color: '#64748B', fontSize: 10, fontWeight: '600', letterSpacing: 1.5, marginBottom: 4 },
-  versionTag: { color: '#334155', fontSize: 9, fontWeight: '700', letterSpacing: 1 }
+  btnDisabled: { backgroundColor: COLORS.textMuted, shadowOpacity: 0 },
+  btnText: { color: COLORS.bg, fontSize: 12, fontWeight: '900', letterSpacing: 2 },
+
+  // Footer
+  footer: { position: 'absolute', bottom: 36, alignItems: 'center' },
+  secBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16,185,129,0.08)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 10 },
+  secText:  { color: COLORS.green, fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
+  buildText: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 1, fontWeight: '600' },
 });
 
 export default LoginScreen;

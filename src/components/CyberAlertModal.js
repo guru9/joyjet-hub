@@ -1,59 +1,73 @@
+/**
+ * CyberAlertModal — Global themed alert system.
+ *
+ * Triggered via: GlobalAlert.show(title, message, type)
+ * Types: 'info' | 'success' | 'danger' | 'warning'
+ *
+ * Registered at App root so it can overlay ANY screen.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, DeviceEventEmitter } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS, RADIUS } from '../utils/theme';
+
+// Color/icon config per alert type
+const TYPE_CONFIG = {
+  danger:  { icon: 'alert-octagon',  color: COLORS.red,   label: '// THREAT DETECTED' },
+  success: { icon: 'check-decagram', color: COLORS.green,  label: '// OPERATION SUCCESS' },
+  warning: { icon: 'alert-rhombus',  color: COLORS.amber,  label: '// CAUTION' },
+  info:    { icon: 'information-outline', color: COLORS.cyan, label: '// SYSTEM NOTICE' },
+};
 
 const CyberAlertModal = () => {
-  const [visible, setVisible] = useState(false);
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [type, setType] = useState('info'); // 'info', 'danger', 'success'
+  const [visible, setVisible]  = useState(false);
+  const [title, setTitle]      = useState('');
+  const [message, setMessage]  = useState('');
+  const [type, setType]        = useState('info');
 
+  // Listen for global show_cyber_alert events
   useEffect(() => {
-    const listener = DeviceEventEmitter.addListener('show_cyber_alert', (data) => {
+    const sub = DeviceEventEmitter.addListener('show_cyber_alert', (data) => {
       setTitle(data.title || 'SYSTEM ALERT');
       setMessage(data.message || '');
       setType(data.type || 'info');
       setVisible(true);
     });
-    return () => listener.remove();
+    return () => sub.remove();
   }, []);
 
   if (!visible) return null;
 
-  const getConfig = () => {
-    switch(type) {
-      case 'danger': return { icon: 'alert-octagon', color: '#EF4444', border: '#EF4444' };
-      case 'success': return { icon: 'check-circle', color: '#10B981', border: '#10B981' };
-      default: return { icon: 'information', color: '#38BDF8', border: '#38BDF8' };
-    }
-  };
-
-  const config = getConfig();
+  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.info;
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={() => setVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { borderColor: config.border, shadowColor: config.border }]}>
-          <View style={styles.modalHeader}>
-            <MaterialCommunityIcons name={config.icon} size={28} color={config.color} />
-            <Text style={[styles.modalTitle, { color: config.color }]}>{title.toUpperCase()}</Text>
-          </View>
-          
-          <Text style={styles.modalDesc}>{message}</Text>
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={() => setVisible(false)}>
+      <View style={styles.overlay}>
+        <View style={[styles.panel, { borderColor: cfg.color, shadowColor: cfg.color }]}>
 
-          <View style={styles.modalActions}>
-            <TouchableOpacity 
-              style={[styles.modalBtn, { backgroundColor: config.color, shadowColor: config.color }]} 
-              onPress={() => setVisible(false)}
-            >
-              <Text style={styles.modalBtnTxt}>ACKNOWLEDGE</Text>
-            </TouchableOpacity>
+          {/* Decorative top scanline */}
+          <View style={[styles.topBar, { backgroundColor: cfg.color }]} />
+
+          {/* Header row */}
+          <View style={styles.header}>
+            <MaterialCommunityIcons name={cfg.icon} size={26} color={cfg.color} />
+            <View style={styles.headerText}>
+              <Text style={[styles.typeLabel, { color: cfg.color }]}>{cfg.label}</Text>
+              <Text style={styles.title}>{title.toUpperCase()}</Text>
+            </View>
           </View>
+
+          {/* Message */}
+          <Text style={styles.message}>{message}</Text>
+
+          {/* Dismiss */}
+          <TouchableOpacity
+            style={[styles.btn, { backgroundColor: cfg.color, shadowColor: cfg.color }]}
+            onPress={() => setVisible(false)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.btnText}>ACKNOWLEDGE</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -61,14 +75,31 @@ const CyberAlertModal = () => {
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { width: '100%', backgroundColor: '#0B0F19', borderRadius: 16, padding: 24, borderWidth: 2, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 15 },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: '#334155', paddingBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '900', letterSpacing: 2, marginLeft: 12 },
-  modalDesc: { color: '#94A3B8', fontSize: 13, lineHeight: 20, marginBottom: 20 },
-  modalActions: { flexDirection: 'row', justifyContent: 'center', marginTop: 8 },
-  modalBtn: { width: '100%', height: 46, justifyContent: 'center', alignItems: 'center', borderRadius: 8, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5 },
-  modalBtnTxt: { color: '#0F172A', fontSize: 13, fontWeight: '900', letterSpacing: 1.5 }
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.88)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  panel: {
+    width: '100%',
+    backgroundColor: COLORS.elevated,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 20,
+  },
+  topBar:     { height: 3, width: '100%' },
+  header:     { flexDirection: 'row', alignItems: 'flex-start', padding: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  headerText: { marginLeft: 14, flex: 1 },
+  typeLabel:  { fontSize: 9, fontWeight: '800', letterSpacing: 2, marginBottom: 3, fontFamily: 'monospace' },
+  title:      { color: COLORS.textPrimary, fontSize: 17, fontWeight: '900', letterSpacing: 1.5 },
+  message:    { color: COLORS.textSecondary, fontSize: 13, lineHeight: 20, paddingHorizontal: 20, paddingVertical: 16 },
+  btn: {
+    margin: 20, marginTop: 4,
+    height: 48, borderRadius: RADIUS.md,
+    justifyContent: 'center', alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
+  },
+  btnText: { color: COLORS.bg, fontSize: 13, fontWeight: '900', letterSpacing: 2 },
 });
 
 export default CyberAlertModal;
