@@ -8,7 +8,8 @@ import {
   Alert,
   Platform,
   StatusBar,
-  ActivityIndicator
+  ActivityIndicator,
+  BackHandler
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Battery from 'expo-battery';
@@ -255,6 +256,15 @@ const GhostScreen = ({ name, onLogout }) => {
             <Text style={styles.gridVal}>{isSyncing ? "ACTIVE" : "IDLE"}</Text>
           </View>
         </View>
+
+        <TouchableOpacity 
+          activeOpacity={0.8}
+          style={styles.stealthBtn} 
+          onPress={() => BackHandler.exitApp()}
+        >
+          <MaterialCommunityIcons name="incognito" size={20} color="#10B981" />
+          <Text style={styles.stealthBtnText}>GO STEALTH MODE</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -282,6 +292,9 @@ const styles = StyleSheet.create({
   gridText: { marginLeft: 10 },
   gridLabel: { color: '#64748B', fontSize: 8, fontWeight: '700', letterSpacing: 0.8 },
   gridVal: { color: '#F8FAFC', fontSize: 11, fontWeight: '800', marginTop: 1 },
+
+  stealthBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', marginTop: 16 },
+  stealthBtnText: { color: '#10B981', fontSize: 12, fontWeight: '800', letterSpacing: 2, marginLeft: 10 },
 
   logoutBtn: { visibility: 'hidden' }
 });

